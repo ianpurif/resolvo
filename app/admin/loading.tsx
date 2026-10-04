@@ -1,0 +1,1 @@
+export default function Loading() { return <div role="status" className="space-y-5"><div className="h-8 w-64 rounded-lg bg-border/50" /><div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{[1, 2, 3, 4].map((id) => <div key={id} className="h-36 rounded-xl border bg-white" />)}</div><p className="text-xs text-muted-foreground">Loading your workspace…</p></div>; }
