@@ -1,0 +1,329 @@
+[
+  {
+    "id": "development-engineering",
+    "split": "development",
+    "provenance": "Synthetic evaluation data; invented organizations, policies and measurements. No customer information. Not medical, legal or financial guidance.",
+    "documents": [
+      {
+        "id": "api",
+        "title": "Event API contract",
+        "format": "md",
+        "text": "# Event API contract\n\nPOST /v2/events requires an Idempotency-Key header. A repeated key with a different payload returns HTTP 409. Keys expire after 48 hours.\n\n## Retrying\nA HTTP 429 response includes Retry-After in seconds. Retry temporary HTTP 503 errors with exponential backoff. Permanent HTTP 422 validation errors must be corrected before retry.\n\n## Access\nOnly workspace owners may rotate API credentials. Event readers may list authorized events."
+      },
+      {
+        "id": "adr",
+        "title": "Architecture decision 14",
+        "format": "txt",
+        "text": "Architecture decision 14, accepted 2026-06-10. PostgreSQL stores events and a transactional outbox in the same transaction. An outbox dispatcher publishes to the delivery service. The choice prevents committed events from being lost between database commit and delivery. An expired dispatcher lease allows another worker to resume. The API process does not publish directly."
+      }
+    ],
+    "cases": [
+      {
+        "id": "duplicate",
+        "question": "What happens if I reuse an event idempotency key with different data?",
+        "kind": "fact",
+        "facts": [
+          [
+            "409"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "api",
+            "quote": "A repeated key with a different payload returns HTTP 409."
+          }
+        ]
+      },
+      {
+        "id": "expiry",
+        "question": "How long are event deduplication keys retained?",
+        "kind": "fact",
+        "facts": [
+          [
+            "48 hours",
+            "two days"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "api",
+            "quote": "Keys expire after 48 hours."
+          }
+        ]
+      },
+      {
+        "id": "retry",
+        "question": "Compare retry handling for HTTP 503 and HTTP 422.",
+        "kind": "comparison",
+        "facts": [
+          [
+            "backoff"
+          ],
+          [
+            "corrected",
+            "correct",
+            "validation"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "api",
+            "quote": "Retry temporary HTTP 503 errors with exponential backoff. Permanent HTTP 422 validation errors must be corrected before retry."
+          }
+        ]
+      },
+      {
+        "id": "outbox",
+        "question": "Why does the event service use a transactional outbox?",
+        "kind": "fact",
+        "facts": [
+          [
+            "lost",
+            "loss"
+          ],
+          [
+            "transaction",
+            "commit"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "adr",
+            "quote": "The choice prevents committed events from being lost between database commit and delivery."
+          }
+        ]
+      },
+      {
+        "id": "ref",
+        "question": "How long do they last?",
+        "kind": "follow-up",
+        "facts": [
+          [
+            "48 hours",
+            "two days"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "api",
+            "quote": "Keys expire after 48 hours."
+          }
+        ],
+        "history": [
+          {
+            "role": "user",
+            "content": "What are event idempotency keys?"
+          },
+          {
+            "role": "assistant",
+            "content": "They identify repeated event requests."
+          }
+        ]
+      },
+      {
+        "id": "switch",
+        "question": "Who can rotate API credentials?",
+        "kind": "topic-switch",
+        "facts": [
+          [
+            "owner"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "api",
+            "quote": "Only workspace owners may rotate API credentials."
+          }
+        ],
+        "history": [
+          {
+            "role": "user",
+            "content": "Why is there an outbox dispatcher?"
+          },
+          {
+            "role": "assistant",
+            "content": "The dispatcher publishes events."
+          }
+        ]
+      },
+      {
+        "id": "missing",
+        "question": "What is the webhook signing secret?",
+        "kind": "missing",
+        "facts": [],
+        "evidence": [],
+        "unanswerable": true
+      }
+    ]
+  },
+  {
+    "id": "development-operations",
+    "split": "development",
+    "provenance": "Synthetic evaluation data; invented organizations, policies and measurements. No customer information. Not medical, legal or financial guidance.",
+    "documents": [
+      {
+        "id": "travel",
+        "title": "Travel approval policy",
+        "format": "md",
+        "text": "# Travel approval policy\n\nDomestic travel under EUR 800 requires the department lead's approval. International travel or expenses of EUR 800 and above require Finance approval before booking. Submit expense receipts within 14 calendar days of return. Personal meals are excluded from reimbursement."
+      },
+      {
+        "id": "incidents",
+        "title": "Incident escalation procedure",
+        "format": "docx",
+        "text": "Incident escalation procedure. Severity 1 incidents must be acknowledged within 15 minutes by the duty engineer. The incident commander sends stakeholder updates every 30 minutes. Severity 2 incidents are acknowledged within 2 business hours. Close an incident only after the owner records a recovery check and follow-up actions."
+      }
+    ],
+    "cases": [
+      {
+        "id": "approval",
+        "question": "Who approves an overseas trip that costs EUR 650?",
+        "kind": "fact",
+        "facts": [
+          [
+            "Finance"
+          ],
+          [
+            "before booking",
+            "before"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "travel",
+            "quote": "International travel or expenses of EUR 800 and above require Finance approval before booking."
+          }
+        ]
+      },
+      {
+        "id": "expense",
+        "question": "When must I send my travel receipts?",
+        "kind": "fact",
+        "facts": [
+          [
+            "14"
+          ],
+          [
+            "return"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "travel",
+            "quote": "Submit expense receipts within 14 calendar days of return."
+          }
+        ]
+      },
+      {
+        "id": "sla",
+        "question": "Compare acknowledgment deadlines for Severity 1 and Severity 2 incidents.",
+        "kind": "comparison",
+        "facts": [
+          [
+            "15 minutes"
+          ],
+          [
+            "2 business hours",
+            "two business hours"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "incidents",
+            "quote": "Severity 1 incidents must be acknowledged within 15 minutes by the duty engineer."
+          },
+          {
+            "document": "incidents",
+            "quote": "Severity 2 incidents are acknowledged within 2 business hours."
+          }
+        ]
+      },
+      {
+        "id": "mixed",
+        "question": "Can the engineer close an incident, and how often are stakeholders updated?",
+        "kind": "multi-hop",
+        "facts": [
+          [
+            "30 minutes"
+          ],
+          [
+            "recovery check"
+          ],
+          [
+            "follow-up"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "incidents",
+            "quote": "The incident commander sends stakeholder updates every 30 minutes."
+          },
+          {
+            "document": "incidents",
+            "quote": "Close an incident only after the owner records a recovery check and follow-up actions."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "development-finance",
+    "split": "development",
+    "provenance": "Synthetic evaluation data; invented organizations, policies and measurements. No customer information. Not medical, legal or financial guidance.",
+    "documents": [
+      {
+        "id": "metrics",
+        "title": "Quarterly service metrics",
+        "format": "csv",
+        "text": "Quarter,Requests,Errors,Region\n2026-Q1,12000,24,North\n2026-Q2,15000,15,North\n2026-Q2,9000,27,South"
+      },
+      {
+        "id": "definitions",
+        "title": "Metric definitions",
+        "format": "txt",
+        "text": "Quarterly error rate is errors divided by requests, multiplied by 100. Regional data must be compared for the same quarter. Request totals count accepted API requests, including successful retries as separate requests."
+      }
+    ],
+    "cases": [
+      {
+        "id": "count",
+        "question": "How many requests did the North region process in 2026-Q2?",
+        "kind": "fact",
+        "facts": [
+          [
+            "15000",
+            "15,000"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "metrics",
+            "quote": "2026-Q2,15000,15,North"
+          }
+        ]
+      },
+      {
+        "id": "rate",
+        "question": "Calculate the North region's 2026-Q2 error rate using the metric definition.",
+        "kind": "multi-hop",
+        "facts": [
+          [
+            "0.1%",
+            "0.10%",
+            "0.1 percent"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "metrics",
+            "quote": "2026-Q2,15000,15,North"
+          },
+          {
+            "document": "definitions",
+            "quote": "Quarterly error rate is errors divided by requests, multiplied by 100."
+          }
+        ]
+      }
+    ]
+  }
+]

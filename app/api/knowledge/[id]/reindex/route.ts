@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireTenant } from "@/lib/auth";
+import { requireKnowledgeOwner } from "@/lib/auth-context";
 import { apiError, requireSameOrigin } from "@/lib/api";
 import { loadDocument, reindexDocument } from "@/lib/rag/ingest";
 export const runtime = "nodejs";
@@ -12,6 +13,7 @@ export async function POST(
   try {
     requireSameOrigin(request);
     const context = await requireTenant();
+    requireKnowledgeOwner(context);
     const document = await loadDocument(
       context,
       z.uuid().parse((await params).id),

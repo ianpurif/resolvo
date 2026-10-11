@@ -1,6 +1,8 @@
 "use client";
 import { useState, useRef, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { friendlyError } from "@/lib/client-errors";
 import {
   Upload,
   RefreshCw,
@@ -24,15 +26,23 @@ import type { DataSource, KnowledgeDocument } from "@/types";
 export function KnowledgeManager({
   documents,
   sources,
+  canManage = true,
 }: {
   documents: KnowledgeDocument[];
   sources: DataSource[];
+  canManage?: boolean;
 }) {
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
   const [kind, setKind] = useState<DataSource["kind"]>("file");
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState("");
+  function setNotice(
+    message: string,
+    kind: "success" | "error" | "warning" = "error",
+  ) {
+    if (message) toast[kind](message, { id: "knowledge-notice" });
+    else toast.dismiss("knowledge-notice");
+  }
   const [editing, setEditing] = useState<KnowledgeDocument | null>(null);
   const [deleting, setDeleting] = useState<KnowledgeDocument | null>(null);
   const [text, setText] = useState("");
@@ -42,6 +52,7 @@ export function KnowledgeManager({
   const advancing = useRef(false);
   const [recoveryDelay, setRecoveryDelay] = useState(0);
   useEffect(() => {
+    if (!canManage) return;
     const pending = documents
       .filter(
         (document) =>
@@ -71,15 +82,15 @@ export function KnowledgeManager({
             throw new Error(data.error ?? "Could not continue indexing.");
           setRecoveryDelay(0);
           if (data.document.status === "ready" && !data.document.error_message)
-            setNotice(data.document.name + " is indexed and ready.");
+            setNotice(data.document.name + " is indexed and ready.", "success");
           else if (data.document.error_message)
             setNotice(data.document.error_message);
         } catch (error) {
           setRecoveryDelay(30_000);
           setNotice(
-            (error instanceof Error
-              ? error.message
-              : "Connection interrupted.") + " Saved progress will be retried.",
+            friendlyError(error, "Connection interrupted.") +
+              " Saved progress will be retried.",
+            "warning",
           );
         } finally {
           advancing.current = false;
@@ -89,7 +100,7 @@ export function KnowledgeManager({
       Math.max(1000, recoveryDelay, next - Date.now()),
     );
     return () => window.clearTimeout(timer);
-  }, [documents, router, recoveryDelay]);
+  }, [documents, router, recoveryDelay, canManage]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -129,6 +140,7 @@ export function KnowledgeManager({
           ? data.document.name +
               " is saved. Indexing will continue automatically here."
           : data.document.name + " is indexed and ready.",
+        "success",
       );
       saveRequest.current = null;
       setEditing(null);
@@ -137,7 +149,12 @@ export function KnowledgeManager({
       setName("");
       form.current?.reset();
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Indexing failed.");
+      setNotice(
+        friendlyError(
+          error,
+          "Could not save knowledge. Check your connection and try again.",
+        ),
+      );
     } finally {
       setBusy(false);
       router.refresh();
@@ -158,9 +175,15 @@ export function KnowledgeManager({
           ? document.name + " is continuing from saved indexing progress."
           : (data.document.error_message ??
               document.name + " has been re-indexed."),
+        data.document.error_message ? "warning" : "success",
       );
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Indexing failed.");
+      setNotice(
+        friendlyError(
+          error,
+          "Could not resume indexing. Check your connection and try again.",
+        ),
+      );
     } finally {
       setBusy(false);
       router.refresh();
@@ -184,7 +207,10 @@ export function KnowledgeManager({
         setText(await response.text());
       } catch (error) {
         setNotice(
-          error instanceof Error ? error.message : "Could not load knowledge.",
+          friendlyError(
+            error,
+            "Could not load knowledge. Check your connection and try again.",
+          ),
         );
       } finally {
         setBusy(false);
@@ -201,18 +227,23 @@ export function KnowledgeManager({
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      setNotice("Source, document and indexed chunks deleted.");
+      setNotice("Knowledge source deleted.", "success");
+      setDeleting(null);
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Delete failed.");
+      setNotice(
+        friendlyError(
+          error,
+          "Could not delete this source. Check your connection and try again.",
+        ),
+      );
     } finally {
       setBusy(false);
-      setDeleting(null);
       router.refresh();
     }
   }
   return (
     <>
-      <form
+      {canManage ? <form
         ref={form}
         onSubmit={submit}
         onChange={() => {
@@ -240,7 +271,7 @@ export function KnowledgeManager({
             </button>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {(["file", "website", "manual"] as const).map((item) => (
             <Button
               key={item}
@@ -248,7 +279,11 @@ export function KnowledgeManager({
               size="sm"
               variant={kind === item ? "default" : "outline"}
               disabled={busy || Boolean(editing)}
-              onClick={() => setKind(item)}
+              aria-pressed={kind === item}
+              onClick={() => {
+                setKind(item);
+                saveRequest.current = null;
+              }}
             >
               {item === "file"
                 ? "Upload document"
@@ -262,14 +297,16 @@ export function KnowledgeManager({
           <label className="block rounded-xl border border-dashed bg-[#fbfcf9] p-6 text-sm">
             <Upload className="mb-3 size-5 text-primary" />
             <input
+              key="file"
               name="file"
               type="file"
-              accept=".pdf,.docx,.txt,.md"
+              accept=".pdf,.docx,.txt,.md,.csv,.tsv,.json"
               required
               disabled={busy}
               onChange={(event) => {
                 const file = event.currentTarget.files?.[0];
                 event.currentTarget.setCustomValidity("");
+                saveRequest.current = null;
                 setNotice("");
                 if (!file) return;
                 try {
@@ -286,17 +323,21 @@ export function KnowledgeManager({
               className="w-full text-xs"
             />
             <span className="mt-3 block text-xs text-muted-foreground">
-              PDF, DOCX, TXT or Markdown · Up to 4 MB
+              PDF, DOCX, TXT, Markdown, CSV, TSV or JSON · Up to 4 MB
             </span>
           </label>
         ) : kind === "website" ? (
           <label className="block text-xs">
             Public web page
             <input
+              key="website"
               type="url"
               required
               value={url}
-              onChange={(event) => setUrl(event.target.value)}
+              onChange={(event) => {
+                setUrl(event.target.value);
+                saveRequest.current = null;
+              }}
               maxLength={2048}
               disabled={busy}
               className="mt-2 w-full rounded-lg border p-3 text-sm"
@@ -316,7 +357,10 @@ export function KnowledgeManager({
                 minLength={1}
                 maxLength={160}
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  saveRequest.current = null;
+                }}
                 disabled={busy}
                 className="mt-2 w-full rounded-lg border p-3 text-sm"
               />
@@ -329,7 +373,10 @@ export function KnowledgeManager({
                 maxLength={250000}
                 rows={8}
                 value={text}
-                onChange={(event) => setText(event.target.value)}
+                onChange={(event) => {
+                  setText(event.target.value);
+                  saveRequest.current = null;
+                }}
                 disabled={busy}
                 className="mt-2 w-full rounded-lg border p-3 text-sm"
               />
@@ -338,8 +385,7 @@ export function KnowledgeManager({
         )}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[11px] text-muted-foreground">
-            Private to your company. Updates replace the previous index
-            atomically.
+            Only members of your company can access these sources.
           </p>
           <Button disabled={busy}>
             {busy ? (
@@ -352,28 +398,21 @@ export function KnowledgeManager({
             )}
           </Button>
         </div>
-      </form>
+      </form> : <p className="mb-6 text-sm text-muted-foreground">You can read company knowledge. Workspace owners manage sources and indexing.</p>}
       {documents.some((document) => document.status === "processing") && (
         <p
           className="mb-5 text-xs leading-6 text-muted-foreground"
           role="status"
         >
-          Indexing continues automatically while this page is open. Progress is
-          saved after each batch. If you leave, reopen Company knowledge or use
-          Re-index to resume.
-        </p>
-      )}
-      {notice && (
-        <p
-          role="status"
-          className="mb-5 rounded-lg border bg-white p-4 text-xs leading-6"
-        >
-          {notice}
+          Keep this page open while indexing. Progress is saved if you leave.
         </p>
       )}
       <section className="overflow-hidden rounded-xl border bg-white">
-        <h2 className="border-b p-5 text-xs font-semibold">
-          Connected documents · {documents.length} shown
+        <h2 className="border-b p-5 text-sm font-semibold">
+          Connected sources{" "}
+          <span className="ml-2 text-xs font-normal text-muted-foreground">
+            {documents.length}
+          </span>
         </h2>
         {!documents.length ? (
           <EmptyState
@@ -391,9 +430,11 @@ export function KnowledgeManager({
                   key={document.id}
                   className="flex flex-wrap items-center justify-between gap-4 p-5"
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{document.name}</p>
-                    <p className="mt-2 text-[11px] text-muted-foreground">
+                  <div className="min-w-0 basis-full sm:flex-1 sm:basis-auto">
+                    <p className="text-sm font-medium break-words">
+                      {document.name}
+                    </p>
+                    <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
                       {source?.kind} · {document.chunk_count} chunks ·{" "}
                       {formatDate(document.updated_at, true)} UTC
                     </p>
@@ -424,6 +465,9 @@ export function KnowledgeManager({
                               : ""}
                           </p>
                           <progress
+                            aria-label={
+                              "Indexing progress for " + document.name
+                            }
                             className="h-2 w-full max-w-xs"
                             value={document.index_completed ?? 0}
                             max={document.index_total}
@@ -437,7 +481,7 @@ export function KnowledgeManager({
                       size="icon"
                       variant="ghost"
                       aria-label={"Edit " + document.name}
-                      disabled={busy || document.status === "processing"}
+                      disabled={!canManage || busy || document.status === "processing"}
                       onClick={() => void edit(document)}
                     >
                       <Pencil />
@@ -446,7 +490,7 @@ export function KnowledgeManager({
                       size="icon"
                       variant="ghost"
                       aria-label={"Re-index " + document.name}
-                      disabled={busy}
+                      disabled={!canManage || busy}
                       onClick={() => void reindex(document)}
                     >
                       <RefreshCw />
@@ -463,7 +507,7 @@ export function KnowledgeManager({
                       size="icon"
                       variant="ghost"
                       aria-label={"Delete " + document.name}
-                      disabled={busy}
+                      disabled={!canManage || busy}
                       onClick={() => setDeleting(document)}
                     >
                       <Trash2 />
@@ -487,13 +531,22 @@ export function KnowledgeManager({
             {deleting?.name} and its indexed knowledge will be removed. Saved
             conversation excerpts remain historical records.
           </DialogDescription>
-          <Button
-            variant="destructive"
-            disabled={busy}
-            onClick={() => void remove()}
-          >
-            Delete source
-          </Button>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() => setDeleting(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={busy}
+              onClick={() => void remove()}
+            >
+              {busy ? "Deleting…" : "Delete source"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>

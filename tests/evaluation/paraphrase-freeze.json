@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "frozenAt": "2026-10-11T07:58:48.375Z",
+  "purpose": "Equivalent-wording verification after production implementation was fixed; sources and original keys are known development data. No prompt or ranking tuning.",
+  "hashes": {
+    "paraphrase.json": "7350867da817cf6b3bddc74edcb6158248be83035e1e68c7b9dada99c1353d22",
+    "development.json": "d908543c342e241378d546e1ef8462746d9a0894caf0d324258f76315f3b8396",
+    "tests/the_next_level_novella.txt": "5bf23267b0ef4d4302088109c2982eba41cb6e1a76dc4252b537e30868b1488b"
+  },
+  "pairs": [
+    {
+      "corpus": "paraphrases-engineering",
+      "original": "duplicate-original",
+      "paraphrase": "duplicate-paraphrase"
+    },
+    {
+      "corpus": "paraphrases-engineering",
+      "original": "retry-original",
+      "paraphrase": "retry-paraphrase"
+    },
+    {
+      "corpus": "paraphrases-operations",
+      "original": "approval-original",
+      "paraphrase": "approval-paraphrase"
+    },
+    {
+      "corpus": "paraphrases-operations",
+      "original": "expense-original",
+      "paraphrase": "expense-paraphrase"
+    },
+    {
+      "corpus": "paraphrases-finance",
+      "original": "count-original",
+      "paraphrase": "count-paraphrase"
+    },
+    {
+      "corpus": "paraphrases-finance",
+      "original": "rate-original",
+      "paraphrase": "rate-paraphrase"
+    }
+  ]
+}

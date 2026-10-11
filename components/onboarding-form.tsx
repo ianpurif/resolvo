@@ -1,6 +1,8 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { friendlyError } from "@/lib/client-errors";
 import { Button } from "@/components/ui/button";
 export function OnboardingForm() {
   const router = useRouter();
@@ -22,11 +24,15 @@ export function OnboardingForm() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
+      toast.success("Your workspace is ready");
       router.replace("/dashboard");
       router.refresh();
     } catch (error) {
+      toast.error(
+        friendlyError(error, "Could not create your workspace. Check your connection and try again."),
+      );
       setError(
-        error instanceof Error ? error.message : "Workspace creation failed.",
+        friendlyError(error, "Could not create your workspace. Check your connection and try again."),
       );
       setBusy(false);
     }

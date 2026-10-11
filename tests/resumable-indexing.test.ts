@@ -26,6 +26,8 @@ async function database() {
     "202610050001_voyage_embeddings.sql",
     "202610050002_tenant_workspaces.sql",
     "202610090001_resumable_indexing.sql",
+    "202610110001_personal_conversations.sql",
+    "202610110002_grounded_hybrid_retrieval.sql",
   ])
     await db.exec(await readFile(`supabase/migrations/${file}`, "utf8"));
   return db;

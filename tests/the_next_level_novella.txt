@@ -1,0 +1,173 @@
+THE NEXT LEVEL
+
+CHAPTER ONE — THE LIST
+
+The first message arrived on a rainy Monday at 6:12 in the morning. Mira Santos, a product engineer in Quezon Province, was halfway through making coffee when her laptop chimed. The subject line said: Players unable to see their opportunities. She read it twice before opening the message, because there were certain words that meant an ordinary day was about to become something else. Unable was one of them. Opportunities was another.
+
+The message came from Leila Morgan, operations manager at Next Level Pathways, a small international company that helped young football players organize their careers. The company did not promise contracts or trials. It helped players build reliable profiles, understand their development needs, and find legitimate opportunities shared by vetted partners. Coaches could provide evaluations. Scouts could review profiles only when players agreed. Club partners could publish programs and receive applications. The platform's job was to bring order to a confusing process without pretending that software could replace talent, hard work, or judgment.
+
+Mira had joined three weeks earlier to rebuild the company's internal portal. The old workflow lived across spreadsheets, messages, and document folders. A player might send a highlight video to one coordinator, a passport copy to another, and a corrected birth date through a third channel. A partner might ask whether a player had consented to share a medical note, and nobody could answer without searching old conversations. The team knew the chaos was dangerous. The portal was supposed to make every record traceable and every permission understandable.
+
+The trouble that morning was deceptively small. Several players could see an opportunity announcement but could not open its application form. Meanwhile, one club coordinator reported seeing an application that belonged to a different club. Mira knew those symptoms might be related, but she resisted the temptation to declare a single cause before looking. She opened the incident board in ClickUp, created a card named Monday access investigation, and wrote three lines: Confirm the reports. Protect the records. Report what we know, not what we guess.
+
+At 7:00, she joined a call with Leila and Daniel Reyes, the player-success lead. Daniel had the tired expression of somebody who had spent the weekend apologizing for errors he could not personally fix. He explained that the affected players were in a scholarship pathway managed by a partner academy in Valencia. The club coordinator's report came from an entirely different program in Bristol. The two reports had happened within an hour of one another, but that was not evidence they shared a cause.
+
+"I can tell people we're fixing it," Daniel said, "but I need to know whether their information is safe."
+
+"First I need to check what the system actually returned," Mira replied. "An unexpected page is not the same as exposed data. But we should treat it seriously until we know."
+
+Leila nodded. She asked Mira to send a short update before noon, even if the investigation was incomplete. At Next Level Pathways, updates were considered part of engineering, not paperwork after engineering. Nobody expected certainty in the first hour. They expected someone to own the next step.
+
+CHAPTER TWO — THREE KINDS OF DOORS
+
+The new portal had three kinds of doors, though the interface made them look like one. Players logged in to see their own profiles, development tasks, and opportunities. Staff members reviewed consent, eligibility, and support requests. Partner organizations managed programs and applications associated with their organizations. Each door opened only after two questions were answered: Who are you? And what are you allowed to do here?
+
+During an onboarding meeting, Mira had explained authentication as the key to the building and authorization as the permission to enter a room. The metaphor sounded simple, but the implementation was not. A user could belong to more than one organization. A scout might work for a club and volunteer with an academy. A player might apply to two programs while consenting to share different details with each. A staff member might help manage an application without being permitted to view sensitive identity documents.
+
+Next Level Pathways used a fictional permissions model with four main roles: player, staff, partner viewer, and partner manager. A player controlled their profile and sharing choices. Staff could perform approved support tasks but did not automatically gain unlimited access. Partner viewers could read authorized records. Partner managers could manage their own programs, export approved summaries, and invite colleagues. Certain sensitive actions required an additional permission beyond the role itself. Even a manager could not export identity documents merely because the export button appeared in a different part of the interface.
+
+Mira reproduced the first issue using a test player account. The announcement opened correctly, but the application form loaded a blank state. Browser logs showed an access-denied response. The form belonged to the academy, and the opportunity was public to eligible players, but the backend checked for a partner membership instead of checking the player's eligibility to apply. The rule was too strict, not too permissive. Mira wrote it down as Incident A, a broken application flow.
+
+Then she investigated the Bristol report. This time the problem went in the other direction. A partner viewer copied a document identifier from an old email and changed the identifier inside a request. The server returned an application summary associated with another partner. Mira felt the familiar coldness of recognizing a real access-control flaw. The page had hidden the record, but the API had queried the database by document ID alone. It had not included the authenticated organization's scope.
+
+She immediately told Leila and the security contact, Omar Haddad, what she had verified. She described the issue in plain language: a partner account could request an application summary outside its organization if it already knew a valid identifier. She did not claim a mass breach. She also did not call it harmless. Omar began checking access logs while Mira prepared a fix. Daniel paused outgoing partner exports until the scope could be confirmed.
+
+They made one decision that would shape the rest of the week. The UI was not allowed to be the security boundary. Every server operation had to check identity, organizational membership, and the specific permission needed for that operation. If the API and the page disagreed, the API's safer rule had to win.
+
+CHAPTER THREE — A PATCH IS NOT A PROMISE
+
+By lunchtime, Mira had a candidate fix, but she refused to call it finished. She changed the document query so it always included the organization derived from the authenticated session. The browser was never trusted to submit an organization identifier as proof of ownership. She added a database policy for the affected table, then tested the route both with ordinary application credentials and with the elevated backend pathway used by internal jobs. The elevated pathway needed its own explicit checks because database row-level policies could not protect a route that bypassed them.
+
+The test matrix grew quickly. A partner viewer had to read its organization's approved summary but not export it. A partner manager could export the approved summary but could not read another organization's application. A staff coordinator could see a support record when assigned to it but could not open unrelated identity files. A player could see their own submissions and withdraw consent from future sharing. An anonymous request could see public program information but no private applications.
+
+Omar joined Mira for a review. "What happens when the record doesn't belong to the organization?" he asked.
+
+"We return not found for that lookup," Mira said. "No record details in the response. We log the rejection internally without leaking the document contents."
+
+"And the old links?"
+
+"They're still valid only for authorized people. Changing the ID won't give access."
+
+They tested a bulk export route, two nested comment endpoints, and a download link generated by object storage. The download link was the most awkward part. A URL could be short-lived and still unsafe if it was issued to the wrong person in the first place. Mira moved the permission check ahead of URL generation and made the signed link expire quickly. The storage bucket itself remained private. They added a test that specifically asked an unauthorized partner to request a link and expected a denial before any URL was created.
+
+That afternoon, Leila asked whether they should tell every customer about a breach. Omar said the investigation was not complete. Logs showed several cross-organization requests, but they did not yet establish whether the requests were test activity, accidental links, or deliberate access. Their legal adviser would need to assess notification requirements in the relevant jurisdictions. The team could not use lack of evidence as proof that nothing happened.
+
+Mira wrote the internal status update: We confirmed an authorization weakness affecting application summaries. We disabled risky exports, fixed the scoped lookup, and are checking related routes. We are reviewing logs to determine whether unauthorized access occurred. Next update at 17:00. She included an owner for each item and avoided writing the words fully resolved.
+
+At five, the issue was contained, the regression tests passed, and the logs were still under review. The customer-support team had a careful holding statement ready. It said the company was investigating a security issue, would contact affected customers if necessary, and would provide verified details rather than guesses. That was not a satisfying ending, but it was the truthful one.
+
+CHAPTER FOUR — THE PLAYER WHO DISAPPEARED
+
+On Wednesday a player named Theo Alvarez called the support desk. His profile had disappeared from a club's shortlist, even though he had completed the required development tasks and received a coach's recommendation. Theo was seventeen, which made the team's treatment of his information especially important. Daniel explained that Next Level Pathways handled younger players conservatively and required appropriate guardian involvement where relevant. Every sharing workflow needed to respect those checks. He promised Theo they would investigate without promising a place on any team.
+
+The shortlist problem turned out to be a synchronization issue. The old system copied player updates into a partner-facing snapshot. When Theo corrected his preferred playing position from winger to attacking midfielder, the main profile updated, but the partner snapshot did not. A background job had failed after receiving a temporary provider error. The application displayed the last successful snapshot without warning staff that it might be stale.
+
+Mira traced the event through the processing queue. The job had no reliable checkpoint, so a partial failure could leave several related updates unfinished. Retrying the whole batch sometimes produced duplicates. Increasing the timeout would not solve a request limit or a network interruption. She divided the work into smaller chunks, gave each update an idempotency key, and stored progress after completed steps. When a job restarted, it checked what had already succeeded and continued from the last safe point.
+
+She built a test with one hundred synthetic player updates. The first run deliberately failed at update sixty-three. After restart, the worker continued from the recorded checkpoint and did not create duplicate shortlist records. She ran the test again with temporary network errors and provider throttling. Those runs did not establish a production failure-rate percentage, but they did demonstrate the desired recovery behavior under controlled conditions. Mira kept that distinction in her report.
+
+Daniel reviewed Theo's consent record before asking the partner to refresh the shortlist. The new snapshot correctly showed the updated position. The club still had to make its own selection decisions, and Next Level Pathways had no power to guarantee Theo an invitation. But at least the data reaching the decision-makers matched what Theo had submitted.
+
+That night, Mira thought about why reliability mattered. Engineers often described a successful job as a green badge on a dashboard. For Theo, a green badge was invisible. What mattered was that an accurate profile arrived at the right place with the right permission, at the right time. A system could be technically operational and still fail the person who depended on it.
+
+CHAPTER FIVE — THE THURSDAY DEMO
+
+The team planned a partner demo for Thursday morning. Nadia Brooks, who managed partnerships, wanted to show how a club could review applicants without opening spreadsheets or sending confidential files through chat. She asked Mira to make the dashboard look impressive. Mira asked what problem the demonstration needed to prove was solved. Nadia paused, then answered: A partner should be able to find the right applicants, understand why they qualify, and know which information the player has agreed to share.
+
+That became the demonstration script. They created a fictional partner called Eastbridge Athletic and five fictional applicant profiles. Each applicant had a playing position, availability, development notes, and clearly marked sharing permissions. The demo did not include actual customer documents. The team used synthetic names and invented footage descriptions so there was no risk of exposing private material on a shared screen.
+
+An hour before the demo, a filter stopped working. Selecting defensive midfielders showed all midfielders instead. Mira checked the latest code change and found that a new mapping had grouped three different positions under one broad category. She had ten minutes before Nadia needed to rehearse. Rather than attempt a risky rewrite of the search service, Mira restored the last known-good mapping and tested the exact demonstration path. She filed the broader taxonomy improvement as a separate task. The demo needed a safe working filter, not a perfect position ontology built under panic.
+
+During the call, Nadia walked the partner through the portal. She showed how approved applications appeared, how staff notes remained separate from partner-visible notes, and how the export control disappeared for partner viewers. Mira quietly checked server logs while Nadia demonstrated a rejected export request. A hidden button would have been easy to fake; the server denying an unauthorized action was evidence.
+
+The partner's first question was not about the interface. "If my scout leaves the club, what happens to their access?" Mira explained that a partner manager could remove the user from the organization, and the next protected request would check current membership. Existing sessions were not a permanent permission grant. They also planned controls for terminating active sessions when required. The partner asked whether the portal could integrate with its existing CRM. Nadia said integrations would be reviewed case by case, with data scope and consent defined before development.
+
+After the call, Nadia sent a message: This was the first demo where the security explanation made the product feel simpler rather than more complicated. Mira saved the sentence, not as a performance metric, but as feedback. They still needed real usage data and customer testing. One good meeting was a promising signal, not proof of product-market fit.
+
+CHAPTER SIX — A QUESTION ABOUT NUMBERS
+
+Friday began with a disagreement about a metric. Elias Ford, the marketing lead, wanted a dashboard card that said ninety-two percent of players were progressing toward their next opportunity. Daniel asked where the number came from. Elias explained that it was calculated from a spreadsheet in which most active players had completed at least one task. Daniel said task completion and career progress were not the same thing. Mira agreed.
+
+The company had spent months building a more careful definition of outcomes. A development task could be completed. A profile could be verified. An application could be submitted. A partner could open a profile. A player could receive an invitation to an assessment or trial. Those were observable events. Whether the player had progressed toward a career goal was a broader claim and could not honestly be reduced to any one of them.
+
+They gathered in a short meeting and drew four columns on a whiteboard: activity, completion, opportunity, and outcome. Activity meant something had been started. Completion meant a defined workflow was finished. Opportunity meant a verified option had been presented or applied for. Outcome meant an external result, such as a confirmed invitation, that the company could document. The team agreed not to present early-stage activities as completed career outcomes.
+
+Mira proposed a simpler dashboard. It would show profile completion, eligible applications submitted, and verified invitations, each with its own definition. It would not claim that a user was guaranteed a contract, scholarship, or professional career. Each number had to be traceable to a specific record, and users should be able to understand what counted. Elias worried the dashboard would look less exciting. Nadia said it would look more trustworthy.
+
+They also decided which information should never appear in a marketing export. Medical notes, identity documents, guardian contact details, and private staff assessments had no place in campaign dashboards. Aggregated counts could be useful, but small groups had to be handled carefully so individual people could not be identified from the numbers. Mira wrote the requirement as a set of allowed fields rather than a vague instruction to anonymize everything.
+
+At the end of the meeting, Elias changed the card title from Players progressing to Completed development tasks this month. The number became smaller, but its meaning became stronger. Daniel thanked him for accepting the change. Elias shrugged. "I would rather explain a real number than defend a big one I don't understand."
+
+That evening, Mira added a note to the engineering handbook: A metric is a promise about what the data means. If you cannot explain how it was counted, do not put it in a headline.
+
+CHAPTER SEVEN — THE FILE NO ONE SHOULD OPEN
+
+The next challenge came from a folder named Partner Uploads. Staff sometimes received documents that were meant for one organization but had been uploaded under a different program. The portal kept a record of who uploaded each file, why it was requested, and which workflow needed it. Yet old imports still used filenames as clues to ownership. Mira discovered a document named final_profile_NEW2.pdf whose name told her almost nothing.
+
+She met with Omar to design a migration. Each file would need an explicit owner, category, permitted audience, retention rule, and link to the workflow that justified its collection. An unidentified file could not become broadly visible just because the system lacked metadata. Their safe default was quarantine: staff with a specific review permission could investigate it, but partners and players would not see it until the ownership was established.
+
+The migration had to be reversible. Mira wrote a dry-run command that produced a report without moving or exposing documents. It listed how many files had clear metadata, how many needed manual review, and which records referenced missing files. She did not paste customer data into an outside AI tool to classify it. Instead, the script relied on existing structured fields and produced opaque identifiers for the reviewers. Where human decisions were needed, the portal created restricted tasks.
+
+A week later, Daniel found a file with a valid owner but outdated sharing permission. The player had withdrawn consent after applying to a program. The original permission had been captured correctly, but a downstream partner snapshot had not removed the document link. Mira fixed the withdrawal workflow so it invalidated future access and queued an update for derived views. She also added a test for the uncomfortable case: a link created while consent was valid should not remain usable after consent was withdrawn, except where a distinct legal retention obligation required a tightly restricted internal copy.
+
+Nobody liked working on document retention. It had none of the excitement of a redesigned landing page or a new recommendation feature. But it was where the company proved whether its promise of player control meant anything. It was easy to ask a player to trust a platform. It was harder to build systems that deserved that trust.
+
+On Friday, Omar signed off on the migration plan. He did not certify that the whole company was compliant with every privacy law. That would require formal legal review, policies, contracts, and audits beyond Mira's code. He simply confirmed the engineering controls they had tested and listed the work still open. Mira appreciated the precision. It meant the report could survive somebody asking difficult questions.
+
+CHAPTER EIGHT — THE PARTNER MEETING
+
+When the new portal reached its first pilot partners, the team learned that every organization had a different definition of a useful dashboard. Eastbridge Athletic wanted quick filters for age group and position. A youth academy wanted guardian consent clearly displayed. A community club cared about whether applications included transport availability. A development coach wanted to see tasks and feedback over time. None of those requests was unreasonable, but building a unique product for each partner would make the portal impossible to maintain.
+
+Leila organized a workshop. She asked every partner to describe the decision they needed to make rather than the screen they wanted to see. Mira mapped those decisions to shared workflows: review eligibility, inspect approved information, communicate next steps, and record an outcome. The differences could often be handled as configuration, but only within a permission system that stayed consistent across organizations.
+
+A partner manager asked for an unrestricted CSV export of every applicant field. Mira explained that the system could provide an approved summary, but not a complete data dump. The manager said the restriction would slow their work. Mira did not argue about whether security was important in the abstract. She asked which fields the team actually needed to make its decision. The partner named position, availability, consent status, and contact method. The approved export covered those fields without exposing identity documents or private coaching notes.
+
+A different partner asked whether they could make notes about players. The team agreed, but the notes required clear ownership. A private partner note belonged to that partner organization; a player-facing feedback note required a separate sharing action. Staff needed to understand the difference so they did not assume every note was safe to forward. Mira proposed labels that described the audience in ordinary words rather than internal database permission names.
+
+The workshop ended with fewer feature requests than it began with. That was not because the company had said no to everyone. It was because several requests had described the same underlying job in different language. Mira wrote the first pilot roadmap with three priorities: reliable applications, understandable permissions, and traceable partner decisions. Fancy charts came later. Nobody asked her to make the software impressive. They asked her to make it dependable.
+
+As the partners left the video call, Leila told Mira that technical planning was often a listening exercise. "If we implement every requested button," she said, "we might still miss the problem people were trying to solve." Mira wrote that sentence in her notebook, underlined it once, and went back to the backlog.
+
+CHAPTER NINE — THE NIGHT SHIFT THAT NEVER HAPPENED
+
+Next Level Pathways worked across several time zones, but the company tried to avoid making remote work feel like permanent emergency duty. Staff in the Philippines handled daytime engineering and support. Colleagues elsewhere took later handoffs. A serious incident could require unusual hours, but ordinary work was organized through written updates and clear ownership. Leila insisted that a good handoff was better than a heroic midnight message nobody could understand.
+
+On a Wednesday afternoon, Mira received a request marked urgent: add a new scout comparison screen before Friday. The proposed feature needed to compare several players, display partner-approved information, and allow notes. It sounded like two days of work until Mira listed the unknowns. Who could compare players across different programs? What information had each player agreed to share? Did a partner need a single shortlist or saved comparison sessions? Could notes be exported? Every unanswered question was a potential authorization bug or a future redesign.
+
+Mira sent a short update in ClickUp. She described the known scope, the key unknowns, and a smaller demonstration that could be completed safely: compare approved public profile fields for applicants inside one partner organization, without exports or saved private notes. She asked Nadia and Omar to confirm that boundary. They agreed. The larger cross-program use case would need its own design review.
+
+By Thursday evening the smaller feature worked in the pilot environment. Mira had tested ordinary and unauthorized accounts, keyboard navigation, empty lists, slow responses, and the case where a player withdrew sharing permission while a comparison page was open. The last case mattered. A page that loaded earlier should not become a permanent copy of information after the permission changed. The interface had to refresh or deny access when the current policy required it.
+
+She posted a handoff before leaving. It said what shipped, what did not ship, what had been tested, and which questions remained unanswered. The message contained no private customer records. Leila acknowledged it from another time zone without requesting a call. On Friday morning, Nadia demonstrated the narrow feature and clearly labeled the unbuilt parts as future work.
+
+The team had not finished everything. They had kept a promise they could defend. Mira decided that was a better definition of moving fast than making ten commitments and hoping none of them would be examined closely.
+
+CHAPTER TEN — THE OPENING
+
+Autumn arrived with the first large group of pilot users. The dashboard showed completed applications, support requests, and development tasks. It did not pretend to predict anyone's future. Each opportunity card listed its source, eligibility conditions, application deadline, and the partner responsible for the program. Every record carried a history of meaningful changes, and the team could answer who had permission to view it at a given moment.
+
+One morning, Theo Alvarez sent Daniel a message. A partner academy had invited him to an assessment session. The invitation was not a contract, and Daniel made sure nobody described it that way. Theo had trained for months, improved his fitness, updated his video, and worked with coaches. The platform's contribution was narrower but still valuable: it had kept his information accurate and helped him apply to an opportunity he could actually pursue.
+
+Daniel forwarded the message to the team after removing unnecessary personal details. Nadia celebrated the invitation while reminding everyone not to turn one story into a success percentage. Omar checked that the related consent trail was complete. Leila asked what had helped Theo and what had caused him frustration. Mira opened the incident history and saw the old synchronization problem that had once hidden his corrected position. It felt strange to look at a resolved bug and realize it had belonged to someone's real week.
+
+At a company meeting, Leila summarized the pilot. They had learned that permissions needed to be visible and understandable, not merely enforced in hidden code. They had learned that reliable background jobs mattered because people relied on current records. They had learned that a metric without a careful definition could mislead the people it was supposed to help. And they had learned that a short honest update often earned more trust than an elaborate promise.
+
+There were still problems. Search relevance needed improvement. Some partners wanted integrations with GoHighLevel and other services. Mobile connections were slow for users in certain areas. The support team wanted clearer internal notes. Legal advisers had an ongoing list of retention and consent questions. The pilot did not make the company finished. It made the next set of questions more informed.
+
+After the meeting, Mira stayed on the call with Daniel. "Do you ever feel like we're just building forms?" she asked.
+
+Daniel smiled. "A form can be the thing between someone and an opportunity," he said. "But only if it works, and only if they can trust it."
+
+Mira closed her laptop a few minutes later. Rain had started again outside her window, soft against the roof. The next release would bring new bugs, new feature requests, and new arguments about priorities. She knew that. She also knew what she would do on Monday: ask what mattered, verify what was true, protect what people trusted her with, and ship the smallest useful change that actually worked.
+
+The football world was bigger than any portal. No application could promise the next goal, the next trial, or the next contract. But a well-built system could make sure a player was seen fairly, by the right people, for the right reasons. For now, that was enough to keep building.
+
+EPILOGUE — THE RECORD
+
+Six months later, Mira revisited the first incident board. Some cards had been closed, some had become long-term improvements, and others had been replaced by questions nobody knew to ask when the portal began. She noticed that the original access-control investigation had not been described as a victory. It contained reproduction steps, evidence, mitigation dates, decisions, and a careful list of limits. She was glad. Anyone joining the engineering team could learn what happened without needing to trust somebody's memory.
+
+The company kept a small internal glossary to reduce confusion. An application was a player's submission to one program. An invitation was a partner-confirmed next step, not a guaranteed placement. A partner viewer could inspect permitted summaries but not export them. A partner manager had additional workflow permissions, never automatic access to every document. A completed job meant the expected processing steps had finished; it did not prove every downstream business outcome. These definitions sounded dull until somebody needed them during an incident.
+
+Mira archived the board and opened a new engineering task. It was about making access-denied messages easier to understand. The code change would probably be small. The thinking behind it would not. Somewhere beyond her laptop, a player might be trying to submit an application with only a few minutes left before a deadline. That person deserved an error message that was truthful, useful, and kind.
+
+END OF NOVELLA

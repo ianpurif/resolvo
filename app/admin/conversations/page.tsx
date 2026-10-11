@@ -8,7 +8,7 @@ export default async function ConversationsPage() {
       <PageHeading
         eyebrow="Workspace history"
         title="Conversations"
-        description="Questions and cited answers from your company’s assistant."
+        description="Your saved questions and source-grounded answers."
       />
       <ConversationsList conversations={data.conversations} />
     </>

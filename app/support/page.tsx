@@ -1,24 +1,25 @@
 import { requireWorkspacePage } from "@/lib/auth";
 import { configuration } from "@/lib/config";
 import { SupportChat } from "@/components/chat/support-chat";
-import { checkDatabaseError } from "@/lib/supabase/server";
+import { getPersonalConversations } from "@/lib/supabase/queries";
 export const dynamic = "force-dynamic";
-export default async function SupportPage() {
+export default async function SupportPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ conversation?: string }>;
+}) {
   const context = await requireWorkspacePage();
-  const conversations = await context.db
-    .from("conversations")
-    .select("id,title")
-    .eq("organization_id", context.organization.id)
-    .order("updated_at", { ascending: false })
-    .limit(30);
-  checkDatabaseError(conversations.error, "load conversation history");
+  const history = await getPersonalConversations(context);
+  const { conversation } = await searchParams;
   return (
     <SupportChat
-      key={context.organization.id}
+      key={context.user.id + ":" + context.organization.id}
       ready={configuration().ready}
       organization={context.organization}
       email={context.user.email ?? ""}
-      initialConversations={conversations.data ?? []}
+      initialConversations={history.conversations}
+      initialHasMore={history.hasMore}
+      initialConversationId={conversation}
     />
   );
 }

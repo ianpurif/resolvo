@@ -1,9 +1,33 @@
-import { Command } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-export function Brand({ compact = false, className }: { compact?: boolean; className?: string }) {
-  return <span className={cn("inline-flex items-center gap-2.5", className)}>
-    <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-white"><Command className="size-5" strokeWidth={2.3} /></span>
-    {!compact && <span className="text-xl font-semibold tracking-[-0.045em]">resolvo<span className="text-primary">.</span></span>}
-  </span>;
+export function Brand({
+  compact = false,
+  className,
+}: {
+  compact?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("inline-flex shrink-0 items-center gap-2", className)}>
+      <span
+        className="brand-mark relative inline-block size-9 shrink-0 overflow-hidden"
+        aria-hidden="true"
+      >
+        <Image
+          src="/resolvo-logo.png"
+          alt=""
+          fill
+          sizes="160px"
+          loading="eager"
+          className="scale-[1.85] object-contain"
+        />
+      </span>
+      {!compact && (
+        <span className="text-[23px] font-semibold tracking-[-0.065em]">
+          resolvo<span className="text-primary">.</span>
+        </span>
+      )}
+    </span>
+  );
 }

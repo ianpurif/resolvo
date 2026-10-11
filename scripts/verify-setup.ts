@@ -71,6 +71,21 @@ async function main() {
     },
   );
   report("Anonymous vector RPC denied", [401, 403].includes(deniedRpc.status));
+  const deniedCache = await fetch(config.url + "/rest/v1/rpc/store_query_embedding", {
+    method: "POST", headers: { ...headers, "Content-Type": "application/json" },
+    // Invalid organization and vector also guarantee no mutation on a bad grant.
+    body: JSON.stringify({ p_organization_id: "00000000-0000-0000-0000-000000000000", p_hash: "0".repeat(64), p_embedding: Array(1024).fill(0) }),
+  });
+  report("Anonymous trusted-cache RPC denied", [401, 403].includes(deniedCache.status), deniedCache.status === 404 ? "Apply 202610110003_server_only_query_cache.sql" : undefined);
+  for (const [name, params] of [
+    ["search_knowledge", { p_query_text: "verification", p_query_embedding: null, p_match_count: 1 }],
+    ["knowledge_passage_context", { p_passage_ids: [] }],
+    ["knowledge_overview", { p_document_ids: [], p_count: 1 }],
+  ] as const) {
+    const denied = await fetch(config.url + "/rest/v1/rpc/" + name, { method: "POST", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify(params) });
+    report("Anonymous retrieval RPC denied: " + name, [401, 403].includes(denied.status),
+      denied.status === 404 ? "Apply 202610110002_grounded_hybrid_retrieval.sql" : undefined);
+  }
   const deniedBudget = await fetch(
     config.url + "/rest/v1/rpc/reserve_voyage_request",
     {
@@ -84,6 +99,12 @@ async function main() {
     [401, 403].includes(deniedBudget.status),
   );
   if (service) {
+    const cacheSchema = await fetch(config.url + "/rest/v1/query_embeddings?select=server_verified&limit=0", { headers: { apikey: service, Authorization: "Bearer " + service } });
+    report("Server-verified query-cache schema", cacheSchema.ok, cacheSchema.ok ? undefined : "Apply 202610110003_server_only_query_cache.sql");
+    for (const [table, select] of [["documents", "index_policy_version"], ["document_chunks", "chunk_index,start_offset,end_offset,section,search_tsv"]]) {
+      const inspected = await fetch(config.url + `/rest/v1/${table}?select=${select}&limit=0`, { headers: { apikey: service, Authorization: "Bearer " + service } });
+      report("Passage provenance schema: " + table, inspected.ok, inspected.ok ? undefined : "Apply 202610110002_grounded_hybrid_retrieval.sql");
+    }
     const progress = await fetch(
       config.url +
         "/rest/v1/documents?select=index_total,index_completed,index_next_attempt_at&limit=0",
@@ -118,6 +139,7 @@ async function main() {
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ) === true,
     );
+    report("Structured storage enabled", ["text/csv", "text/tab-separated-values", "application/json"].every((type) => bucket.allowed_mime_types?.includes(type) === true));
   } else
     console.log(
       "SKIP Operational schema and bucket checks: no optional service key.",

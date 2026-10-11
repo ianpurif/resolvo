@@ -12,10 +12,17 @@ export async function GET(request: Request) {
       const { data } = await db.auth.getUser();
       if (data.user?.app_metadata.provider === "google") {
         const context = await findWorkspace({ db, user: data.user });
-        return NextResponse.redirect(
+        const response = NextResponse.redirect(
           origin + (context ? "/dashboard" : "/onboarding"),
           303,
         );
+        response.cookies.set("resolvo-signed-in", "1", {
+          path: "/",
+          maxAge: 30,
+          sameSite: "lax",
+          secure: origin.startsWith("https:"),
+        });
+        return response;
       }
       await db.auth.signOut({ scope: "local" });
     }

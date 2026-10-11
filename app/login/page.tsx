@@ -1,6 +1,10 @@
+import Link from "next/link";
+import { ArrowLeft, LockKeyhole } from "lucide-react";
 import { Brand } from "@/components/brand";
-import { Button } from "@/components/ui/button";
+import { GoogleButton } from "@/components/auth/google-button";
+import { AuthNotice } from "@/components/auth/auth-notice";
 import { configuration } from "@/lib/config";
+
 export const dynamic = "force-dynamic";
 export default async function LoginPage({
   searchParams,
@@ -12,41 +16,50 @@ export default async function LoginPage({
     (name) =>
       !["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "APP_URL"].includes(name),
   );
+  const message = !configured
+    ? "Sign-in is temporarily unavailable. Please try again later."
+    : error === "signout"
+      ? "You’re signed out here. Sign-out on other devices could not be confirmed."
+      : error
+        ? "Sign-in didn’t finish. Please try Google again."
+        : "";
   return (
-    <main className="grid min-h-dvh place-items-center bg-[#f4f6f1] px-5">
-      <section className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
-        <Brand />
-        <h1 className="mt-9 text-3xl font-medium tracking-tight">
-          Your company’s knowledge.
-          <br />
-          One trusted workspace.
+    <main
+      id="main-content"
+      className="auth-page relative flex min-h-dvh flex-col bg-[#f6f8f7] px-6"
+    >
+      <header className="mx-auto flex w-full max-w-7xl items-center justify-between py-7">
+        <Link href="/" aria-label="Resolvo home">
+          <Brand />
+        </Link>
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary"
+        >
+          <ArrowLeft className="size-3.5" />
+          Back to home
+        </Link>
+      </header>
+      <section className="relative mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center pb-24 text-center">
+        <Brand compact className="mx-auto mb-7 [&_.brand-mark]:size-16" />
+        <h1 className="text-[34px] font-semibold tracking-[-0.055em]">
+          Welcome to Resolvo
         </h1>
-        <p className="mt-4 text-sm leading-7 text-muted-foreground">
-          Connect your sources, find grounded answers, and keep your team’s
-          knowledge together.
+        <p className="mt-3 text-sm text-muted-foreground">
+          Your knowledge. A conversation away.
         </p>
-        {(!configured || error) && (
-          <p
-            role="alert"
-            className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"
-          >
-            {!configured
-              ? "Configure Supabase authentication and the application URL before signing in."
-              : error === "signout"
-                ? "Your local session was cleared. The authentication provider could not confirm sign-out on other devices."
-                : "Sign-in could not finish. Check the Google provider and callback settings, then try again."}
-          </p>
-        )}
-        <form action="/auth/google" method="post" className="mt-8">
-          <Button className="w-full" disabled={!configured}>
-            Continue with Google
-          </Button>
-        </form>
-        <p className="mt-5 text-xs leading-6 text-muted-foreground">
-          Private knowledge and conversation history are available only to
-          members of your company workspace.
+        <div className="mt-9">
+          <GoogleButton disabled={!configured} />
+        </div>
+        <AuthNotice message={message} warning={error === "signout"} />
+        <p className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <LockKeyhole className="size-3.5" />A private workspace for your
+          company
         </p>
       </section>
+      <footer className="pb-7 text-center text-[11px] text-muted-foreground">
+        Company knowledge, thoughtfully connected.
+      </footer>
     </main>
   );
 }

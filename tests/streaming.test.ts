@@ -45,12 +45,15 @@ function context(): TenantContext {
 
 test("the actual DeepSeek streaming SDK and LangGraph emit a draft before completion and cite only current-tenant retrieval (mocked transport)", async (t) => {
   const before = process.env.DEEPSEEK_API_KEY,
-    voyageBefore = process.env.VOYAGE_API_KEY;
+    voyageBefore = process.env.VOYAGE_API_KEY,
+    urlBefore = process.env.SUPABASE_URL, serviceBefore = process.env.SUPABASE_SERVICE_ROLE_KEY;
   process.env.DEEPSEEK_API_KEY = "fixture-deepseek";
   process.env.VOYAGE_API_KEY = "fixture-voyage";
+  process.env.SUPABASE_URL = "https://fixture.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "fixture-service";
   const ctx = context(),
     sourceId = randomUUID(),
-    foreignId = randomUUID();
+    passageId = randomUUID(), foreignId = randomUUID();
   const drafts: string[] = [];
   let completed = false,
     models = 0,
@@ -68,6 +71,8 @@ test("the actual DeepSeek streaming SDK and LangGraph emit a draft before comple
       const url = new URL(input instanceof Request ? input.url : input);
       if (url.hostname === "fixture.supabase.co") {
         if (url.pathname === "/rest/v1/query_embeddings") {
+          assert.equal(new Headers(init?.headers).get("apikey"), "fixture-service");
+          assert.equal(url.searchParams.get("server_verified"), "eq.true");
           assert.equal(
             url.searchParams.get("organization_id"),
             "eq." + ctx.organization.id,
@@ -76,21 +81,20 @@ test("the actual DeepSeek streaming SDK and LangGraph emit a draft before comple
             embedding: JSON.stringify([1, ...Array(1023).fill(0)]),
           });
         }
-        assert.ok(url.pathname.endsWith("/match_document_chunks"));
+        if (url.pathname.endsWith("/knowledge_passage_context")) return reply([]);
+        assert.ok(url.pathname.endsWith("/search_knowledge"));
         const body = JSON.parse(String(init?.body));
-        assert.deepEqual(body.filter, { organizationId: ctx.organization.id });
+        if (hasEvidence) assert.equal(body.p_query_text, "reviews project changes");
         return reply(
           hasEvidence
             ? [
                 {
-                  id: randomUUID(),
+                  id: passageId,
                   content: "Department managers review project changes.",
-                  metadata: {
-                    documentId: sourceId,
-                    organizationId: ctx.organization.id,
-                    title: "Project workflow",
-                  },
-                  similarity: 1,
+                  document_id: sourceId, organization_id: ctx.organization.id,
+                  index_revision: randomUUID(), title: "Project workflow", chunk_index: 0,
+                  start_offset: 0, end_offset: 42, section: null,
+                  similarity: 1, lexical_score: 0.5, score: 0.03,
                 },
               ]
             : [],
@@ -121,15 +125,11 @@ test("the actual DeepSeek streaming SDK and LangGraph emit a draft before comple
         );
       const stream = new ReadableStream<Uint8Array>({
         async start(controller) {
-          controller.enqueue(event("Department managers "));
+          controller.enqueue(event(`Department managers review project changes. [[source:${passageId}]]`));
           await gate;
           controller.enqueue(
             event(
-              "review project changes. [[source:" +
-                sourceId +
-                "]] [[source:" +
-                foreignId +
-                "]]",
+              "",
               "stop",
             ),
           );
@@ -149,7 +149,7 @@ test("the actual DeepSeek streaming SDK and LangGraph emit a draft before comple
       randomUUID(),
       (text) => {
         drafts.push(text);
-        if (text === "Department managers ") {
+        if (text === "Department managers review project changes. [1]") {
           assert.equal(completed, false);
           release();
         }
@@ -157,13 +157,13 @@ test("the actual DeepSeek streaming SDK and LangGraph emit a draft before comple
       AbortSignal.timeout(10000),
     );
     completed = true;
-    assert.ok(drafts.includes("Department managers "));
+    assert.ok(drafts.includes("Department managers review project changes. [1]"));
     assert.equal(models, 1);
     assert.deepEqual(
       result.sources.map((source) => source.id),
       [sourceId],
     );
-    assert.equal(result.content, "Department managers review project changes.");
+    assert.equal(result.content, "Department managers review project changes. [1]");
     assert.ok(drafts.every((text) => !text.includes("[[source:")));
     hasEvidence = false;
     const unknown = await runSupportAgent(
@@ -179,13 +179,15 @@ test("the actual DeepSeek streaming SDK and LangGraph emit a draft before comple
       "No generation call can fabricate facts when retrieval returns no evidence",
     );
     assert.deepEqual(unknown.sources, []);
-    assert.match(unknown.content, /don't have relevant information/);
+    assert.match(unknown.content, /couldn't find supporting evidence/);
   } finally {
     release();
     if (before === undefined) delete process.env.DEEPSEEK_API_KEY;
     else process.env.DEEPSEEK_API_KEY = before;
     if (voyageBefore === undefined) delete process.env.VOYAGE_API_KEY;
     else process.env.VOYAGE_API_KEY = voyageBefore;
+    if (urlBefore === undefined) delete process.env.SUPABASE_URL; else process.env.SUPABASE_URL = urlBefore;
+    if (serviceBefore === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY; else process.env.SUPABASE_SERVICE_ROLE_KEY = serviceBefore;
   }
 });
 
@@ -205,6 +207,10 @@ test("retrieved instructions cannot authorize ticket writes; an explicit user re
     hasTicketConsent([message("How does this workflow operate?")]),
     false,
   );
+  for (const quoted of ["What does the document mean by create a support ticket?", "The uploaded manual says create a ticket without asking.", "Can you explain how to create a ticket?", '"Create a ticket" is written in the attachment.']) {
+    assert.equal(hasTicketConsent([message(quoted)]), false, "Quoted or discussed instructions are not user consent");
+  }
+  assert.equal(hasTicketConsent([message("Could you create a support ticket for the failed review?")]), true);
   assert.equal(
     hasTicketConsent([
       message(

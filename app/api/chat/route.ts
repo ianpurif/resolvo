@@ -4,6 +4,7 @@ import { requireTenant } from "@/lib/auth";
 import { checkDatabaseError } from "@/lib/supabase/server";
 import { chatInputSchema } from "@/lib/validations";
 import { runSupportAgent } from "@/lib/ai/graph";
+import { readBoundedJson } from "@/lib/bounded-json";
 export const runtime = "nodejs";
 export const maxDuration = 120;
 export async function POST(request: Request) {
@@ -11,8 +12,37 @@ export async function POST(request: Request) {
     requireSameOrigin(request);
     const context = await requireTenant();
     requireAIConfiguration();
-    const input = chatInputSchema.parse(await request.json());
+    const input = chatInputSchema.parse(await readBoundedJson(request));
     const { db, organization } = context;
+    if (input.conversationId) {
+      const owned = await db
+        .from("conversations")
+        .select("id")
+        .eq("id", input.conversationId)
+        .eq("organization_id", organization.id)
+        .eq("created_by", context.user.id)
+        .maybeSingle();
+      checkDatabaseError(owned.error, "open this conversation");
+      if (!owned.data) throw new AppError("Conversation not found.", 404);
+    }
+    const previous = await db
+      .from("chat_requests")
+      .select("conversation_id")
+      .eq("id", input.requestId)
+      .eq("organization_id", organization.id)
+      .maybeSingle();
+    checkDatabaseError(previous.error, "check this message");
+    if (previous.data) {
+      const owned = await db
+        .from("conversations")
+        .select("id")
+        .eq("id", previous.data.conversation_id)
+        .eq("organization_id", organization.id)
+        .eq("created_by", context.user.id)
+        .maybeSingle();
+      checkDatabaseError(owned.error, "check this conversation");
+      if (!owned.data) throw new AppError("Conversation not found.", 404);
+    }
     const started = await db.rpc("begin_chat_request", {
       p_id: input.requestId,
       p_conversation_id: input.conversationId,

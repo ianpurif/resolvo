@@ -4,7 +4,7 @@ import { checkDatabaseError } from "./server";
 import type { WorkspaceData, Conversation, ChatMessage } from "@/types";
 export async function getWorkspace(): Promise<WorkspaceData> {
   const context = await requireWorkspacePage();
-  const { db, organization } = context;
+  const { db, organization, user } = context;
   const [documents, sources, tickets, conversations, knowledge, openTickets] =
     await Promise.all([
       db
@@ -31,6 +31,7 @@ export async function getWorkspace(): Promise<WorkspaceData> {
         .from("conversations")
         .select("*", { count: "exact" })
         .eq("organization_id", organization.id)
+        .eq("created_by", user.id)
         .order("updated_at", { ascending: false })
         .limit(100),
       db
@@ -72,22 +73,42 @@ export async function getConversation(
   context: TenantContext,
   id: string,
 ): Promise<{ conversation: Conversation | null; messages: ChatMessage[] }> {
-  const [conversation, messages] = await Promise.all([
-    context.db
-      .from("conversations")
-      .select("*")
-      .eq("organization_id", context.organization.id)
-      .eq("id", id)
-      .maybeSingle(),
-    context.db
-      .from("messages")
-      .select("*")
-      .eq("organization_id", context.organization.id)
-      .eq("conversation_id", id)
-      .order("created_at")
-      .limit(200),
-  ]);
+  const conversation = await context.db
+    .from("conversations")
+    .select("*")
+    .eq("organization_id", context.organization.id)
+    .eq("created_by", context.user.id)
+    .eq("id", id)
+    .maybeSingle();
   checkDatabaseError(conversation.error, "load this conversation");
+  if (!conversation.data) return { conversation: null, messages: [] };
+  const messages = await context.db
+    .from("messages")
+    .select("*")
+    .eq("organization_id", context.organization.id)
+    .eq("conversation_id", id)
+    .order("created_at", { ascending: false })
+    .order("id")
+    .limit(200);
   checkDatabaseError(messages.error, "load conversation messages");
-  return { conversation: conversation.data, messages: messages.data ?? [] };
+  return {
+    conversation: conversation.data,
+    messages: (messages.data ?? []).reverse(),
+  };
+}
+
+export async function getPersonalConversations(context: TenantContext) {
+  const result = await context.db
+    .from("conversations")
+    .select("id,title,updated_at,created_at", { count: "exact" })
+    .eq("organization_id", context.organization.id)
+    .eq("created_by", context.user.id)
+    .order("updated_at", { ascending: false })
+    .order("id")
+    .limit(30);
+  checkDatabaseError(result.error, "load conversation history");
+  return {
+    conversations: result.data ?? [],
+    hasMore: (result.count ?? 0) > (result.data?.length ?? 0),
+  };
 }

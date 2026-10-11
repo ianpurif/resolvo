@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID, createHash } from "node:crypto";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { splitKnowledge, INDEX_POLICY_VERSION } from "./chunks";
+import { delimitedKnowledge, jsonKnowledge } from "./structured";
 import { AppError } from "@/lib/config";
 import { checkDatabaseError } from "@/lib/supabase/server";
 import { validateUpload } from "@/lib/validations";
@@ -9,6 +10,7 @@ import { tokenCounts } from "./embedding-policy";
 import { pendingIndex, continueIndexing } from "./index-jobs";
 import { extractWebsite } from "./website";
 import type { TenantContext } from "@/lib/auth";
+import { requireKnowledgeOwner } from "@/lib/auth-context";
 import type { KnowledgeDocument, DataSource } from "@/types";
 import { fromBuffer, type Entry } from "yauzl";
 export function normalizeText(text: string) {
@@ -132,10 +134,14 @@ export async function extractText(file: File, extension: string) {
     }
   }
   try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(
       await file.arrayBuffer(),
     );
-  } catch {
+    return extension === "csv" ? delimitedKnowledge(text, ",")
+      : extension === "tsv" ? delimitedKnowledge(text, "\t")
+        : extension === "json" ? jsonKnowledge(text) : text;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
     throw new AppError("Save this document as UTF-8 text.", 400);
   }
 }
@@ -169,7 +175,9 @@ export async function prepareFile(file: File): Promise<Prepared> {
         ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         : extension === "md"
           ? "text/markdown"
-          : "text/plain";
+          : extension === "csv" ? "text/csv"
+            : extension === "tsv" ? "text/tab-separated-values"
+              : extension === "json" ? "application/json" : "text/plain";
   return {
     file: new File([file], file.name, { type: mime }),
     text,
@@ -223,6 +231,7 @@ export async function ingestPrepared(
   existing?: KnowledgeDocument,
   requestId?: string,
 ): Promise<KnowledgeDocument> {
+  requireKnowledgeOwner(context);
   const { db, organization } = context;
   if (existing && existing.organization_id !== organization.id)
     throw new AppError("Document not found.", 404);
@@ -271,7 +280,8 @@ export async function ingestPrepared(
     existing?.status === "ready" &&
     !existing.error_message &&
     existing.content_hash === hash &&
-    existing.name === input.name
+    existing.name === input.name &&
+    existing.index_policy_version === INDEX_POLICY_VERSION
   ) {
     const source = await db
       .from("data_sources")
@@ -287,11 +297,8 @@ export async function ingestPrepared(
     )
       return existing;
   }
-  const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1200,
-    chunkOverlap: 200,
-  });
-  const texts = await splitter.splitText(input.text);
+  const chunks = await splitKnowledge(input.text);
+  const texts = chunks.map((chunk) => chunk.content);
   if (texts.length > 500)
     throw new AppError(
       "This document produces too many chunks. Split it into smaller files.",
@@ -350,8 +357,8 @@ export async function ingestPrepared(
       p_size: input.file.size,
       p_replace: Boolean(existing),
       p_hash: hash,
-      p_manifest: texts.map((content, index) => ({
-        content,
+      p_manifest: chunks.map((chunk, index) => ({
+        ...chunk,
         token_count: counts[index],
       })),
     });
@@ -404,6 +411,7 @@ export async function reindexDocument(
   context: TenantContext,
   document: KnowledgeDocument,
 ) {
+  requireKnowledgeOwner(context);
   const pending = await pendingIndex(context, document.id);
   if (pending) {
     const resumed = await context.db.rpc("resume_document_index_job", {

@@ -1,66 +1,101 @@
 "use client";
+
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  type FormEvent,
+} from "react";
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
+  ArrowDown,
   ArrowUp,
-  Plus,
-  MessageSquare,
-  Menu,
-  Loader2,
   BookOpen,
-  LogOut,
-  ArrowUpRight,
-  Building2,
+  ChevronRight,
   RotateCcw,
+  Square,
+  Sparkles,
 } from "lucide-react";
+import { toast } from "sonner";
+import { friendlyError } from "@/lib/client-errors";
 import { Brand } from "@/components/brand";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  WorkspaceFrame,
+  useHistoryPagination,
+} from "@/components/workspace/workspace-frame";
+import { ConversationActions } from "./conversation-actions";
 import { MessageBubble } from "./message-bubble";
-import { cn } from "@/lib/utils";
+import { consumeChatStream } from "@/lib/chat/stream";
+import type { SavedConversation } from "@/lib/chat/history";
 import type { ChatMessage, Organization } from "@/types";
-type Saved = { id: string; title: string };
-type Pending = { id: string; text: string; userId: string };
-type StreamEvent = {
-  type: "status" | "draft" | "done" | "error";
-  text?: string;
-  error?: string;
-  conversationId?: string;
-  message?: ChatMessage;
+
+type Pending = {
+  id: string;
+  text: string;
+  userId: string;
+  conversationId: string | null;
 };
 export function SupportChat({
   ready,
   organization,
   email,
   initialConversations,
+  initialHasMore = false,
+  initialConversationId,
 }: {
   ready: boolean;
   organization: Organization;
   email: string;
-  initialConversations: Saved[];
+  initialConversations: SavedConversation[];
+  initialHasMore?: boolean;
+  initialConversationId?: string;
 }) {
+  const history = useHistoryPagination(initialConversations, initialHasMore);
+  const { conversations, setConversations } = history;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [conversations, setConversations] = useState(initialConversations);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
-  const [menu, setMenu] = useState(false);
   const [status, setStatus] = useState("");
+  const [atBottom, setAtBottom] = useState(true);
   const busyRef = useRef(false);
-  const bottom = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  const autoScroll = useRef(true);
+  const composer = useRef<HTMLTextAreaElement>(null);
   const abort = useRef<AbortController | null>(null);
-  useEffect(() => () => abort.current?.abort(), []);
+  const mounted = useRef(true);
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      abort.current?.abort();
+    };
+  }, []);
+  useEffect(() => {
+    if (!autoScroll.current) return;
+    const frame = requestAnimationFrame(() => {
+      if (scroller.current)
+        scroller.current.scrollTo({
+          top: scroller.current.scrollHeight,
+          behavior:
+            busy || matchMedia("(prefers-reduced-motion: reduce)").matches
+              ? "instant"
+              : "smooth",
+        });
+    });
+    return () => cancelAnimationFrame(frame);
   }, [messages, draft, busy]);
+  function updateURL(id: string | null) {
+    window.history.replaceState(
+      null,
+      "",
+      id ? "/support?conversation=" + id : "/support",
+    );
+  }
   function startNew() {
     if (busyRef.current) return;
     setMessages([]);
@@ -69,41 +104,84 @@ export function SupportChat({
     setError("");
     setDraft("");
     setInput("");
-    setMenu(false);
+    autoScroll.current = true;
+    setAtBottom(true);
+    updateURL(null);
+    composer.current?.focus();
   }
-  async function open(id: string) {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    setBusy(true);
-    setError("");
-    setMenu(false);
-    try {
-      const response = await fetch("/api/conversations/" + id, {
-        cache: "no-store",
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
-      setMessages(data.messages);
-      setConversationId(id);
-      setPending(null);
+  const open = useCallback(
+    async (id: string) => {
+      if (busyRef.current) return;
+      busyRef.current = true;
+      setBusy(true);
+      setStatus("Loading conversation…");
+      setError("");
       setDraft("");
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Could not load this conversation.",
-      );
-    } finally {
-      busyRef.current = false;
-      setBusy(false);
-    }
-  }
+      const controller = new AbortController();
+      abort.current = controller;
+      try {
+        const response = await fetch("/api/conversations/" + id, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error ?? "Could not load this conversation.");
+        setMessages(data.messages);
+        setConversationId(id);
+        setInput("");
+        setPending(null);
+        setConversations((previous) => [
+          { ...data.conversation },
+          ...previous.filter((item) => item.id !== id),
+        ]);
+        const last = data.messages.at(-1) as ChatMessage | undefined;
+        if (last?.role === "user" && last.request_id) {
+          setPending({
+            id: last.request_id,
+            text: last.content,
+            userId: last.id,
+            conversationId: id,
+          });
+          setError(
+            "This answer wasn’t completed. Retry to continue this conversation.",
+          );
+        }
+        autoScroll.current = true;
+        setAtBottom(true);
+        updateURL(id);
+      } catch (failure) {
+        if (!mounted.current) return;
+        const message = controller.signal.aborted
+          ? "Loading stopped. Open this conversation again when you’re ready."
+          : friendlyError(
+              failure,
+              "Couldn’t load this conversation. Check your connection and try again.",
+            );
+        setError(message);
+        toast.error(message);
+      } finally {
+        busyRef.current = false;
+        if (mounted.current) {
+          setBusy(false);
+          setStatus("");
+        }
+        abort.current = null;
+      }
+    },
+    [setConversations],
+  );
+  useEffect(() => {
+    if (initialConversationId)
+      void Promise.resolve().then(() => open(initialConversationId));
+  }, [initialConversationId, open]);
   async function send(text: string, retry?: Pending) {
-    if (!text.trim() || busyRef.current) return;
+    if (!text.trim() || busyRef.current || !ready) return;
     const turn = retry ?? {
       id: crypto.randomUUID(),
       text: text.trim(),
       userId: crypto.randomUUID(),
+      conversationId,
     };
     busyRef.current = true;
     setBusy(true);
@@ -111,335 +189,402 @@ export function SupportChat({
     setDraft("");
     setInput("");
     setPending(turn);
-    setStatus("Connecting…");
+    setStatus("Finding the right context…");
+    autoScroll.current = true;
+    setAtBottom(true);
+    if (composer.current) composer.current.style.height = "56px";
     if (!retry)
       setMessages((previous) => [
         ...previous,
         {
           id: turn.userId,
           organization_id: organization.id,
-          conversation_id: conversationId ?? "",
+          conversation_id: turn.conversationId ?? "",
           role: "user",
           content: turn.text,
           sources: [],
           created_at: new Date().toISOString(),
+          request_id: turn.id,
         },
       ]);
-    abort.current = new AbortController();
+    const controller = new AbortController();
+    abort.current = controller;
+    let complete = false;
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: turn.text,
-          conversationId,
+          conversationId: turn.conversationId,
           requestId: turn.id,
         }),
-        signal: abort.current.signal,
+        signal: controller.signal,
       });
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error ?? "The message could not be sent.");
       }
       if (!response.body)
-        throw new Error("Streaming is unavailable in this browser.");
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let complete = false;
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        let boundary: number;
-        while ((boundary = buffer.indexOf("\n\n")) >= 0) {
-          const frame = buffer.slice(0, boundary);
-          buffer = buffer.slice(boundary + 2);
-          if (!frame.startsWith("data: ")) continue;
-          const event = JSON.parse(frame.slice(6)) as StreamEvent;
-          if (event.type === "error")
-            throw new Error(event.error ?? "The assistant could not finish.");
-          if (event.type === "status") {
-            setStatus(event.text ?? "Retrieving knowledge…");
-            if (event.conversationId) setConversationId(event.conversationId);
-          }
-          if (event.type === "draft") {
-            setDraft(event.text ?? "");
-            setStatus("Writing an answer…");
-          }
-          if (event.type === "done" && event.message && event.conversationId) {
-            const id = event.conversationId;
-            setMessages((previous) => [...previous, event.message!]);
-            setConversationId(id);
-            setPending(null);
-            setDraft("");
-            complete = true;
-            setConversations((previous) =>
-              [
+        throw new Error("The response could not be opened. Please retry.");
+      await consumeChatStream(response.body, (event) => {
+        if (event.type === "error")
+          throw new Error(event.error ?? "The assistant could not finish.");
+        if (event.type === "status") {
+          setStatus(event.text ?? "Searching company knowledge…");
+          if (event.conversationId) {
+            turn.conversationId = event.conversationId;
+            setConversationId(event.conversationId);
+            setPending({ ...turn });
+            updateURL(event.conversationId);
+            setConversations((previous) => {
+              const existing = previous.find(
+                (item) => item.id === event.conversationId,
+              );
+              return [
                 {
-                  id,
-                  title:
-                    previous.find((item) => item.id === id)?.title ??
-                    turn.text.slice(0, 80),
+                  id: event.conversationId!,
+                  title: existing?.title ?? turn.text.slice(0, 80),
+                  created_at: existing?.created_at ?? new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
                 },
-                ...previous.filter((item) => item.id !== id),
-              ].slice(0, 30),
-            );
+                ...previous.filter((item) => item.id !== event.conversationId),
+              ];
+            });
           }
         }
-      }
+        if (event.type === "draft") {
+          setDraft(event.text ?? "");
+          setStatus("Writing an answer…");
+        }
+        if (event.type === "done" && event.message && event.conversationId) {
+          complete = true;
+          setMessages((previous) => [
+            ...previous.filter((item) => item.id !== event.message!.id),
+            event.message!,
+          ]);
+          setConversationId(event.conversationId);
+          setPending(null);
+          setDraft("");
+          updateURL(event.conversationId);
+          setConversations((previous) => {
+            const old = previous.find(
+              (item) => item.id === event.conversationId,
+            );
+            return [
+              {
+                id: event.conversationId!,
+                title: old?.title ?? turn.text.slice(0, 80),
+                created_at: old?.created_at ?? new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+              ...previous.filter((item) => item.id !== event.conversationId),
+            ];
+          });
+        }
+      });
       if (!complete)
         throw new Error("The response was interrupted. Retry this message.");
-    } catch (error) {
+    } catch (failure) {
+      if (!mounted.current || complete) return;
       setDraft("");
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Could not connect. Please retry.",
-      );
+      const stopped = controller.signal.aborted;
+      const message = stopped
+        ? "Answer stopped. Retry when you’re ready."
+        : friendlyError(
+            failure,
+            "The answer couldn’t finish. Check your connection and retry.",
+          );
+      setError(message);
+      if (!stopped) toast.error(message, { id: "chat-error" });
     } finally {
       busyRef.current = false;
-      setBusy(false);
-      setStatus("");
       abort.current = null;
+      if (mounted.current) {
+        setBusy(false);
+        setStatus("");
+        requestAnimationFrame(() => composer.current?.focus());
+      }
     }
   }
   function submit(event: FormEvent) {
     event.preventDefault();
     void send(input);
   }
-  const sidebar = (
-    <>
-      <Link href="/dashboard" className="mb-9 inline-flex">
-        <Brand />
-      </Link>
-      <div className="mb-7 flex gap-3 rounded-xl border bg-white/70 p-3">
-        <Building2 className="size-5 shrink-0 text-primary" />
-        <div className="min-w-0">
-          <p className="truncate text-xs font-semibold">{organization.name}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">
-            Private knowledge assistant
-          </p>
-        </div>
-      </div>
-      <Button
-        onClick={startNew}
-        disabled={busy}
-        variant="outline"
-        className="mb-7 justify-start bg-white"
-      >
-        <Plus />
-        New conversation
-      </Button>
-      <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Workspace conversations
-      </p>
-      <div className="flex-1 space-y-1 overflow-auto">
-        {!conversations.length ? (
-          <p className="text-xs leading-6 text-muted-foreground">
-            Your company’s conversations will appear here.
-          </p>
-        ) : (
-          conversations.map((item) => (
-            <button
-              key={item.id}
-              disabled={busy}
-              onClick={() => void open(item.id)}
-              className={cn(
-                "flex w-full gap-2 rounded-lg p-3 text-left text-xs",
-                item.id === conversationId
-                  ? "bg-white text-primary"
-                  : "text-muted-foreground hover:bg-white",
-              )}
-            >
-              <MessageSquare className="size-3.5 shrink-0" />
-              <span className="truncate">{item.title}</span>
-            </button>
-          ))
-        )}
-      </div>
-      <Link
-        href="/dashboard"
-        className="my-6 flex justify-between text-xs text-primary"
-      >
-        Company dashboard
-        <ArrowUpRight className="size-3.5" />
-      </Link>
-      <div className="border-t pt-5">
-        <p className="truncate text-xs text-muted-foreground">{email}</p>
-        <form action="/auth/signout" method="post" className="mt-3">
-          <button className="flex gap-2 text-xs text-muted-foreground">
-            <LogOut className="size-3.5" />
-            Sign out
-          </button>
-        </form>
-      </div>
-    </>
-  );
+  function renamed(item: SavedConversation) {
+    setConversations((previous) =>
+      previous.map((old) => (old.id === item.id ? item : old)),
+    );
+  }
+  function deleted(id: string) {
+    setConversations((previous) => previous.filter((item) => item.id !== id));
+    if (id === conversationId) startNew();
+  }
+  const selected = conversations.find((item) => item.id === conversationId);
   return (
-    <div className="flex h-dvh min-h-[500px] bg-white">
-      <aside className="hidden w-[250px] shrink-0 flex-col border-r bg-[#f6f7f3] px-5 py-7 lg:flex">
-        {sidebar}
-      </aside>
-      <Dialog open={menu} onOpenChange={setMenu}>
-        <DialogContent className="top-0 left-0 flex h-dvh max-h-none w-[280px] translate-x-0 translate-y-0 flex-col gap-0 rounded-none bg-[#f6f7f3] px-5 py-7">
-          <DialogTitle className="sr-only">Workspace conversations</DialogTitle>
-          <DialogDescription className="sr-only">
-            Open a saved company conversation.
-          </DialogDescription>
-          {sidebar}
-        </DialogContent>
-      </Dialog>
-      <main className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-[74px] shrink-0 items-center gap-3 border-b px-5 md:px-10">
-          <button
-            aria-label="Open conversations"
-            onClick={() => setMenu(true)}
-            className="lg:hidden"
-          >
-            <Menu className="size-5" />
-          </button>
-          <p className="truncate text-xs font-medium">
-            {conversations.find((item) => item.id === conversationId)?.title ??
-              "New conversation"}
-          </p>
-          <span className="ml-auto text-[10px] text-muted-foreground">
-            Private to {organization.name}
-          </span>
-        </header>
-        <div className="flex-1 overflow-y-auto px-5 md:px-10">
-          <div className="mx-auto max-w-[720px] py-10">
-            {!messages.length ? (
-              <div className="flex min-h-[45dvh] flex-col items-center justify-center text-center">
-                <div className="mb-6 rounded-2xl border bg-secondary p-5">
-                  <BookOpen className="size-7 text-primary" />
-                </div>
-                <p className="mb-4 text-[10px] font-semibold uppercase tracking-widest text-primary">
-                  {organization.name} knowledge
-                </p>
-                <h1 className="text-4xl font-medium tracking-tight">
-                  Answers from your
-                  <br />
-                  <span className="text-muted-foreground">
-                    company’s own sources.
-                  </span>
-                </h1>
-                <p className="mt-5 max-w-md text-sm leading-7 text-muted-foreground">
-                  Ask about your company’s services, processes, policies or
-                  documents. The assistant cites its sources and tells you when
-                  evidence is missing.
-                </p>
-                <Link
-                  href="/admin/knowledge"
-                  className="mt-7 text-xs font-medium text-primary"
-                >
-                  Connect or update knowledge
-                  <ArrowUpRight className="ml-1 inline size-3.5" />
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-7">
-                {messages.map((message) => (
-                  <MessageBubble key={message.id} message={message} />
+    <WorkspaceFrame
+      organization={organization}
+      email={email}
+      title={selected?.title ?? "Resolvo assistant"}
+      conversations={conversations}
+      activeId={conversationId}
+      busy={busy}
+      hasMore={history.hasMore}
+      loadingMore={history.loadingMore}
+      onLoadMore={() => void history.loadMore()}
+      onNew={startNew}
+      onOpen={(id) => void open(id)}
+      onRename={renamed}
+      onDelete={deleted}
+      chat
+      headerActions={
+        selected && (
+          <ConversationActions
+            conversation={selected}
+            disabled={busy}
+            onRename={renamed}
+            onDelete={deleted}
+          />
+        )
+      }
+    >
+      <div
+        ref={scroller}
+        onScroll={() => {
+          const element = scroller.current;
+          if (!element) return;
+          const near =
+            element.scrollHeight - element.scrollTop - element.clientHeight <
+            140;
+          autoScroll.current = near;
+          setAtBottom(near);
+        }}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:px-8"
+      >
+        <div className="mx-auto max-w-[760px] py-8 sm:py-11">
+          {!messages.length && !busy ? (
+            <div className="flex min-h-[43dvh] flex-col items-center justify-center pt-6 text-center">
+              <Brand compact className="mb-6 [&_.brand-mark]:size-14" />
+              <p className="mb-3 text-[11px] text-muted-foreground">
+                Your {organization.name} knowledge assistant
+              </p>
+              <h1 className="text-[clamp(29px,4vw,40px)] leading-tight font-medium tracking-[-.055em]">
+                What would you like to know?
+              </h1>
+              <p className="mt-4 max-w-sm text-[13px] leading-6 text-muted-foreground">
+                Find an answer. Explore an idea. Start with your company’s
+                knowledge.
+              </p>
+              <div className="mt-8 grid w-full max-w-lg gap-2 sm:grid-cols-3">
+                {[
+                  {
+                    label: "Understand a policy",
+                    text: "What are the key policies in our company knowledge?",
+                    icon: BookOpen,
+                  },
+                  {
+                    label: "Find a process",
+                    text: "What processes are documented in our company knowledge?",
+                    icon: Sparkles,
+                  },
+                  {
+                    label: "Explore our sources",
+                    text: "Summarize the information available in our company knowledge.",
+                    icon: SearchIcon,
+                  },
+                ].map(({ label, text, icon: Icon }) => (
+                  <button
+                    key={label}
+                    onClick={() => {
+                      setInput(text);
+                      composer.current?.focus();
+                    }}
+                    disabled={!ready}
+                    className="flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-[11px] text-[#627c6c] transition-colors hover:border-[#afc9b8] hover:bg-[#f8fbf7] disabled:opacity-50 sm:flex-col sm:items-start"
+                  >
+                    <Icon className="size-4 text-primary" />
+                    {label}
+                  </button>
                 ))}
               </div>
-            )}
-            {draft && (
-              <div className="mt-7">
-                <MessageBubble
-                  message={{
-                    id: "stream",
-                    organization_id: organization.id,
-                    conversation_id: conversationId ?? "",
-                    role: "assistant",
-                    content: draft,
-                    sources: [],
-                    created_at: "",
-                  }}
-                />
-              </div>
-            )}
-            {busy && (
-              <p
-                role="status"
-                className="mt-6 flex items-center gap-2 text-xs text-muted-foreground"
+              <Link
+                href="/admin/knowledge"
+                className="mt-7 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary"
               >
-                <Loader2 className="size-4 animate-spin" />
-                {status}
-              </p>
-            )}
-            {error && (
-              <div
-                role="alert"
-                className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-6 text-amber-900"
-              >
-                {error}
-                {pending && (
+                Manage your company’s sources
+                <ChevronRight className="size-3" />
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-9">
+              {messages.map((message) => (
+                <MessageBubble key={message.id} message={message} />
+              ))}
+            </div>
+          )}
+          {draft && (
+            <div className="mt-9">
+              <MessageBubble
+                streaming
+                message={{
+                  id: "stream",
+                  organization_id: organization.id,
+                  conversation_id: conversationId ?? "",
+                  role: "assistant",
+                  content: draft,
+                  sources: [],
+                  created_at: "",
+                }}
+              />
+            </div>
+          )}
+          {busy && !draft && (
+            <div
+              role="status"
+              className="mt-6 flex items-center gap-3 text-xs text-muted-foreground"
+            >
+              <Brand compact className="[&_.brand-mark]:size-7" />
+              <span className="thinking-dot">{status || "Loading…"}</span>
+            </div>
+          )}
+          {busy && draft && (
+            <p role="status" className="sr-only">
+              Writing an answer…
+            </p>
+          )}
+          {error && (
+            <div
+              role="alert"
+              className="mt-6 rounded-xl border border-amber-200/80 bg-amber-50/60 px-4 py-3 text-xs leading-6 text-amber-900"
+            >
+              {error}
+              <div className="mt-2 flex items-center gap-5">
+                {pending ? (
                   <button
                     disabled={busy}
                     onClick={() => void send(pending.text, pending)}
-                    className="mt-2 flex items-center gap-2 font-semibold"
+                    className="flex items-center gap-1.5 font-semibold"
                   >
                     <RotateCcw className="size-3.5" />
                     Retry message
                   </button>
-                )}
+                ) : conversationId ? (
+                  <button
+                    disabled={busy}
+                    onClick={() => void open(conversationId)}
+                    className="font-semibold"
+                  >
+                    Reload conversation
+                  </button>
+                ) : null}
+                <button
+                  disabled={busy}
+                  onClick={startNew}
+                  className="font-semibold"
+                >
+                  Start a new chat
+                </button>
               </div>
-            )}
-            <div ref={bottom} />
-          </div>
-        </div>
-        <footer className="shrink-0 px-5 py-4 md:px-10">
-          <form
-            onSubmit={submit}
-            className="mx-auto max-w-[720px] rounded-2xl border p-3 shadow-xs"
-          >
-            <label htmlFor="message" className="sr-only">
-              Ask your company’s assistant
-            </label>
-            <textarea
-              id="message"
-              rows={2}
-              maxLength={4000}
-              value={input}
-              disabled={busy || !ready || Boolean(pending && error)}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (
-                  event.key === "Enter" &&
-                  !event.shiftKey &&
-                  !event.nativeEvent.isComposing
-                ) {
-                  event.preventDefault();
-                  void send(input);
-                }
-              }}
-              placeholder="Ask a question about your company’s knowledge…"
-              className="w-full resize-none bg-transparent p-2 text-sm outline-none"
-            />
-            <div className="flex items-center justify-between">
-              <span className="px-2 text-[10px] text-muted-foreground">
-                {ready
-                  ? "Cited answers from your company’s knowledge"
-                  : "AI providers must be configured before chatting"}
-              </span>
-              <Button
-                type="submit"
-                size="icon"
-                aria-label="Send message"
-                disabled={
-                  !input.trim() || busy || !ready || Boolean(pending && error)
-                }
-              >
-                <ArrowUp />
-              </Button>
             </div>
-          </form>
-          <p className="mt-3 text-center text-[10px] text-muted-foreground">
-            Check the cited sources before relying on an AI answer.
-          </p>
-        </footer>
-      </main>
-    </div>
+          )}
+        </div>
+      </div>
+      <footer className="relative shrink-0 bg-white px-4 pt-2 pb-[max(14px,env(safe-area-inset-bottom))] sm:px-8">
+        {!atBottom && (
+          <button
+            aria-label="Jump to latest message"
+            onClick={() => {
+              autoScroll.current = true;
+              scroller.current?.scrollTo({
+                top: scroller.current.scrollHeight,
+                behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+                  ? "instant"
+                  : "smooth",
+              });
+            }}
+            className="absolute -top-10 left-1/2 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border bg-white shadow-sm"
+          >
+            <ArrowDown className="size-4" />
+          </button>
+        )}
+        <form
+          onSubmit={submit}
+          className="composer-shadow mx-auto max-w-[760px] rounded-[22px] border bg-[#fbfcfa] p-3 transition-colors focus-within:border-[#9fbaa9]"
+        >
+          <label htmlFor="message" className="sr-only">
+            Ask your company’s assistant
+          </label>
+          <textarea
+            ref={composer}
+            id="message"
+            rows={2}
+            maxLength={4000}
+            value={input}
+            disabled={busy || !ready || Boolean(pending && error)}
+            onChange={(event) => {
+              setInput(event.target.value);
+              event.target.style.height = "56px";
+              event.target.style.height =
+                Math.min(160, event.target.scrollHeight) + "px";
+            }}
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" &&
+                !event.shiftKey &&
+                !event.nativeEvent.isComposing
+              ) {
+                event.preventDefault();
+                void send(input);
+              }
+            }}
+            placeholder="Ask your company’s knowledge…"
+            className="min-h-14 w-full resize-none bg-transparent px-2 py-2 text-[13px] leading-6 outline-none! placeholder:text-[#93a094] disabled:opacity-60"
+          />
+          <div className="flex items-center justify-between px-1">
+            <Link
+              href="/admin/knowledge"
+              className="flex items-center gap-1.5 rounded-full border bg-white px-2.5 py-1.5 text-[10px] text-muted-foreground hover:text-primary"
+            >
+              <BookOpen className="size-3" />
+              Company knowledge
+            </Link>
+            <div className="flex items-center gap-3">
+              <span className="hidden text-[9px] text-muted-foreground sm:block">
+                Enter to send · Shift + Enter for a new line
+              </span>
+              {busy ? (
+                <button
+                  type="button"
+                  aria-label="Stop response"
+                  onClick={() => abort.current?.abort()}
+                  className="flex size-9 items-center justify-center rounded-xl bg-primary text-white"
+                >
+                  <Square className="size-3.5" fill="currentColor" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  aria-label="Send message"
+                  disabled={
+                    !input.trim() || !ready || Boolean(pending && error)
+                  }
+                  className="flex size-9 items-center justify-center rounded-xl bg-primary text-white transition-colors hover:bg-[#1c6148] disabled:bg-[#e5ebe3] disabled:text-[#9aa99b]"
+                >
+                  <ArrowUp className="size-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </form>
+        <p className="mx-auto mt-3 max-w-[760px] text-center text-[9px] text-[#879586]">
+          {ready
+            ? "AI can make mistakes. Check the sources behind important answers."
+            : "Chat is temporarily unavailable. Your workspace administrator can check the connection."}
+        </p>
+      </footer>
+    </WorkspaceFrame>
   );
+}
+function SearchIcon() {
+  return <BookOpen className="size-4 text-primary" />;
 }

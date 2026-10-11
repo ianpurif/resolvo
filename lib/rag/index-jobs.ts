@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { AppError } from "@/lib/config";
 import { checkDatabaseError } from "@/lib/supabase/server";
 import type { TenantContext } from "@/lib/auth";
+import { requireKnowledgeOwner } from "@/lib/auth-context";
 import type { KnowledgeDocument } from "@/types";
 import { embedBatch, EmbeddingDeferred, EmbeddingFailure } from "./embeddings";
 import { embeddingBackoff, selectEmbeddingBatch } from "./embedding-policy";
@@ -38,6 +39,7 @@ export async function pendingIndex(context: TenantContext, id: string) {
 }
 
 export async function continueIndexing(context: TenantContext, id: string) {
+  requireKnowledgeOwner(context);
   const lease = randomUUID();
   const claim = await context.db
     .rpc("claim_document_index_batch", {

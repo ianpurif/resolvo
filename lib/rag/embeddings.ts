@@ -1,5 +1,5 @@
 import "server-only";
-import { VoyageEmbeddings } from "@langchain/mongodb";
+import { Embeddings } from "@langchain/core/embeddings";
 import { createClient } from "@supabase/supabase-js";
 import { setTimeout as delay } from "node:timers/promises";
 import { AppError } from "@/lib/config";
@@ -51,7 +51,9 @@ function rateDatabase() {
 export async function embedBatch(
   texts: string[],
   inputType: "document" | "query",
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   const key = process.env.VOYAGE_API_KEY?.trim();
   if (!key)
     throw new AppError(
@@ -74,7 +76,7 @@ export async function embedBatch(
       p_rpm: rpm,
       p_tpm: tpm,
     })
-    .abortSignal(AbortSignal.timeout(5000));
+    .abortSignal(AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(5000)]));
   if (reserved.error?.code === "PGRST202")
     throw new AppError(
       "Apply the resumable indexing migration in Supabase before indexing knowledge.",
@@ -101,7 +103,7 @@ export async function embedBatch(
         output_dtype: "float",
         truncation: false,
       }),
-      signal: AbortSignal.timeout(25_000),
+      signal: AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(25_000)]),
     });
     const body = await response.json().catch(() => null);
     if (!response.ok) {
@@ -152,7 +154,8 @@ export async function embedBatch(
         vectors[entry.index] ||
         !Array.isArray(entry.embedding) ||
         entry.embedding.length !== EMBEDDING_DIMENSION ||
-        !entry.embedding.every(Number.isFinite)
+        !entry.embedding.every(Number.isFinite) ||
+        !entry.embedding.some((value: number) => value !== 0)
       )
         throw new EmbeddingFailure(
           "Voyage returned an invalid embedding vector.",
@@ -185,18 +188,11 @@ export async function embedBatch(
   }
 }
 
-// Keep the current LangChain Voyage class/interface. Its built-in transport
-// discards Retry-After and offers no abort signal, so override the public methods
-// with a bounded transport and the shared SQL budget, without private API hooks.
-class ReliableVoyageEmbeddings extends VoyageEmbeddings {
-  constructor(private readonly type: "document" | "query") {
+// The application owns the bounded provider transport/rate budget. Implement
+// LangChain's minimal interface without loading an unused MongoDB integration.
+class ReliableVoyageEmbeddings extends Embeddings {
+  constructor(private readonly type: "document" | "query", private readonly signal?: AbortSignal) {
     super({
-      apiKey: process.env.VOYAGE_API_KEY,
-      modelName: EMBEDDING_MODEL,
-      inputType: type,
-      outputDimension: EMBEDDING_DIMENSION,
-      outputDtype: "float",
-      truncation: false,
       maxRetries: 0,
       maxConcurrency: 1,
     });
@@ -226,8 +222,9 @@ class ReliableVoyageEmbeddings extends VoyageEmbeddings {
     let failures = 0;
     while (true) {
       try {
-        return await embedBatch(texts, this.type);
+        return await embedBatch(texts, this.type, this.signal);
       } catch (error) {
+        this.signal?.throwIfAborted();
         const wait =
           error instanceof EmbeddingDeferred
             ? error.waitMs
@@ -237,17 +234,17 @@ class ReliableVoyageEmbeddings extends VoyageEmbeddings {
               ? embeddingBackoff(failures++, error.status, error.retryAfterMs)
               : 0;
         if (!wait || Date.now() + wait + 25_000 > deadline) throw error;
-        await delay(wait);
+        await delay(wait, undefined, { signal: this.signal });
       }
     }
   }
 }
 
-export function embeddings(inputType: "document" | "query") {
+export function embeddings(inputType: "document" | "query", signal?: AbortSignal) {
   if (!process.env.VOYAGE_API_KEY?.trim())
     throw new AppError(
       "Connect Voyage AI embeddings to index and search knowledge.",
       503,
     );
-  return new ReliableVoyageEmbeddings(inputType);
+  return new ReliableVoyageEmbeddings(inputType, signal);
 }

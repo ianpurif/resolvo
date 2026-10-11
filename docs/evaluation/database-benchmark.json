@@ -1,0 +1,144 @@
+{
+  "completedAt": "2026-10-11T07:53:11.455Z",
+  "implementationHash": "7e9ccec487014ace2287e98d0d321bf3abe9ae873b2f9a0f32b122578e6c2a0b",
+  "node": "v22.16.0",
+  "database": "Local PostgreSQL/WASM/PGlite; 1024-dimensional controlled vectors and synthetic text",
+  "measurements": [
+    {
+      "chunks": 500,
+      "method": "legacy-vector",
+      "samples": 10,
+      "p50Ms": 8.084700000000339,
+      "p95Ms": 8.69609999999966,
+      "cpuMicroseconds": {
+        "user": 109000,
+        "system": 0
+      },
+      "rssBefore": 461033472,
+      "rssAfter": 461803520,
+      "syntheticInsertMs": 226.07859999999982,
+      "insertionIsProviderThroughput": false
+    },
+    {
+      "chunks": 500,
+      "method": "hybrid-exact-tenant",
+      "samples": 10,
+      "p50Ms": 25.651600000000144,
+      "p95Ms": 30.15650000000005,
+      "cpuMicroseconds": {
+        "user": 219000,
+        "system": 0
+      },
+      "rssBefore": 463171584,
+      "rssAfter": 464187392,
+      "syntheticInsertMs": 226.07859999999982,
+      "insertionIsProviderThroughput": false
+    },
+    {
+      "chunks": 500,
+      "method": "lexical",
+      "samples": 10,
+      "p50Ms": 21.05679999999984,
+      "p95Ms": 29.195200000000114,
+      "cpuMicroseconds": {
+        "user": 109000,
+        "system": 0
+      },
+      "rssBefore": 464220160,
+      "rssAfter": 464252928,
+      "syntheticInsertMs": 226.07859999999982,
+      "insertionIsProviderThroughput": false
+    },
+    {
+      "chunks": 2500,
+      "method": "legacy-vector",
+      "samples": 10,
+      "p50Ms": 31.302700000000186,
+      "p95Ms": 33.322699999998804,
+      "cpuMicroseconds": {
+        "user": 281000,
+        "system": 0
+      },
+      "rssBefore": 473526272,
+      "rssAfter": 473530368,
+      "syntheticInsertMs": 6313.2142,
+      "insertionIsProviderThroughput": false
+    },
+    {
+      "chunks": 2500,
+      "method": "hybrid-exact-tenant",
+      "samples": 10,
+      "p50Ms": 112.92190000000119,
+      "p95Ms": 117.28440000000046,
+      "cpuMicroseconds": {
+        "user": 938000,
+        "system": 0
+      },
+      "rssBefore": 474279936,
+      "rssAfter": 474808320,
+      "syntheticInsertMs": 6313.2142,
+      "insertionIsProviderThroughput": false
+    },
+    {
+      "chunks": 2500,
+      "method": "lexical",
+      "samples": 10,
+      "p50Ms": 85.15339999999924,
+      "p95Ms": 96.8044000000009,
+      "cpuMicroseconds": {
+        "user": 704000,
+        "system": 0
+      },
+      "rssBefore": 474808320,
+      "rssAfter": 474804224,
+      "syntheticInsertMs": 6313.2142,
+      "insertionIsProviderThroughput": false
+    },
+    {
+      "chunks": 10000,
+      "method": "legacy-vector",
+      "samples": 10,
+      "p50Ms": 120.9004999999961,
+      "p95Ms": 133.6771000000008,
+      "cpuMicroseconds": {
+        "user": 1140000,
+        "system": 16000
+      },
+      "rssBefore": 642519040,
+      "rssAfter": 642527232,
+      "syntheticInsertMs": 24046.2157,
+      "insertionIsProviderThroughput": false
+    },
+    {
+      "chunks": 10000,
+      "method": "hybrid-exact-tenant",
+      "samples": 10,
+      "p50Ms": 481.36909999999625,
+      "p95Ms": 492.64169999999285,
+      "cpuMicroseconds": {
+        "user": 3562000,
+        "system": 47000
+      },
+      "rssBefore": 662081536,
+      "rssAfter": 662081536,
+      "syntheticInsertMs": 24046.2157,
+      "insertionIsProviderThroughput": false
+    },
+    {
+      "chunks": 10000,
+      "method": "lexical",
+      "samples": 10,
+      "p50Ms": 367.07850000000326,
+      "p95Ms": 390.3692999999985,
+      "cpuMicroseconds": {
+        "user": 2969000,
+        "system": 94000
+      },
+      "rssBefore": 662077440,
+      "rssAfter": 662081536,
+      "syntheticInsertMs": 24046.2157,
+      "insertionIsProviderThroughput": false
+    }
+  ],
+  "limitations": "Warm local SQL timings only. Includes no HTTP, provider, multi-process concurrency, production data distribution or hosted resource limits. Peak RSS includes the WASM database and is not attributable solely to retrieval."
+}

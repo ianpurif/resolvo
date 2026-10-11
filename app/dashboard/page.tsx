@@ -1,145 +1,181 @@
 import Link from "next/link";
 import {
-  BookOpen,
-  Plug,
-  Ticket,
-  MessageSquare,
+  ArrowRight,
   ArrowUpRight,
-  Activity,
+  BookOpen,
+  MessageSquare,
+  Plus,
+  Ticket,
 } from "lucide-react";
 import { getWorkspace } from "@/lib/supabase/queries";
-import { PageHeading } from "@/components/admin/page-heading";
-import { EmptyState } from "@/components/admin/empty-state";
 import { StatusBadge } from "@/components/status-badge";
 import { formatDate } from "@/lib/utils";
 export default async function DashboardPage() {
   const data = await getWorkspace();
-  const metrics = [
-    { label: "Connected sources", value: data.counts.sources, icon: Plug },
-    { label: "Documents", value: data.counts.documents, icon: BookOpen },
-    { label: "Knowledge chunks", value: data.counts.knowledge, icon: BookOpen },
-    { label: "Open tickets", value: data.counts.tickets, icon: Ticket },
-    {
-      label: "Conversations",
-      value: data.counts.conversations,
-      icon: MessageSquare,
-    },
-  ];
-  const activity = [
-    ...data.documents.map((doc) => ({
-      id: doc.id,
-      title: doc.name,
-      date: doc.updated_at,
-      note:
-        doc.status === "ready"
-          ? "Knowledge indexed"
-          : doc.status === "failed"
-            ? "Indexing failed"
-            : "Indexing in progress",
-    })),
-    ...data.tickets.map((ticket) => ({
-      id: ticket.id,
-      title: ticket.ticket_number,
-      date: ticket.created_at,
-      note: "Ticket created",
-    })),
-    ...data.conversations.map((conv) => ({
-      id: conv.id,
-      title: conv.title,
-      date: conv.updated_at,
-      note: "Conversation updated",
-    })),
-  ]
-    .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
-    .slice(0, 8);
   return (
     <>
-      <PageHeading
-        eyebrow="Your company workspace"
-        title="Knowledge your team can trust."
-        description="Connect your sources and keep answers grounded in your company’s own data."
-      />
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {metrics.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="rounded-xl border bg-white p-5">
-            <div className="mb-5 flex justify-between text-xs text-muted-foreground">
+      <div className="mb-8 flex items-center justify-between gap-5">
+        <div>
+          <p className="mb-3 text-[11px] text-muted-foreground">
+            A clearer view of your company knowledge
+          </p>
+          <h1 className="text-3xl font-medium tracking-[-.045em] sm:text-4xl">
+            Your workspace
+          </h1>
+        </div>
+        <Link
+          href="/admin/knowledge"
+          className="flex shrink-0 items-center gap-2 rounded-lg border bg-white px-3 py-2.5 text-xs sm:px-4"
+        >
+          <Plus className="size-3.5" />
+          <span className="hidden sm:inline">Add knowledge</span>
+          <span className="sm:hidden">Add source</span>
+        </Link>
+      </div>
+      <Link
+        href="/support"
+        className="group mb-8 flex items-center justify-between gap-5 overflow-hidden rounded-2xl border border-[#d4e3d6] bg-[#eaf3e9] px-6 py-7 sm:px-8"
+      >
+        <div>
+          <span className="mb-4 flex items-center gap-2 text-[10px] font-semibold tracking-wider text-primary">
+            <MessageSquare className="size-3.5" />
+            RESOLVO ASSISTANT
+          </span>
+          <h2 className="text-2xl font-medium tracking-[-.035em]">
+            Start with a good question.
+          </h2>
+          <p className="mt-2 text-xs leading-6 text-[#6a826d]">
+            Find answers in your company’s own sources.
+          </p>
+        </div>
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-transform group-hover:translate-x-1">
+          <ArrowRight className="size-5" />
+        </span>
+      </Link>
+      <div className="mb-9 grid grid-cols-3 divide-x rounded-2xl border bg-white py-5">
+        {[
+          {
+            label: "Sources",
+            value: data.counts.sources,
+            href: "/admin/knowledge",
+            icon: BookOpen,
+          },
+          {
+            label: "Your chats",
+            value: data.counts.conversations,
+            href: "/admin/conversations",
+            icon: MessageSquare,
+          },
+          {
+            label: "Open tickets",
+            value: data.counts.tickets,
+            href: "/admin/tickets",
+            icon: Ticket,
+          },
+        ].map(({ label, value, href, icon: Icon }) => (
+          <Link href={href} key={label} className="px-4 sm:px-6">
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <Icon className="hidden size-3.5 sm:block" />
               {label}
-              <Icon className="size-4" />
             </div>
-            <p className="text-3xl font-medium">{value}</p>
-          </div>
+            <p className="mt-3 text-2xl font-medium tracking-tight">{value}</p>
+          </Link>
         ))}
       </div>
-      <div className="grid gap-5 xl:grid-cols-2">
-        <section className="rounded-xl border bg-white">
-          <div className="flex justify-between border-b p-5 text-xs font-semibold">
-            Connected knowledge
-            <Link href="/admin/knowledge" className="flex gap-1 text-primary">
-              Manage
+      <div className="grid gap-7 lg:grid-cols-2">
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Recent knowledge</h2>
+            <Link
+              href="/admin/knowledge"
+              className="flex items-center gap-1 text-[11px] text-primary"
+            >
+              View all
               <ArrowUpRight className="size-3" />
             </Link>
           </div>
-          {!data.sources.length ? (
-            <EmptyState
-              title="Start with your first source."
-              description="Upload documents, import a public web page, or write knowledge for your company."
-            />
-          ) : (
-            <div className="divide-y">
-              {data.sources.slice(0, 6).map((source) => (
-                <div
-                  key={source.id}
-                  className="flex items-center justify-between gap-3 p-5"
+          <div className="overflow-hidden rounded-2xl border bg-white">
+            {data.documents.length ? (
+              data.documents.slice(0, 5).map((doc) => (
+                <Link
+                  href="/admin/knowledge"
+                  key={doc.id}
+                  className="flex items-center gap-3 border-b px-5 py-5 last:border-0 hover:bg-muted/40"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-medium">
-                      {source.name}
-                    </p>
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      {source.kind} ·{" "}
-                      {source.last_indexed_at
-                        ? formatDate(source.last_indexed_at, true) + " UTC"
-                        : "Awaiting successful indexing"}
+                  <BookOpen className="size-4 shrink-0 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium">{doc.name}</p>
+                    <p className="mt-1.5 text-[10px] text-muted-foreground">
+                      {formatDate(doc.updated_at)} · {doc.chunk_count} chunks
                     </p>
                   </div>
-                  {data.documents.find(
-                    (doc) => doc.data_source_id === source.id,
-                  ) && (
-                    <StatusBadge
-                      status={
-                        data.documents.find(
-                          (doc) => doc.data_source_id === source.id,
-                        )!.status
-                      }
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                  <StatusBadge status={doc.status} />
+                </Link>
+              ))
+            ) : (
+              <div className="px-6 py-9">
+                <BookOpen className="mb-4 size-6 text-[#9bac9c]" />
+                <p className="text-sm font-medium">Connect your first source</p>
+                <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                  A document, a public web page, or something your team knows.
+                </p>
+                <Link
+                  href="/admin/knowledge"
+                  className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-primary"
+                >
+                  Add knowledge
+                  <ArrowRight className="size-3.5" />
+                </Link>
+              </div>
+            )}
+          </div>
         </section>
-        <section className="rounded-xl border bg-white">
-          <h2 className="flex items-center gap-2 border-b p-5 text-xs font-semibold">
-            <Activity className="size-4" />
-            Recent activity
-          </h2>
-          {!activity.length ? (
-            <EmptyState
-              title="A clean workspace."
-              description="Your company’s indexing, tickets and conversations will appear here."
-            />
-          ) : (
-            <div className="divide-y">
-              {activity.map((item) => (
-                <div key={item.id} className="p-5">
-                  <p className="truncate text-xs font-medium">{item.title}</p>
-                  <p className="mt-1.5 text-[10px] text-muted-foreground">
-                    {item.note} · {formatDate(item.date, true)} UTC
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Pick up a conversation</h2>
+            <Link
+              href="/admin/conversations"
+              className="flex items-center gap-1 text-[11px] text-primary"
+            >
+              View all
+              <ArrowUpRight className="size-3" />
+            </Link>
+          </div>
+          <div className="overflow-hidden rounded-2xl border bg-white">
+            {data.conversations.length ? (
+              data.conversations.slice(0, 5).map((conv) => (
+                <Link
+                  href={"/support?conversation=" + conv.id}
+                  key={conv.id}
+                  className="flex items-center gap-3 border-b px-5 py-5 last:border-0 hover:bg-muted/40"
+                >
+                  <MessageSquare className="size-4 shrink-0 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium">{conv.title}</p>
+                    <p className="mt-1.5 text-[10px] text-muted-foreground">
+                      {formatDate(conv.updated_at, true)} UTC
+                    </p>
+                  </div>
+                  <ArrowUpRight className="size-3.5 text-muted-foreground" />
+                </Link>
+              ))
+            ) : (
+              <div className="px-6 py-9">
+                <MessageSquare className="mb-4 size-6 text-[#9bac9c]" />
+                <p className="text-sm font-medium">A fresh start</p>
+                <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                  Your personal conversations will be saved automatically.
+                </p>
+                <Link
+                  href="/support"
+                  className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-primary"
+                >
+                  Start a chat
+                  <ArrowRight className="size-3.5" />
+                </Link>
+              </div>
+            )}
+          </div>
         </section>
       </div>
     </>

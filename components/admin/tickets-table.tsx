@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { friendlyError } from "@/lib/client-errors";
 import {
   Search,
   Loader2,
@@ -45,12 +47,14 @@ export function TicketsTable({ tickets }: { tickets: Ticket[] }) {
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.error ?? "Couldn't update ticket status.");
+      toast.success("Ticket status updated");
       router.refresh();
     } catch (error) {
+      toast.error(
+        friendlyError(error, "Could not update the ticket. Check your connection and try again."),
+      );
       setError(
-        error instanceof Error
-          ? error.message
-          : "Couldn't update ticket status.",
+        friendlyError(error, "Could not update the ticket. Check your connection and try again."),
       );
     } finally {
       setSaving(null);

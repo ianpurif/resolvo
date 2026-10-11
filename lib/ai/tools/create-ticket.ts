@@ -17,7 +17,7 @@ export function hasTicketConsent(history: ChatMessage[]) {
   )
     return false;
   if (
-    /\b(?:create|open|raise|submit|file|make|log|record)\b[\s\S]{0,70}\b(?:ticket|support request)\b/i.test(
+    /^(?:(?:please|can you|could you|would you|will you)\s+)?(?:(?:I (?:want|need|would like)\s+)(?:you\s+)?to\s+)?(?:create|open|raise|submit|file|make|log|record)\b[\s\S]{0,70}\b(?:ticket|support request)\b/i.test(
       text,
     )
   )

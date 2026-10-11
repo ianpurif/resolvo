@@ -13,6 +13,7 @@ export function supportModel() {
     maxTokens: 1500,
     timeout: 45000,
     maxRetries: 1,
+    streamUsage: true,
     // The customer receives the final answer only. No reasoning is streamed.
     modelKwargs: { thinking: { type: "disabled" } },
   });

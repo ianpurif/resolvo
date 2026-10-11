@@ -28,7 +28,7 @@ export const sourceInputSchema = z.discriminatedUnion("kind", [
     .strict(),
   z.object({ kind: z.literal("website"), url: z.url().max(2048) }).strict(),
 ]);
-export const acceptedExtensions = ["pdf", "docx", "txt", "md"] as const;
+export const acceptedExtensions = ["pdf", "docx", "txt", "md", "csv", "tsv", "json"] as const;
 export function validateUpload(file: { name: string; size: number }) {
   const extension = file.name.split(".").at(-1)?.toLowerCase();
   if (
@@ -37,7 +37,7 @@ export function validateUpload(file: { name: string; size: number }) {
       extension as (typeof acceptedExtensions)[number],
     )
   )
-    throw new Error("Choose a PDF, DOCX, TXT, or Markdown file.");
+    throw new Error("Choose a PDF, DOCX, TXT, Markdown, CSV, TSV, or JSON file.");
   if (!file.size) throw new Error("This file is empty.");
   if (file.size > MAX_FILE_SIZE) throw new Error(UPLOAD_SIZE_ERROR);
   return extension;

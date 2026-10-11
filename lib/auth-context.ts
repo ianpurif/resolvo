@@ -9,6 +9,9 @@ export interface TenantContext {
   organization: Organization;
   role: "owner" | "member";
 }
+export function requireKnowledgeOwner(context: TenantContext) {
+  if (context.role !== "owner") throw new AppError("Only workspace owners can change company knowledge.", 403);
+}
 export async function resolveIdentity(db: SupabaseClient) {
   const { data, error } = await db.auth.getUser();
   if (error || !data.user || data.user.app_metadata.provider !== "google")

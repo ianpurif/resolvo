@@ -1,0 +1,4727 @@
+{
+  "version": 2,
+  "reviewer": "Codex assistant; source-backed inspection, not a blinded human review",
+  "method": "Verified 336 final responses against frozen source-backed keys and actual displayed excerpts. 127 core responses have byte-identical answer text and displayed source text/provenance to already reviewed responses, with evidence-projection hashes recorded; 161 changed core answers and all 48 supplemental answers were freshly inspected. Recomputed arithmetic, checked roles, conditions, dates, conflicts, uncertainty and scope claims. Missing source sections invalidate claimed continuous retrieved coverage. Requested-answer correctness is distinct from semantic citation support and unsupported secondary claims. Alias screening assigns no reviewed status.",
+  "limits": [
+    "Assistant review can make errors; independently authored questions and blinded human review remain deployment gates.",
+    "The first unseen generated-content holdout was evaluated on implementation eaf30eb569d418c4195ba595312b638bdcaf19f82e258efa9ace4005f15eae71. Its review is preserved in initial-source-review.json. The final cache authorization and empty-degraded-search fix was independently derived from an authorization probe, not those holdout outcomes; no retrieval ranking or nonempty-evidence prompts changed. The subsequent holdout replay is regression verification, not a second unseen benchmark.",
+    "Holdout generator templates were known. Acceptance outcomes informed earlier generic citation-format repairs; acceptance is not a blind final benchmark.",
+    "The reserved-book question is ambiguous; the frozen key assumes a pending reservation. Report sensitivity excluding this case.",
+    "Supplemental paraphrases reuse known development sources and keys. They were frozen after production code was fixed, before evaluation, and did not inform tuning.",
+    "Correct/complete evaluates requested facts and justified uncertainty. Incorrect additional source-scope claims can pass that dimension while failing semantic citation support and unsupported-claim checks. Repeated samples are not independent questions; no confidence interval or perfect-accuracy claim."
+  ],
+  "runs": {
+    "live-cacheguard": {
+      "resultsSha256": "46cca3418cbdee118af8e0661f6ba6a179b91fe3ba7d880d6283a7d01769ad1f",
+      "implementationHash": "7e9ccec487014ace2287e98d0d321bf3abe9ae873b2f9a0f32b122578e6c2a0b",
+      "startedAt": "2026-10-11T07:53:47.665Z",
+      "completedAt": "2026-10-11T07:58:04.648Z",
+      "repeats": 2,
+      "frozenHashes": {
+        "development.json": "d908543c342e241378d546e1ef8462746d9a0894caf0d324258f76315f3b8396",
+        "acceptance.json": "016f766051c0c237931af43738b1a5179dc8e545bdef7254e3b9661e60cf9dfe",
+        "regression.json": "6b1de715cf472d0e1ff0feb0abe55f4cc170231c6a9fce65115d92e01796feed",
+        "holdout.json": "3c3d9f0c88fd70cdb57562253f791b98a4f4ef5c4a198b840596b6af78d3201c",
+        "tests/the_next_level_novella.txt": "5bf23267b0ef4d4302088109c2982eba41cb6e1a76dc4252b537e30868b1488b"
+      }
+    },
+    "live-paraphrases": {
+      "resultsSha256": "7d68231b95a77223f04189c4f8d71e889d837cdae93efdc84b9e90c25a7a2a57",
+      "implementationHash": "7e9ccec487014ace2287e98d0d321bf3abe9ae873b2f9a0f32b122578e6c2a0b",
+      "startedAt": "2026-10-11T07:59:22.563Z",
+      "completedAt": "2026-10-11T08:02:27.557Z",
+      "repeats": 2,
+      "frozenHashes": {
+        "paraphrase.json": "7350867da817cf6b3bddc74edcb6158248be83035e1e68c7b9dada99c1353d22",
+        "development.json": "d908543c342e241378d546e1ef8462746d9a0894caf0d324258f76315f3b8396",
+        "tests/the_next_level_novella.txt": "5bf23267b0ef4d4302088109c2982eba41cb6e1a76dc4252b537e30868b1488b"
+      }
+    }
+  },
+  "records": [
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "duplicate",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 0,
+          "projectionSha256": "8a2d5200b57e7a62e7e9eed0fee8706924ef40d6740ee6ffb06f366f02114395"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "duplicate",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "expiry",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "expiry",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "2127e1e9fc050a21d6836ca7c124d12ff6616e87c0703e8dea3c3f8a89890b95"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "retry",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "retry",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        false
+      ],
+      "citationSupport": [
+        true,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        true
+      ],
+      "note": "Repeat 1 adds automatic retry behavior that neither displayed source establishes. Repeat 0 states source-backed retry guidance."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "outbox",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "outbox",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "ref",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "4f43f765dd42505bb397f290394f837f87e2222dee2c0bde308fe55c2da8a17e"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "4f43f765dd42505bb397f290394f837f87e2222dee2c0bde308fe55c2da8a17e"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "ref",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 0,
+          "projectionSha256": "b006da5aa643bcb0ca138507a6a24a1ac74cc108c5942813e02f37587f548e06"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "2a3327db00d9e64609946047561363b5ff2ac7e15e1372033c355e1f3fe74986"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "switch",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Both topic-switch answers falsely refuse despite credential evidence in the authorized corpus; their displayed outbox excerpt supports only the stated retrieval limitation."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "switch",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "abc24c8c0ddc159f0524f891c40c1b5fdf3a57d05daee87234e4370cde6da2b6"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "abc24c8c0ddc159f0524f891c40c1b5fdf3a57d05daee87234e4370cde6da2b6"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "missing",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-engineering",
+      "caseId": "missing",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-operations",
+      "caseId": "approval",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-operations",
+      "caseId": "approval",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "8c343feda12cd5b6363534f4ee44c36e3488522bf4ecc9d3d11a6be9256e67c5"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-operations",
+      "caseId": "expense",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-operations",
+      "caseId": "expense",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "640f2436000490ae195793b8a4bb33f95d7593316343121a82e04b2d7339e824"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-operations",
+      "caseId": "sla",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "ed7d0bd73bd573874cf58914f068c135c1f95aa2abdd5de91500ab114c683904"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-operations",
+      "caseId": "sla",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-operations",
+      "caseId": "mixed",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-operations",
+      "caseId": "mixed",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-finance",
+      "caseId": "count",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "bc62400044f58d8293adcf1200c07f15576f1f9574aec48f48f519998d176cbc"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "bc62400044f58d8293adcf1200c07f15576f1f9574aec48f48f519998d176cbc"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-finance",
+      "caseId": "count",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "559d655f1c04425d7e62ad60dd2d146363489329d8a0b0d5b453295176a760e9"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-finance",
+      "caseId": "rate",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "development-finance",
+      "caseId": "rate",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-education",
+      "caseId": "lend",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "4b97352af2dc5c2aa89534aad0920ad9a3893ec647f124d41b73ba1cbb43ae3e"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "4b97352af2dc5c2aa89534aad0920ad9a3893ec647f124d41b73ba1cbb43ae3e"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-education",
+      "caseId": "lend",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "7397f1df82ae5df14207222fcffd8600490e28b127165910879ec9e6dfef14d8"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-education",
+      "caseId": "renew",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-education",
+      "caseId": "renew",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        false
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Repeat 1 quotes the renewal condition but refuses its frozen pending-reservation interpretation; wording is ambiguous and sensitivity is reported."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-education",
+      "caseId": "roles",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-education",
+      "caseId": "roles",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-education",
+      "caseId": "tuition",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "1871d19b13d2ede2d91e04129dc71a101f61b3f13daa34634fbd2d815edc2f4a"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "1871d19b13d2ede2d91e04129dc71a101f61b3f13daa34634fbd2d815edc2f4a"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-education",
+      "caseId": "tuition",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-healthcare",
+      "caseId": "urgent",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "8f120a058ad1abc5810057de40d8ae9068f02728b84b1df7f12ef2e872f403b6"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-healthcare",
+      "caseId": "urgent",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-healthcare",
+      "caseId": "notes",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "7106d64bd42e2a86d971837a24b523bebce44f1fe3a0d437aaa7ab01fa188e8b"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-healthcare",
+      "caseId": "notes",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "78da4c026f6726838d6a429a4733d1b71bdd392f543786acf6faf12ee7f47c0d"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "78da4c026f6726838d6a429a4733d1b71bdd392f543786acf6faf12ee7f47c0d"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-healthcare",
+      "caseId": "drug",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "b9e820ec115b9de5fe59d21a9574d97d6784a0f2f215174d8cc376fc2cf7be5a"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "b9e820ec115b9de5fe59d21a9574d97d6784a0f2f215174d8cc376fc2cf7be5a"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-healthcare",
+      "caseId": "drug",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-conflicts",
+      "caseId": "current",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-conflicts",
+      "caseId": "current",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-conflicts",
+      "caseId": "hours",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-conflicts",
+      "caseId": "hours",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-commerce",
+      "caseId": "plans",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-commerce",
+      "caseId": "plans",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-commerce",
+      "caseId": "refund",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-commerce",
+      "caseId": "refund",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-commerce",
+      "caseId": "return",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-commerce",
+      "caseId": "return",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-professional-services",
+      "caseId": "migration",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "caca197d7038a817b1b638c2b4741abef61b256518e07e35ac0536c3f876e8ef"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "caca197d7038a817b1b638c2b4741abef61b256518e07e35ac0536c3f876e8ef"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-professional-services",
+      "caseId": "migration",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-professional-services",
+      "caseId": "scope",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-professional-services",
+      "caseId": "scope",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 0,
+          "projectionSha256": "9abb06ae23c7e0e8a2e9dd5be559a6926722afdf176d4cf8ad0084bf43276c44"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-professional-services",
+      "caseId": "overview",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "acceptance-professional-services",
+      "caseId": "overview",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-1",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant original evidence exists, but baseline retrieval refuses the factual question.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "3d4f1fd9276034d6fa51003f5c9af6a988f1cc1ff3c602177d3af44c507cb29c"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "3d4f1fd9276034d6fa51003f5c9af6a988f1cc1ff3c602177d3af44c507cb29c"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-1",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "c06d3cffe9b954304941825d02af71f206afcb832d6f8c0d006a17b9ffb37984"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-2",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant original evidence exists, but baseline retrieval refuses the factual question.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "4fcb7ca02c937680f74b641cade87944d6e802853e936ef3e1f0399f2cb4b8b8"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "4fcb7ca02c937680f74b641cade87944d6e802853e936ef3e1f0399f2cb4b8b8"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-2",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-3",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Answers the company rather than the frozen location question; displayed passage supports company context, not the requested province.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 0,
+          "projectionSha256": "ad88270a295a3a7b45218c1a85580ad3d47b76929ebc92f12589b46d54f3cbe1"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-3",
+      "variant": "improved",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Supporting location passage is not selected; answer appropriately limits itself to retrieved text but falsely refuses relative to the source."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-4",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact, but displayed excerpt is overwritten by another passage or clipped before the claimed detail."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-4",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-5",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact, but displayed excerpt is overwritten by another passage or clipped before the claimed detail.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "0bf8d1f3c63287ea21aab488df4fd7a758ae2fa607b96f21e33c4bcbc6c35cf1"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-5",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-6",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant original evidence exists, but baseline retrieval refuses the factual question.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "2af1aab3a0fef7cda54157f19f6bc411b415cbb6159d3ddf2303d601a64ac36a"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "2af1aab3a0fef7cda54157f19f6bc411b415cbb6159d3ddf2303d601a64ac36a"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-6",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "343c97fff058b396eacc50a825176c288bba657468a07d6aebe3d33c3a8dc45c"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-7",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant original evidence exists, but baseline retrieval refuses the factual question.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "804265ec9f361fb6c660038d47e7a85b6ccac63938079c39b4760af92de19627"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "804265ec9f361fb6c660038d47e7a85b6ccac63938079c39b4760af92de19627"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-7",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "c43ac10559313a65d3b3d848f4aae523fb4b3deaf7379cd3de2c9ac74bd098b8"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-8",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant original evidence exists, but baseline retrieval refuses the factual question.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "e4400922d28b05f0d437286129213b13908c9c62a320dbd5f67ea9553ad8d571"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "e4400922d28b05f0d437286129213b13908c9c62a320dbd5f67ea9553ad8d571"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-8",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-9",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-9",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-10",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact, but displayed excerpt is overwritten by another passage or clipped before the claimed detail."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-10",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-11",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant original evidence exists, but baseline retrieval refuses the factual question.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "9fe69841dc0bd8909a8abab3adbd135e8ec23f3f28d8619dcc6b38af5ac43e4f"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "9fe69841dc0bd8909a8abab3adbd135e8ec23f3f28d8619dcc6b38af5ac43e4f"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-11",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "ab5be3d093f7e267f0182d8caf464d5d6106dbb112abf1c94037bf0d82aa3109"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "ab5be3d093f7e267f0182d8caf464d5d6106dbb112abf1c94037bf0d82aa3109"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-12",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-12",
+      "variant": "improved",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "A factual question containing the noun summary is routed to partial overview passages. Repeat 0 is rejected for an unknown citation; repeat 1 falsely refuses because API evidence is absent.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "788e8e4eff3de2095bc5cb440a02a94fe56e5705ca8e6deda3e12851784fce11"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-13",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact, but displayed excerpt is overwritten by another passage or clipped before the claimed detail."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-13",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-14",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant original evidence exists, but baseline retrieval refuses the factual question."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-14",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "6d69ea6bf135dc057ffcc0f1c575a9dbb1a13cd052b17b3bb289c51eed33d4f6"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "6d69ea6bf135dc057ffcc0f1c575a9dbb1a13cd052b17b3bb289c51eed33d4f6"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-15",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant original evidence exists, but baseline retrieval refuses the factual question.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "ded9106351bc8f52173794f3f2b2a81028308734d9c0bd461494e277872e3cb1"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "ded9106351bc8f52173794f3f2b2a81028308734d9c0bd461494e277872e3cb1"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-15",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "46be2974174bbcf902c58bd1377058e37a0f5b3d83f63a32a9b408fd57b3bc9f"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-16",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant original evidence exists, but baseline retrieval refuses the factual question.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "8574a088bb5d7d4bbe6938473154bd91c870977081081bb3e45fe780a5720e81"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "8574a088bb5d7d4bbe6938473154bd91c870977081081bb3e45fe780a5720e81"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-16",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "8999e85d968bf51acc9a7994b76bbae1b017526a9ac01441a65b3401d60c209e"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-17",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact, but displayed excerpt is overwritten by another passage or clipped before the claimed detail.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "e650abf6003cfe4099407c5a2b2662dccbf2be3c0a669be2d6e843d0008fc486"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-17",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 0,
+          "projectionSha256": "a137fa90c8c99c8146f4291fb9f8657b04ea0691349d9e564f560f43d2423bbd"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-18",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact, but displayed excerpt is overwritten by another passage or clipped before the claimed detail.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "5256d14cec78644bcf054289a3da53ef908b3832ae4b844930af239d942e9adf"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "5256d14cec78644bcf054289a3da53ef908b3832ae4b844930af239d942e9adf"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-18",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "3594c7a4d5c1d1490e96aa6866b94b3d6f773f2fe523f34d7303c87052185176"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "3594c7a4d5c1d1490e96aa6866b94b3d6f773f2fe523f34d7303c87052185176"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-19",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact, but displayed excerpt is overwritten by another passage or clipped before the claimed detail.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "196b37b842d50f527b832c2af87448f47033fc996774cfd8ef18241236864a32"
+        },
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "196b37b842d50f527b832c2af87448f47033fc996774cfd8ef18241236864a32"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-19",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-release",
+          "repeat": 1,
+          "projectionSha256": "335c2885cb884ef65d57ac20691d05b79bd0286c528326826f3d6cb8b8fce55a"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-20",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact, but displayed excerpt is overwritten by another passage or clipped before the claimed detail."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "novella-regression",
+      "caseId": "novella-20",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-release",
+          "repeat": 0,
+          "projectionSha256": "af92b94ad023928ba2e606087108a6d3a1afba8c0b6518fe239abfcc0b6c46ca"
+        },
+        {
+          "run": "live-release",
+          "repeat": 0,
+          "projectionSha256": "af92b94ad023928ba2e606087108a6d3a1afba8c0b6518fe239abfcc0b6c46ca"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "renewal",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "45ce764430f2e2747ae46a1d9c89b0c5b83a0db86e6612f124b620807f05f45b"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "45ce764430f2e2747ae46a1d9c89b0c5b83a0db86e6612f124b620807f05f45b"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "renewal",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 0,
+          "projectionSha256": "38c1a9dae7790b251da9e54759b92d447228909aff103926ae15b7946dd546bf"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "99c972204977d12f69d18a549bf21ad80f4b055291a4a890f30daba406cc9e7d"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "capacity",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "89082c3834d5a850809710d2cb81295c0049c72973a4f3c0ba5b42fa4837f493"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "capacity",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "13e35366d86a9e6a6ac75913b34033f1238cf72c55cc5b434c8c338062b28884"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "13e35366d86a9e6a6ac75913b34033f1238cf72c55cc5b434c8c338062b28884"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "distributed",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "distributed",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "1e2bb041e8138266bead1427022dfef9e36a53b4392fc11091cae38d4dc65974"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "1e2bb041e8138266bead1427022dfef9e36a53b4392fc11091cae38d4dc65974"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "effective",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "788c08eefc215021740b08f57debd6c726ba3d04512a22d7a4740b53e1efa0f1"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "effective",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "ac303fb84060c4a222916f60df39f6b5022c55dc6b662fb4641cc28d782bf68e"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "ac303fb84060c4a222916f60df39f6b5022c55dc6b662fb4641cc28d782bf68e"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "follow",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "660fe6d7691b0fc9f033522ee038942deb6e1135cd57d91d14023059714b6878"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "660fe6d7691b0fc9f033522ee038942deb6e1135cd57d91d14023059714b6878"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "follow",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "insurance",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "insurance",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        true,
+        true
+      ],
+      "note": "Insurance uncertainty is correct, but both answers describe retrieved records 1 through 29 although selected/cited excerpts omit 15 through 19. Secondary source-scope claim fails support."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "renewal",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "0ddeada64c534bc956fd37bc88b1e7912f4b64f118710a6e794836cf5c68c7fe"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "renewal",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "10ef310825f177b3bd2984c5ac8f2277eb1423f6bb8a539bbc9ff81aab2455b9"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "10ef310825f177b3bd2984c5ac8f2277eb1423f6bb8a539bbc9ff81aab2455b9"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "capacity",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim.",
+      "equivalentPreviouslyReviewed": [
+        null,
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "093eddf6a3780eb75d0dc8b5375e4e5562e40716641972385ba481c47e828220"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "capacity",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "49143a23eba052016e860f2114dcab6f9767adbc22de8ce0392fec76a1a20b1a"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "49143a23eba052016e860f2114dcab6f9767adbc22de8ce0392fec76a1a20b1a"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "distributed",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 0,
+          "projectionSha256": "b2d476cf28bc76e9940d035d9d1390169965bf2eb52c14cfc90a48a202928fda"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 0,
+          "projectionSha256": "b2d476cf28bc76e9940d035d9d1390169965bf2eb52c14cfc90a48a202928fda"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "distributed",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "3cb0169a8d0fa304ac25c519a401ccfa2a83217f4881d8cf08046615c843248d"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "3cb0169a8d0fa304ac25c519a401ccfa2a83217f4881d8cf08046615c843248d"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "effective",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "effective",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "16251c852e053a6d1fe37b8d053f5460c0e15f952d9983b998e6ff4991a394fc"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "16251c852e053a6d1fe37b8d053f5460c0e15f952d9983b998e6ff4991a394fc"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "follow",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "7b1d018a3b9bf84f22f0a7c44527d6e5d4965ad783b4f7aa807334c66a9176a6"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "7b1d018a3b9bf84f22f0a7c44527d6e5d4965ad783b4f7aa807334c66a9176a6"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "follow",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "a6779903c1285a02bb916bbdb818277b056e2ac13f424fb7df13066527daa891"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "insurance",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "insurance",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        true
+      ],
+      "note": "Repeat 1 describes records 1 through 24 although the cited excerpts omit 15 through 19. Requested insurance uncertainty remains correct; secondary source-scope claim fails support."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "renewal",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "385f097094bf85417254a907b55c062478f1993095a3281ca9995fcfd5e24597"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "385f097094bf85417254a907b55c062478f1993095a3281ca9995fcfd5e24597"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "renewal",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "d646b3859ec4ff50f7fb4f6f65ebeb556a17bb1651c715386627b588a8f4fd69"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "d646b3859ec4ff50f7fb4f6f65ebeb556a17bb1651c715386627b588a8f4fd69"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "capacity",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "8298a4c01c034792582b6bc83e687127e31414ad86c262d70e96d806ff8e6aa9"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "8298a4c01c034792582b6bc83e687127e31414ad86c262d70e96d806ff8e6aa9"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "capacity",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "6f02c03faf443e96159e900949c2b1d85b2da6fd017888d10a4baae1b979a1aa"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "6f02c03faf443e96159e900949c2b1d85b2da6fd017888d10a4baae1b979a1aa"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "distributed",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "distributed",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "15a57ff7ef09e084e6e2f9340f7ccd6adcbecbacdeab6c18ba5af1e6441e574d"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "effective",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "effective",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "follow",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "7a1a7791bc4befcbc2d3d559228c404579320c6a50d1df954e2fef4d17a1c127"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "follow",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 0,
+          "projectionSha256": "016a18bcaef063f33d197f36c941732ee287ca94ca99054cc28ffd5c97727968"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 0,
+          "projectionSha256": "016a18bcaef063f33d197f36c941732ee287ca94ca99054cc28ffd5c97727968"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "insurance",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested fact or uncertainty is correct, but the document-ID citation map displays another section or a clipped passage that does not support the claim."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-research-B71909",
+      "caseId": "insurance",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "renewal",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty, but document-ID citation mapping shows a different section.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "62bdc9abe7b49e84e00cc20f86b2ceb0edbf340f7fbd56d7dcd49105300d828b"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "62bdc9abe7b49e84e00cc20f86b2ceb0edbf340f7fbd56d7dcd49105300d828b"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "renewal",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "fe6238afe73c7d3e19829920ecfbf6b061e9a02ae02de4be18b1924da5d18efc"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "fe6238afe73c7d3e19829920ecfbf6b061e9a02ae02de4be18b1924da5d18efc"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "capacity",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty, but document-ID citation mapping shows a different section.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "d095b9ca94b8b57b0e6b12d2e68036c658e664a1917a3ac746044a15bb24fe66"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "d095b9ca94b8b57b0e6b12d2e68036c658e664a1917a3ac746044a15bb24fe66"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "capacity",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "37c00cc0502ede0cf905766352db00c9136030c9f6df13e32035e9e9319c5e42"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "37c00cc0502ede0cf905766352db00c9136030c9f6df13e32035e9e9319c5e42"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "distributed",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty, but document-ID citation mapping shows a different section.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "ec313a08d5773c79222520ff7394722db4a188d2d51e62dfe94e030c04936350"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "ec313a08d5773c79222520ff7394722db4a188d2d51e62dfe94e030c04936350"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "distributed",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "f74e29957f2e787cc70ae03c7e017398949f64ca82ab5ed46c2fbb2b169f3c53"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "f74e29957f2e787cc70ae03c7e017398949f64ca82ab5ed46c2fbb2b169f3c53"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "effective",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "6330151aff038c8057994e1af9f6adaf164cc40e9c71ca332256210be0fdcae0"
+        },
+        null
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "effective",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "9ddf8d25635fecd34adc0c741eae03102352999fc610e2744bbb4a9a957ba3a7"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "9ddf8d25635fecd34adc0c741eae03102352999fc610e2744bbb4a9a957ba3a7"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "follow",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty, but document-ID citation mapping shows a different section.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "784b0db5405c6c78f97f4ccb655014ed7d75f833df7bb58ed5c06fcb21a1303a"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "784b0db5405c6c78f97f4ccb655014ed7d75f833df7bb58ed5c06fcb21a1303a"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "follow",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found.",
+      "equivalentPreviouslyReviewed": [
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "91a52a5e484764f67f67b35b82ef62a50ade04b4ed0414bdc06b02a950042958"
+        },
+        {
+          "run": "live-holdout",
+          "repeat": 1,
+          "projectionSha256": "91a52a5e484764f67f67b35b82ef62a50ade04b4ed0414bdc06b02a950042958"
+        }
+      ]
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "insurance",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty, but document-ID citation mapping shows a different section."
+    },
+    {
+      "run": "live-cacheguard",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "insurance",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        true,
+        true
+      ],
+      "note": "Insurance uncertainty is correct, but both answers claim retrieved records 1 through 44 although excerpts only cover 1 through 14 and 40 through 44. Secondary source-scope statement is unsupported."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-engineering",
+      "caseId": "duplicate-original",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-engineering",
+      "caseId": "duplicate-original",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-engineering",
+      "caseId": "duplicate-paraphrase",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-engineering",
+      "caseId": "duplicate-paraphrase",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-engineering",
+      "caseId": "retry-original",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        true
+      ],
+      "citationSupport": [
+        false,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        true,
+        false
+      ],
+      "note": "Repeat 0 adds automatic retry behavior not established by the API contract; all paraphrased retry responses stay within source-backed guidance."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-engineering",
+      "caseId": "retry-original",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-engineering",
+      "caseId": "retry-paraphrase",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-engineering",
+      "caseId": "retry-paraphrase",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-operations",
+      "caseId": "approval-original",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-operations",
+      "caseId": "approval-original",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-operations",
+      "caseId": "approval-paraphrase",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-operations",
+      "caseId": "approval-paraphrase",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-operations",
+      "caseId": "expense-original",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-operations",
+      "caseId": "expense-original",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-operations",
+      "caseId": "expense-paraphrase",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-operations",
+      "caseId": "expense-paraphrase",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-finance",
+      "caseId": "count-original",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-finance",
+      "caseId": "count-original",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-finance",
+      "caseId": "count-paraphrase",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-finance",
+      "caseId": "count-paraphrase",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-finance",
+      "caseId": "rate-original",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-finance",
+      "caseId": "rate-original",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-finance",
+      "caseId": "rate-paraphrase",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    },
+    {
+      "run": "live-paraphrases",
+      "corpus": "paraphrases-finance",
+      "caseId": "rate-paraphrase",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts, conditions, calculations and displayed source excerpts verified. Missing answers stay explicit; no unsupported addition found."
+    }
+  ]
+}

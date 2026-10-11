@@ -16,22 +16,22 @@ Open [Resolvo](http://localhost:3000). There is no unauthenticated chat, sample 
 
 ## Supabase and Google
 
-1. Apply every unapplied file in `supabase/migrations/` in filename order, using Supabase's SQL Editor or a linked `supabase db push`. Do not rerun applied migrations. An installation with tenant workspaces already enabled needs only [the resumable indexing migration](supabase/migrations/202610090001_resumable_indexing.sql); it preserves all existing documents and vectors.
+1. Apply every unapplied file in `supabase/migrations/` in filename order, using Supabase's SQL Editor or a linked `supabase db push`. Do not rerun applied migrations. Existing installations need [personal conversations](supabase/migrations/202610110001_personal_conversations.sql), [grounded hybrid retrieval](supabase/migrations/202610110002_grounded_hybrid_retrieval.sql) and [server-only query caching](supabase/migrations/202610110003_server_only_query_cache.sql). These preserve records and add conversation ownership, tenant-scoped hybrid search, passage provenance, owner-only knowledge changes, private audit events and protection against client-written query vectors. Review the [deployment and recovery procedure](docs/rag-operations.md) before applying hosted changes. Development, builds, and browser tests do not apply migrations to the hosted project.
 2. Enable Google in Supabase Auth and configure its OAuth client ID and secret. In Google's console, authorize the callback URL displayed by Supabase. Keep the Google client secret in Supabase, never in the application or browser.
 3. Set the Supabase Auth Site URL to the application's origin. Allow `http://localhost:3000/auth/callback` for local development and the exact HTTPS production callback for Vercel. Avoid broad wildcard production redirect allowlists.
 4. Add the settings below to local and Vercel environments. Restart the application after changing them.
 5. Sign in with Google. An account without a workspace is redirected to onboarding, where workspace creation and owner membership happen in one transaction.
 
-| Setting | Purpose |
-| --- | --- |
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_PUBLISHABLE_KEY` | Publishable or legacy anon key for authenticated SSR clients |
-| `APP_URL` | Exact application origin, such as `http://localhost:3000`; HTTPS in production |
-| `DEEPSEEK_API_KEY` | DeepSeek Flash generation and tool calling |
-| `VOYAGE_API_KEY` | Voyage document and query embeddings |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only credential for the shared Voyage rate-budget RPCs and setup inspection; document operations use user JWTs and RLS |
-| `VOYAGE_REQUESTS_PER_MINUTE` | Shared Voyage RPM budget; defaults to `3` for the trial account |
-| `VOYAGE_TOKENS_PER_MINUTE` | Shared Voyage TPM budget; defaults to `10000` for the trial account |
+| Setting                      | Purpose                                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `SUPABASE_URL`               | Supabase project URL                                                                                                          |
+| `SUPABASE_PUBLISHABLE_KEY`   | Publishable or legacy anon key for authenticated SSR clients                                                                  |
+| `APP_URL`                    | Exact application origin, such as `http://localhost:3000`; HTTPS in production                                                |
+| `DEEPSEEK_API_KEY`           | DeepSeek Flash generation and tool calling                                                                                    |
+| `VOYAGE_API_KEY`             | Voyage document and query embeddings                                                                                          |
+| `SUPABASE_SERVICE_ROLE_KEY`  | Server-only credential for the shared Voyage rate-budget RPCs and setup inspection; document operations use user JWTs and RLS |
+| `VOYAGE_REQUESTS_PER_MINUTE` | Shared Voyage RPM budget; defaults to `3` for the trial account                                                               |
+| `VOYAGE_TOKENS_PER_MINUTE`   | Shared Voyage TPM budget; defaults to `10000` for the trial account                                                           |
 
 All settings are read on the server. The publishable key is not a privileged secret, but the server-started PKCE flow keeps it out of the browser bundle as well. DeepSeek, Voyage, and service-role credentials never reach client components. A service-role key is explicitly rejected as an authentication key.
 
@@ -41,12 +41,12 @@ All settings are read on the server. The publishable key is not a privileged sec
 
 There are two different callbacks in this server-side PKCE flow:
 
-| Configuration | Required value for the current local setup |
-| --- | --- |
+| Configuration                                                                                  | Required value for the current local setup                  |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Google Cloud → Google Auth Platform → Clients → Web application → **Authorized redirect URIs** | `https://eobqdatsbwniqtvbusux.supabase.co/auth/v1/callback` |
-| Supabase → Authentication → URL Configuration → **Site URL** | `http://localhost:3000` |
-| Supabase → Authentication → URL Configuration → **Redirect URLs** | `http://localhost:3000/auth/callback` |
-| `.env.local` → **APP_URL** | `http://localhost:3000` |
+| Supabase → Authentication → URL Configuration → **Site URL**                                   | `http://localhost:3000`                                     |
+| Supabase → Authentication → URL Configuration → **Redirect URLs**                              | `http://localhost:3000/auth/callback`                       |
+| `.env.local` → **APP_URL**                                                                     | `http://localhost:3000`                                     |
 
 Google returns its provider authorization code to Supabase's `/auth/v1/callback`. Supabase then redirects to Resolvo's `/auth/callback`, where the server exchanges the application code using the HttpOnly PKCE verifier cookie and verifies the user before redirecting to the dashboard. Google rejects an unregistered provider callback before Resolvo's callback executes. A `303` from `/auth/google` is the expected handoff, and a `302` from Supabase alone does not prove Google accepted the request.
 
@@ -66,9 +66,11 @@ The original migrations remain unchanged as applied history. Sample data, order 
 
 ## Company knowledge
 
+Workspace owners can add, edit, re-index and delete knowledge; members can read it, download authorized originals and ask questions. Structured imports preserve field labels and record boundaries. Text retains chunk ordinals, extracted-text offsets and Markdown section labels without adding generated facts.
+
 At `/admin/knowledge`, connect:
 
-- PDF, DOCX, UTF-8 TXT or Markdown files, up to 4 MB; PDFs are limited to 100 pages.
+- PDF, DOCX, UTF-8 TXT, Markdown, CSV, TSV or JSON files, up to 4 MB; PDFs are limited to 100 pages.
 - One public HTML or plain-text web page at a time.
 - Manually written knowledge, up to 250,000 readable characters.
 
@@ -106,21 +108,33 @@ flowchart TD
 
 Each tenant-owned record has `organization_id`: memberships, sources, documents, chunks, conversations, messages, tickets, request ledgers and query-embedding caches. Membership is resolved from a server-verified Google user; browser tenant IDs are rejected. One account has one workspace membership, and an organization can have multiple members. Workspace membership provisioning beyond initial owner onboarding is an operator-controlled database operation; there is no public self-enrollment or role-changing API.
 
-Knowledge database and Storage clients carry the signed-in user's session, so RLS applies to all tenant data operations. Policies resolve `auth.uid() → organization_members → organization_id`. Composite foreign keys prevent linking another tenant's document, checkpoint or conversation. The membership helper has a fixed search path, no user-supplied identity parameters and a Google-provider check. Anonymous roles have no app-table or RPC grants. Storage includes a restrictive tenant boundary so older broad Storage policies cannot override workspace isolation. The server-only service client calls only provider-budget RPCs; their underlying rate tables contain no company text and deny direct access to authenticated and anonymous roles.
+Knowledge database and Storage clients carry the signed-in user's session, so RLS applies to source operations. Policies resolve `auth.uid() → organization_members → organization_id`. Composite foreign keys prevent linking another tenant's document, checkpoint or conversation. The membership helper has a fixed search path, no user-supplied identity parameters and a Google-provider check. Anonymous roles have no app-table or RPC grants. Storage includes a restrictive tenant boundary so older broad Storage policies cannot override workspace isolation. Server-only service clients access provider-budget RPCs and derived query vectors; source reads, indexing and retrieval use the user's JWT. Authenticated browsers cannot read or write the shared query cache.
 
-The similarity-search function filters `organization_id` inside PostgreSQL **before** cosine ranking and joins only the document's active index revision. It does not retrieve globally and filter afterward. Query embeddings are cached per organization and model for seven days, bounded to 512 entries per workspace. Answers are not cached; every request searches the current indexed data.
+The similarity-search function filters `organization_id` inside PostgreSQL **before** cosine ranking and joins only the document's active index revision. It does not retrieve globally and filter afterward. Verified query embeddings are cached per organization and model for seven days, bounded to 512 entries per workspace. The authenticated server organization controls cache scope; existing client-written vectors are excluded. Answers are not cached; every request searches the current indexed data.
 
 Protected pages include `/dashboard`, `/admin/*`, `/support` and onboarding. APIs independently validate authentication, membership, resource ownership, strict input schemas and mutation origins. Proxy refreshes sessions and denies unauthenticated requests. Authentication uses HttpOnly, SameSite cookies and PKCE; production cookies are Secure. Sign-out revokes refresh sessions globally and clears local auth cookies and browser storage. Existing access tokens on other devices remain subject to Supabase's normal JWT lifetime; use a short access-token lifetime appropriate to the deployment.
 
 ### Assistant and speed
 
-The industry-independent assistant performs focused Top-4 retrieval before the model call. It receives a concise evidence prompt and bounded recent history. Most answers use one DeepSeek Flash call; a ticket uses the minimal `agent → tools → agent` loop. Query-cache writes and vector searches run independently. SSE status arrives immediately, followed by model content as it is generated. Reasoning, tool payloads and internal citation markers are not streamed to the browser.
+The assistant combines tenant-scoped vector and full text rankings using reciprocal rank fusion. Short follow-ups use the active user context; independent topics start fresh. Factual questions use focused passages and bounded neighboring context, comparisons reserve distinct sources, and summaries sample source sections with an explicit partial-coverage flag. Context is limited to 6 factual, 8 comparison or 12 summary passages. Most answers use one DeepSeek Flash call; a consented ticket uses the `agent → tools → agent` loop. SSE status arrives immediately, followed by drafts whose citations pass structural checks. Reasoning, tool payloads and internal citation markers are not streamed to the browser.
 
-Retrieved text is untrusted evidence. Unknown facts require an explicit unknown answer. Citation IDs are resolved against this turn's retrieved sources; invented source IDs are discarded. Source chips display the actual retrieved excerpt. The only action tool records a ticket for the current company's team; it does not approve business actions. Ticket writes are idempotent per workspace and request. Chat RPCs serialize turns, replay completed requests and allow safe retries. Workspace requests are bounded to 30 new turns per minute.
+Retrieved text is untrusted evidence. Unknown facts require uncertainty; conflicting sources must be distinguished. Citation IDs identify selected passages and revisions, with visible numbers beside claims and full excerpts in source chips. Unknown IDs reject the response; missing citation placement permits one bounded JSON repair with explicit source IDs before rejection. These checks validate provenance and placement; semantic support requires source-backed evaluation. The only action tool records a ticket for the current company's team and is registered only with explicit consent. Ticket writes are idempotent per workspace and request. Chat RPCs serialize turns, replay completed requests and allow safe retries. Workspace requests are bounded to 30 new turns per minute.
 
-Dashboard metrics come from exact database counts. Lists show up to 100 recent records; the chat sidebar shows the latest 30 conversations, and saved conversation views show up to 200 messages. Empty workspaces show empty states rather than fabricated data. Conversations retain their original source excerpts as historical records even when source documents change.
+Dashboard metrics come from exact database counts. Lists show up to 100 recent records; the sidebar loads personal conversations in pages of 30, grouped by the user's local calendar date. Opened chats show their latest 200 messages. Messages remain persisted in PostgreSQL, and the agent uses bounded recent context. Empty workspaces show empty states rather than fabricated data. Conversations retain their original source excerpts as historical records even when source documents change.
+
+Conversation history is private to its authenticated creator within their company. Restrictive RLS policies protect conversations, messages, and request replays even from other members of the same company; sources and tickets remain company resources. Composite foreign keys also prevent linking another user's request to a message. Rename and confirmed delete use a transaction with the same lock as chat creation. Active answers block deletion, and deleting a chat cascades to its messages and request records. Separate private rate events preserve the shared 30-turn rolling minute limit after deletion; they store no message text or user identity, deny direct app-role access, and prune expired events on the next request in that workspace.
+
+## Interface
+
+`/` is the public landing page. `/login` uses the supplied Resolvo logo and a [Google-branded button](https://developers.google.com/identity/branding-guidelines) with the existing server-side PKCE flow. `/dashboard`, `/support`, and `/admin/*` share a collapsible sidebar with paginated history, search, conversation actions, company knowledge, tickets, and account settings.
+
+The assistant streams Markdown with copyable code blocks and saved source excerpts. Interrupted turns retain their request ID for safe retries, including after reopening. Auto-scroll follows new output while the reader stays near the bottom and pauses when they scroll upward. Sonner provides compact notifications for sign-in, source operations, conversation actions, and failures. Motion respects reduced-motion preferences.
+
+The landscape uses a direct, size-optimized Unsplash URL under the [Unsplash License](https://unsplash.com/license), with a credit in the footer. The Google G comes from Google's branding assets. Google Sans and Manrope are served locally with their [Google Sans license](public/fonts/OFL-google-sans.txt) and [Manrope license](public/fonts/OFL-manrope.txt), so font optimization does not depend on remote downloads during builds. No sample company data or fallback AI provider is included in the application.
 
 ## Verification
+
+The [RAG implementation report](docs/rag-report.md) records before/after results on 72 frozen questions across 13 isolated corpora, six supplemental paraphrase pairs, source-backed review of 336 response observations, security/recovery tests, latency/cost regressions and deployment gates. The [evaluation and operations procedure](docs/rag-operations.md) distinguishes offline checks, paid evaluation, embedding replay, repeated retrieval and hosted verification. Run `npm run eval:rag -- --splits=development --output=offline-development` for local extraction/indexing/retrieval checks; offline vectors do not measure semantic or answer accuracy. Paid evaluation requires separate explicit spending/data approval.
 
 ```powershell
 npm run typecheck
@@ -130,7 +144,16 @@ npm run build
 npm run start
 ```
 
-With real credentials in `.env.local`, run `npm run verify:setup` to check Google Auth, the workspace/checkpoint schema, anonymous API denial and private bucket configuration. Its schema and bucket checks are read-only. The server service key is also required at runtime for the shared provider-budget RPCs. Run `npm run verify:providers` to generate real Voyage document/query vectors and receive a real DeepSeek Flash stream; this uses small provider requests without saving any company data and follows the same shared rate budget.
+For the isolated desktop/mobile browser journey:
+
+```powershell
+npx playwright install chromium
+npm run test:browser
+```
+
+This suite copies the application into a temporary ignored directory, uses the actual migrations in local PGlite PostgreSQL, and supplies local Supabase Auth, private Storage, Voyage, and DeepSeek transports. It exercises the real SSR session code, routes, retrieval, agent, persistence, confirmation dialogs, Markdown/copy/source interactions, failure recovery, responsive navigation, and logout. It copies no `.env.local`, uses fixture credentials, makes no paid provider calls, and removes the temporary application afterward. Evidence and screenshots are saved to `.local/verification/browser-evidence.json`. These checks verify local behavior; they do not verify real Google consent, hosted RLS, or provider answer quality.
+
+With real credentials in `.env.local`, run `npm run verify:setup` to check Google Auth, the workspace/checkpoint/cache schema, anonymous API denial and private bucket configuration. Its schema and bucket checks are read-only. The server service key is required at runtime for shared provider-budget RPCs and trusted query caching. Run `npm run verify:providers` only with paid API approval to generate real Voyage document/query vectors and receive a real DeepSeek Flash stream; this uses small provider requests without saving any company data and follows the same shared rate budget.
 
 Tests execute the actual migrations in local PGlite PostgreSQL with pgvector and Supabase-compatible Auth/Storage schemas. They check two tenants, anonymous and non-Google access, cross-tenant reads/writes, scoped similarity search, private paths even with an older broad Storage policy, restricted table grants, composite foreign keys, request replay, expiring indexing leases, checkpoint recovery and atomic replacement. Embedding policy tests use the bundled tokenizer on large English, Unicode and code inputs and verify token budgets, exponential delays, provider retry hints and non-retryable errors without mocked HTTP or timers. Real PDF and DOCX fixtures exercise extraction and archive limits. Other existing transport/agent tests explicitly mock HTTP for isolated auth and streaming regressions. Local tests do not substitute for hosted Supabase, Voyage, Google session or DeepSeek verification.
 
@@ -144,4 +167,6 @@ The application implements access controls and private storage; regulated deploy
 
 ## Dependencies
 
-DeepSeek Flash remains centralized in `lib/ai/model.ts`. LangChain's current Voyage class is exported by `@langchain/mongodb`; only embeddings are used, with no MongoDB service. Supabase PostgreSQL and pgvector remain the vector store. SupabaseVectorStore currently ships through `@langchain/community`; its direct module is used for retrieval, while atomic indexing uses a scoped SQL RPC. DeepSeek requires `@langchain/openai` transitively for API compatibility; there are no OpenAI embedding calls or credentials. `.npmrc` skips unrelated optional integration peers with conflicting dependencies.
+The lockfile includes the compatible Handlebars 4.7.10 security patch. `npm audit --omit=dev` still reports three moderate advisories in Mammoth's `argparse` / `sprintf-js` dependency chain. Resolvo uses Mammoth's library extraction API; its CLI entry point imports `argparse`. A forced historical Mammoth downgrade has not been applied.
+
+DeepSeek Flash remains centralized in `lib/ai/model.ts`. The existing bounded Voyage transport implements LangChain's embeddings interface; search and atomic indexing use tenant-scoped SQL RPCs. Unused MongoDB/community vector wrappers were removed. Supabase PostgreSQL and pgvector remain the vector store. LangChain's core, text splitters and LangGraph remain for their active interfaces and consented ticket workflow. DeepSeek requires `@langchain/openai` transitively for API compatibility; there are no OpenAI embedding calls or credentials. `.npmrc` skips unrelated optional integration peers with conflicting dependencies.

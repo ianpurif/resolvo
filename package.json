@@ -9,6 +9,10 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "node --conditions=react-server --import tsx --test tests/*.test.ts",
+    "test:browser": "node --import tsx tests/browser/verify.ts",
+    "eval:rag": "node --conditions=react-server --import tsx scripts/evaluate-rag.ts",
+    "eval:rag:live": "node --env-file=.env.local --conditions=react-server --import tsx scripts/evaluate-rag.ts --live",
+    "bench:rag": "node --conditions=react-server --import tsx scripts/benchmark-rag.ts",
     "verify:setup": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-setup.ts",
     "verify:oauth": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-oauth.ts",
     "verify:providers": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-providers.ts"
@@ -16,6 +20,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
     "@electric-sql/pglite-pgvector": "^0.0.9",
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
@@ -29,11 +34,9 @@
   },
   "dependencies": {
     "@huggingface/tokenizers": "^0.2.0",
-    "@langchain/community": "^1.1.29",
     "@langchain/core": "^1.2.14",
     "@langchain/deepseek": "^1.1.17",
     "@langchain/langgraph": "^1.4.19",
-    "@langchain/mongodb": "^1.3.1",
     "@langchain/textsplitters": "^1.0.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
@@ -51,6 +54,7 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "server-only": "^0.0.1",
+    "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0",
     "yauzl": "^3.4.0",
     "zod": "^4.6.5"

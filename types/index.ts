@@ -38,6 +38,7 @@ export interface KnowledgeDocument {
   active_revision: string;
   indexing_token: string | null;
   content_hash: string | null;
+  index_policy_version?: number;
   index_total?: number;
   index_completed?: number;
   index_next_attempt_at?: string | null;
@@ -48,8 +49,15 @@ export interface Source {
   id: string;
   title: string;
   excerpt: string;
+  chunkId?: string;
+  revision?: string;
+  chunkIndex?: number;
+  startOffset?: number;
+  endOffset?: number;
+  section?: string;
 }
 export interface ChatMessage {
+  request_id?: string | null;
   id: string;
   organization_id: string;
   conversation_id: string;

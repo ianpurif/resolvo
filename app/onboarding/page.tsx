@@ -15,15 +15,17 @@ export default async function OnboardingPage() {
   }
   if (await findWorkspace(identity)) redirect("/dashboard");
   return (
-    <main className="grid min-h-dvh place-items-center bg-[#f4f6f1] px-5">
+    <main
+      id="main-content"
+      className="auth-page grid min-h-dvh place-items-center bg-[#f6f8f7] px-5"
+    >
       <section className="w-full max-w-md rounded-2xl border bg-white p-8">
         <Brand />
-        <h1 className="mt-8 text-2xl font-medium">
-          Create your company workspace
+        <h1 className="mt-8 text-[28px] font-medium tracking-[-.04em]">
+          Make room for your knowledge
         </h1>
         <p className="mt-3 text-sm leading-7 text-muted-foreground">
-          Start with an empty, private knowledge base. Your company’s sources
-          define what the assistant knows.
+          Create your company’s private workspace.
         </p>
         <OnboardingForm />
       </section>

@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "frozenAt": "2026-10-11T05:15:58.896Z",
+  "hashes": {
+    "development.json": "d908543c342e241378d546e1ef8462746d9a0894caf0d324258f76315f3b8396",
+    "acceptance.json": "016f766051c0c237931af43738b1a5179dc8e545bdef7254e3b9661e60cf9dfe",
+    "regression.json": "6b1de715cf472d0e1ff0feb0abe55f4cc170231c6a9fce65115d92e01796feed",
+    "holdout.json": "3c3d9f0c88fd70cdb57562253f791b98a4f4ef5c4a198b840596b6af78d3201c",
+    "tests/the_next_level_novella.txt": "5bf23267b0ef4d4302088109c2982eba41cb6e1a76dc4252b537e30868b1488b"
+  },
+  "counts": [
+    {
+      "split": "development",
+      "documents": 2,
+      "questions": 7
+    },
+    {
+      "split": "development",
+      "documents": 2,
+      "questions": 4
+    },
+    {
+      "split": "development",
+      "documents": 2,
+      "questions": 2
+    },
+    {
+      "split": "acceptance",
+      "documents": 2,
+      "questions": 4
+    },
+    {
+      "split": "acceptance",
+      "documents": 2,
+      "questions": 3
+    },
+    {
+      "split": "acceptance",
+      "documents": 4,
+      "questions": 2
+    },
+    {
+      "split": "acceptance",
+      "documents": 3,
+      "questions": 3
+    },
+    {
+      "split": "acceptance",
+      "documents": 2,
+      "questions": 3
+    },
+    {
+      "split": "regression",
+      "documents": 1,
+      "questions": 20
+    },
+    {
+      "split": "holdout",
+      "documents": 3,
+      "questions": 6
+    },
+    {
+      "split": "holdout",
+      "documents": 3,
+      "questions": 6
+    },
+    {
+      "split": "holdout",
+      "documents": 3,
+      "questions": 6
+    },
+    {
+      "split": "holdout",
+      "documents": 3,
+      "questions": 6
+    }
+  ],
+  "scoring": "Exact source spans for retrieval coverage. Answer aliases are screening only; independent source-backed review is required for correctness/semantic citation support.",
+  "holdoutPolicy": "Generated source values and questions are not inspected or run until implementation is complete. No further tuning after final holdout results."
+}

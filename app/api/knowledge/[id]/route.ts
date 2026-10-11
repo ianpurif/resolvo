@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireTenant } from "@/lib/auth";
+import { requireKnowledgeOwner } from "@/lib/auth-context";
 import { apiError, requireSameOrigin } from "@/lib/api";
 import { AppError } from "@/lib/config";
 import { checkDatabaseError } from "@/lib/supabase/server";
@@ -18,6 +19,7 @@ export async function PATCH(request: Request, { params }: Params) {
   try {
     requireSameOrigin(request);
     const context = await requireTenant();
+    requireKnowledgeOwner(context);
     const document = await loadDocument(
       context,
       z.uuid().parse((await params).id),
@@ -36,6 +38,7 @@ export async function DELETE(request: Request, { params }: Params) {
   try {
     requireSameOrigin(request);
     const context = await requireTenant();
+    requireKnowledgeOwner(context);
     const document = await loadDocument(
       context,
       z.uuid().parse((await params).id),

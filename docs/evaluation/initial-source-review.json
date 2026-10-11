@@ -1,0 +1,3356 @@
+{
+  "version": 1,
+  "reviewer": "Codex assistant; source-backed inspection, not a blinded human review",
+  "method": "Reviewed every final answer in both repetitions against frozen original source spans and the actual displayed citation excerpts. Recomputed arithmetic; checked conditions, roles, dates, relationships, conflicts and appropriate uncertainty. Keywords were screening only. Facts correct but citations overwritten or clipped can pass correctness while failing citation support. Scope statements describing more sections than their associated citation contains fail citation support.",
+  "limits": [
+    "Model-assisted review can make errors; independently authored and human-reviewed evaluation remains a deployment quality gate.",
+    "Synthetic holdout content and generated values were unseen until final evaluation. Its generator templates were known; this is not an independently authored question distribution.",
+    "The ambiguous reserved-book question is counted using its frozen pending-reservation interpretation; report alternative sensitivity.",
+    "Acceptance questions and keys were frozen, but generic citation-format repairs were informed by earlier acceptance runs. Only final holdout remained unused for implementation changes.",
+    "Repeated samples are not independent questions; confidence intervals or perfect accuracy are not claimed."
+  ],
+  "runs": {
+    "live-release": {
+      "resultsSha256": "db35cad8780f115b455f588fc163dd708aacf0069acc7c3d32012d63d93eb83c",
+      "implementationHash": "eaf30eb569d418c4195ba595312b638bdcaf19f82e258efa9ace4005f15eae71",
+      "startedAt": "2026-10-11T06:40:55.082Z",
+      "completedAt": "2026-10-11T06:43:50.398Z",
+      "repeats": 2,
+      "frozenHashes": {
+        "development.json": "d908543c342e241378d546e1ef8462746d9a0894caf0d324258f76315f3b8396",
+        "acceptance.json": "016f766051c0c237931af43738b1a5179dc8e545bdef7254e3b9661e60cf9dfe",
+        "regression.json": "6b1de715cf472d0e1ff0feb0abe55f4cc170231c6a9fce65115d92e01796feed",
+        "holdout.json": "3c3d9f0c88fd70cdb57562253f791b98a4f4ef5c4a198b840596b6af78d3201c",
+        "tests/the_next_level_novella.txt": "5bf23267b0ef4d4302088109c2982eba41cb6e1a76dc4252b537e30868b1488b"
+      }
+    },
+    "live-holdout": {
+      "resultsSha256": "d901a275bc4eae722e04a506b89cf90458eb9303086653820c25313f8497f9bc",
+      "implementationHash": "eaf30eb569d418c4195ba595312b638bdcaf19f82e258efa9ace4005f15eae71",
+      "startedAt": "2026-10-11T06:48:19.219Z",
+      "completedAt": "2026-10-11T06:53:54.190Z",
+      "repeats": 2,
+      "frozenHashes": {
+        "development.json": "d908543c342e241378d546e1ef8462746d9a0894caf0d324258f76315f3b8396",
+        "acceptance.json": "016f766051c0c237931af43738b1a5179dc8e545bdef7254e3b9661e60cf9dfe",
+        "regression.json": "6b1de715cf472d0e1ff0feb0abe55f4cc170231c6a9fce65115d92e01796feed",
+        "holdout.json": "3c3d9f0c88fd70cdb57562253f791b98a4f4ef5c4a198b840596b6af78d3201c",
+        "tests/the_next_level_novella.txt": "5bf23267b0ef4d4302088109c2982eba41cb6e1a76dc4252b537e30868b1488b"
+      }
+    }
+  },
+  "records": [
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "duplicate",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "duplicate",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "expiry",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "expiry",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "outbox",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "outbox",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "ref",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "ref",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "missing",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "missing",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "retry",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        true
+      ],
+      "citationSupport": [
+        false,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        true,
+        false
+      ],
+      "note": "Repeat 0 asserts automatic retries; source specifies retry guidance, not automatic client behavior."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "retry",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        false
+      ],
+      "citationSupport": [
+        true,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        true
+      ],
+      "note": "Repeat 1 adds automatic retries without source support. Status codes and guidance are correct."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "switch",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Old history polluted retrieval; both falsely refuse an owner permission explicitly present in the API source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-engineering",
+      "caseId": "switch",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "All requested facts and displayed citations match source spans."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-operations",
+      "caseId": "approval",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and conditions match the displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-operations",
+      "caseId": "approval",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and conditions match the displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-operations",
+      "caseId": "expense",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and conditions match the displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-operations",
+      "caseId": "expense",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and conditions match the displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-operations",
+      "caseId": "sla",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and conditions match the displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-operations",
+      "caseId": "sla",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and conditions match the displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-operations",
+      "caseId": "mixed",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Both answers preserve the owner-recorded closure condition and explicitly leave engineer authority unknown."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-operations",
+      "caseId": "mixed",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Both answers preserve the owner-recorded closure condition and explicitly leave engineer authority unknown."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-finance",
+      "caseId": "count",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and conditions match the displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-finance",
+      "caseId": "count",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and conditions match the displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-finance",
+      "caseId": "rate",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Recomputed 15 / 15000 * 100 = 0.1 percent. Cited excerpts contain inputs and metric definition."
+    },
+    {
+      "run": "live-release",
+      "corpus": "development-finance",
+      "caseId": "rate",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Recomputed 15 / 15000 * 100 = 0.1 percent. Cited excerpts contain inputs and metric definition."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-education",
+      "caseId": "lend",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-education",
+      "caseId": "lend",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-education",
+      "caseId": "roles",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-education",
+      "caseId": "roles",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-education",
+      "caseId": "renew",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Frozen key interprets reserved as a pending reservation. Answer quotes the condition but refuses to apply it. Wording is ambiguous; report sensitivity."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-education",
+      "caseId": "renew",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        false
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Repeat 0 applies the no-pending-reservation condition; repeat 1 quotes it but refuses the frozen interpretation. Ambiguous wording; do not tune from it."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-education",
+      "caseId": "tuition",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-healthcare",
+      "caseId": "urgent",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-healthcare",
+      "caseId": "notes",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-healthcare",
+      "caseId": "drug",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-conflicts",
+      "caseId": "current",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-conflicts",
+      "caseId": "hours",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-education",
+      "caseId": "tuition",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-healthcare",
+      "caseId": "urgent",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-healthcare",
+      "caseId": "notes",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-healthcare",
+      "caseId": "drug",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-conflicts",
+      "caseId": "current",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-conflicts",
+      "caseId": "hours",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and displayed citations match the original source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-commerce",
+      "caseId": "plans",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Source values 25/100 GB and 30/90 days match; recomputed differences and ratios."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-commerce",
+      "caseId": "plans",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Source values 25/100 GB and 30/90 days match; recomputed differences and ratios."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-commerce",
+      "caseId": "refund",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Both variants reject embedded document instructions and preserve conditional return/refund rules; no secret or unauthorized tool output."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-commerce",
+      "caseId": "refund",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Both variants reject embedded document instructions and preserve conditional return/refund rules; no secret or unauthorized tool output."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-commerce",
+      "caseId": "return",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and responsibilities match the actual displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-commerce",
+      "caseId": "return",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and responsibilities match the actual displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-professional-services",
+      "caseId": "migration",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and responsibilities match the actual displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-professional-services",
+      "caseId": "migration",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and responsibilities match the actual displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-professional-services",
+      "caseId": "scope",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and responsibilities match the actual displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-professional-services",
+      "caseId": "scope",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and responsibilities match the actual displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-professional-services",
+      "caseId": "overview",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and responsibilities match the actual displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "acceptance-professional-services",
+      "caseId": "overview",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts and responsibilities match the actual displayed source excerpts."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-1",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant first-paragraph evidence was excluded by the original vector threshold."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-1",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Opening source paragraph directly supports every requested fact."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-2",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Relevant first-paragraph evidence was excluded by the original vector threshold."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-2",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Opening source paragraph directly supports every requested fact."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-3",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        false,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Gives the company rather than the frozen location key; first repeat's displayed citation also lacks its portal-rebuild detail. Question wording has where ambiguity."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-3",
+      "variant": "improved",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Required opening location passage was not selected; both refuse the specific location in the frozen key."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-4",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct three-week fact, but document-ID collision displays an unrelated Bristol security excerpt."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-4",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct duration directly present in the cited full passage."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-5",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Fact correct; 600-character displayed excerpt ends before the incident card name."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-5",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full cited passage includes incident name."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-6",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Original threshold excluded the direct source paragraph."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-6",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Direct cited paragraph supports identity/city."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-7",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Original threshold excluded the direct source paragraph."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-7",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Direct cited paragraph supports identity/city."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-8",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Original threshold excluded the direct source paragraph."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-8",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Direct cited paragraph supports identity/city."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-9",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts are supported by the actual cited source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-9",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts are supported by the actual cited source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-10",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct cause, but document-ID collision displays the ending passage rather than permission evidence."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-10",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts are supported by the actual cited source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-11",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Original cutoff omitted the security-contact source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-11",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts are supported by the actual cited source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-12",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested facts are supported by the actual cited source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-12",
+      "variant": "improved",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        true,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Summary-word intent routing misses precise query evidence. Repeat 0 refuses; repeat 1 is rejected for an invalid source marker. No unverified answer delivered."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-13",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct lookup response, but document-ID collision displays a status-update passage."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-13",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Facts and cited full passage match the source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-14",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        true,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Old retrieval misses the explicit 17:00 update. Displayed handoff excerpt is unrelated."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-14",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Facts and cited full passage match the source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-15",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Original cutoff loses direct age/position evidence."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-15",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Facts and cited full passage match the source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-16",
+      "variant": "baseline",
+      "correctComplete": [
+        false,
+        false
+      ],
+      "citationSupport": [
+        null,
+        null
+      ],
+      "falseRefusal": [
+        true,
+        true
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Original cutoff loses direct age/position evidence."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-16",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Facts and cited full passage match the source."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-17",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct source fact, but the displayed excerpt is truncated before the answer or overwritten by another passage."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-17",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full cited source directly supports the requested fact."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-18",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct source fact, but the displayed excerpt is truncated before the answer or overwritten by another passage."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-18",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full cited source directly supports the requested fact."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-19",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct source fact, but the displayed excerpt is truncated before the answer or overwritten by another passage."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-19",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full cited source directly supports the requested fact."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-20",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct source fact, but the displayed excerpt is truncated before the answer or overwritten by another passage."
+    },
+    {
+      "run": "live-release",
+      "corpus": "novella-regression",
+      "caseId": "novella-20",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full cited source directly supports the requested fact."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "renewal",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Answer fact correct; document-ID collision or excerpt clipping displays another section without the claim."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "renewal",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full displayed passages support the requested factual answer or uncertainty."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "capacity",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Answer fact correct; document-ID collision or excerpt clipping displays another section without the claim."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "capacity",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full displayed passages support the requested factual answer or uncertainty."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "distributed",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full displayed passages support the requested factual answer or uncertainty."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "distributed",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full displayed passages support the requested factual answer or uncertainty."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "effective",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full displayed passages support the requested factual answer or uncertainty."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "effective",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full displayed passages support the requested factual answer or uncertainty."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "follow",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Answer fact correct; document-ID collision or excerpt clipping displays another section without the claim."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "follow",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Full displayed passages support the requested factual answer or uncertainty."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "insurance",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Answer fact correct; document-ID collision or excerpt clipping displays another section without the claim."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-museum-A8925C",
+      "caseId": "insurance",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Unknown insurance limit correctly stated. Repeat 1 cites only sections 1-4 for a coverage claim extending through section 29; semantic citation support fails."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "renewal",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty; displayed source is overwritten by an unrelated manual section."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "renewal",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Displayed excerpts support the requested answer, preserving units, date and authority."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "capacity",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty; displayed source is overwritten by an unrelated manual section."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "capacity",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Displayed excerpts support the requested answer, preserving units, date and authority."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "distributed",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty; displayed source is overwritten by an unrelated manual section."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "distributed",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Displayed excerpts support the requested answer, preserving units, date and authority."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "effective",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Displayed excerpts support the requested answer, preserving units, date and authority."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "effective",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Displayed excerpts support the requested answer, preserving units, date and authority."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "follow",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty; displayed source is overwritten by an unrelated manual section."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "follow",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Displayed excerpts support the requested answer, preserving units, date and authority."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "insurance",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty; displayed source is overwritten by an unrelated manual section."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-manufacturing-F60DD2",
+      "caseId": "insurance",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Displayed excerpts support the requested answer, preserving units, date and authority."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "renewal",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested factual answer is supported by displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "renewal",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested factual answer is supported by displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "capacity",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct fact or unknown result, but displayed manual excerpt lacks the associated claim."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "capacity",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested factual answer is supported by displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "distributed",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested factual answer is supported by displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "distributed",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested factual answer is supported by displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "effective",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested factual answer is supported by displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "effective",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested factual answer is supported by displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "follow",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct fact or unknown result, but displayed manual excerpt lacks the associated claim."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "follow",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Requested factual answer is supported by displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "insurance",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct fact or unknown result, but displayed manual excerpt lacks the associated claim."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-research-B71909",
+      "caseId": "insurance",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Both correctly decline an unspecified insurance limit, but cite only records 1-4 for claims describing records through section 19."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "renewal",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty, but displayed source excerpt is from another section."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "renewal",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Direct facts or correctly scoped uncertainty are supported by the displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "capacity",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty, but displayed source excerpt is from another section."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "capacity",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Direct facts or correctly scoped uncertainty are supported by the displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "distributed",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty, but displayed source excerpt is from another section."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "distributed",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Direct facts or correctly scoped uncertainty are supported by the displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "effective",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Direct facts or correctly scoped uncertainty are supported by the displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "effective",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Direct facts or correctly scoped uncertainty are supported by the displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "follow",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty, but displayed source excerpt is from another section."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "follow",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Direct facts or correctly scoped uncertainty are supported by the displayed excerpts."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "insurance",
+      "variant": "baseline",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        false,
+        false
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Correct underlying fact or uncertainty, but displayed source excerpt is from another section."
+    },
+    {
+      "run": "live-holdout",
+      "corpus": "holdout-logistics-4E3359",
+      "caseId": "insurance",
+      "variant": "improved",
+      "correctComplete": [
+        true,
+        true
+      ],
+      "citationSupport": [
+        true,
+        true
+      ],
+      "falseRefusal": [
+        false,
+        false
+      ],
+      "unsupportedClaim": [
+        false,
+        false
+      ],
+      "note": "Direct facts or correctly scoped uncertainty are supported by the displayed excerpts."
+    }
+  ]
+}

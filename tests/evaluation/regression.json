@@ -1,0 +1,367 @@
+[
+  {
+    "id": "novella-regression",
+    "split": "regression",
+    "provenance": "Existing repository novella; source preserved byte-for-byte. Newly frozen 20-question source-backed regression, not the unavailable earlier 20-question evaluation.",
+    "documents": [
+      {
+        "id": "novella",
+        "title": "The Next Level",
+        "path": "tests/the_next_level_novella.txt",
+        "format": "txt"
+      }
+    ],
+    "cases": [
+      {
+        "id": "novella-1",
+        "question": "At what time did the first message arrive?",
+        "kind": "fact",
+        "facts": [
+          [
+            "6:12"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "6:12 in the morning"
+          }
+        ]
+      },
+      {
+        "id": "novella-2",
+        "question": "Who sent Mira the first message and what was their role?",
+        "kind": "fact",
+        "facts": [
+          [
+            "Leila Morgan"
+          ],
+          [
+            "operations manager"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "Leila Morgan, operations manager"
+          }
+        ]
+      },
+      {
+        "id": "novella-3",
+        "question": "Where was Mira working as a product engineer?",
+        "kind": "fact",
+        "facts": [
+          [
+            "Quezon Province"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "a product engineer in Quezon Province"
+          }
+        ]
+      },
+      {
+        "id": "novella-4",
+        "question": "How long had Mira worked at the company before the Monday investigation?",
+        "kind": "fact",
+        "facts": [
+          [
+            "three weeks",
+            "3 weeks"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "Mira had joined three weeks earlier"
+          }
+        ]
+      },
+      {
+        "id": "novella-5",
+        "question": "What was the incident card called?",
+        "kind": "fact",
+        "facts": [
+          [
+            "Monday access investigation"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "Monday access investigation"
+          }
+        ]
+      },
+      {
+        "id": "novella-6",
+        "question": "Who was the player-success lead?",
+        "kind": "fact",
+        "facts": [
+          [
+            "Daniel Reyes"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "Daniel Reyes, the player-success lead"
+          }
+        ]
+      },
+      {
+        "id": "novella-7",
+        "question": "In which city was the academy managing the affected scholarship pathway?",
+        "kind": "fact",
+        "facts": [
+          [
+            "Valencia"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "a partner academy in Valencia"
+          }
+        ]
+      },
+      {
+        "id": "novella-8",
+        "question": "Which city was associated with the club coordinator's report?",
+        "kind": "fact",
+        "facts": [
+          [
+            "Bristol"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "an entirely different program in Bristol"
+          }
+        ]
+      },
+      {
+        "id": "novella-9",
+        "question": "What were the four main permission roles?",
+        "kind": "fact",
+        "facts": [
+          [
+            "player"
+          ],
+          [
+            "staff"
+          ],
+          [
+            "partner viewer"
+          ],
+          [
+            "partner manager"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "four main roles: player, staff, partner viewer, and partner manager"
+          }
+        ]
+      },
+      {
+        "id": "novella-10",
+        "question": "Why was the academy application form returning access denied?",
+        "kind": "fact",
+        "facts": [
+          [
+            "partner membership"
+          ],
+          [
+            "eligibility"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "the backend checked for a partner membership instead of checking the player's eligibility to apply"
+          }
+        ]
+      },
+      {
+        "id": "novella-11",
+        "question": "Who was the security contact?",
+        "kind": "fact",
+        "facts": [
+          [
+            "Omar Haddad"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "the security contact, Omar Haddad"
+          }
+        ]
+      },
+      {
+        "id": "novella-12",
+        "question": "What was missing from the flawed application-summary API query?",
+        "kind": "fact",
+        "facts": [
+          [
+            "organization",
+            "organizational"
+          ],
+          [
+            "scope",
+            "scoped"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "It had not included the authenticated organization's scope."
+          }
+        ]
+      },
+      {
+        "id": "novella-13",
+        "question": "What response did Mira choose for an unauthorized record lookup?",
+        "kind": "fact",
+        "facts": [
+          [
+            "not found",
+            "404"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "We return not found for that lookup"
+          }
+        ]
+      },
+      {
+        "id": "novella-14",
+        "question": "When was the next update promised in Mira's internal status message?",
+        "kind": "fact",
+        "facts": [
+          [
+            "17:00",
+            "5:00"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "Next update at 17:00."
+          }
+        ]
+      },
+      {
+        "id": "novella-15",
+        "question": "How old was Theo Alvarez?",
+        "kind": "fact",
+        "facts": [
+          [
+            "seventeen",
+            "17"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "Theo was seventeen"
+          }
+        ]
+      },
+      {
+        "id": "novella-16",
+        "question": "What position did Theo change from and to?",
+        "kind": "fact",
+        "facts": [
+          [
+            "winger"
+          ],
+          [
+            "attacking midfielder"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "from winger to attacking midfielder"
+          }
+        ]
+      },
+      {
+        "id": "novella-17",
+        "question": "At which synthetic update did Mira deliberately fail the recovery test?",
+        "kind": "fact",
+        "facts": [
+          [
+            "sixty-three",
+            "sixty three",
+            "63"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "deliberately failed at update sixty-three"
+          }
+        ]
+      },
+      {
+        "id": "novella-18",
+        "question": "What was the fictional partner in the Thursday demonstration called?",
+        "kind": "fact",
+        "facts": [
+          [
+            "Eastbridge Athletic"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "a fictional partner called Eastbridge Athletic"
+          }
+        ]
+      },
+      {
+        "id": "novella-19",
+        "question": "How many fictional applicant profiles were used in the demo?",
+        "kind": "fact",
+        "facts": [
+          [
+            "five",
+            "5"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "five fictional applicant profiles"
+          }
+        ]
+      },
+      {
+        "id": "novella-20",
+        "question": "What was the default treatment for unidentified imported files?",
+        "kind": "fact",
+        "facts": [
+          [
+            "quarantine"
+          ]
+        ],
+        "evidence": [
+          {
+            "document": "novella",
+            "quote": "Their safe default was quarantine"
+          }
+        ]
+      }
+    ]
+  }
+]
