@@ -1,11 +1,18 @@
-import type { Metadata } from "next";
-import { configuration } from "@/lib/config";
+import { requireWorkspacePage } from "@/lib/auth";
 import { AdminShell } from "@/components/admin/admin-shell";
-
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin workspace" };
-
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const config = configuration();
-  return <AdminShell missing={config.missing} databaseReady={config.databaseReady}>{children}</AdminShell>;
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const context = await requireWorkspacePage();
+  return (
+    <AdminShell
+      organization={context.organization}
+      email={context.user.email ?? ""}
+    >
+      {children}
+    </AdminShell>
+  );
 }

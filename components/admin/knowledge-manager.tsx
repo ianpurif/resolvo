@@ -1,71 +1,501 @@
 "use client";
-
-import { useRef, useState, type DragEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, FileText, Trash2, Loader2, CheckCircle2, AlertCircle, X, BookOpen } from "lucide-react";
+import {
+  Upload,
+  RefreshCw,
+  Trash2,
+  Download,
+  Pencil,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/status-badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { EmptyState } from "./empty-state";
-import { formatDate, cn } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { validateUpload } from "@/lib/validations";
-import type { KnowledgeDocument } from "@/types";
-
-export function KnowledgeManager({ documents, preview }: { documents: KnowledgeDocument[]; preview: boolean }) {
+import type { DataSource, KnowledgeDocument } from "@/types";
+export function KnowledgeManager({
+  documents,
+  sources,
+}: {
+  documents: KnowledgeDocument[];
+  sources: DataSource[];
+}) {
   const router = useRouter();
-  const fileInput = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [dragging, setDragging] = useState(false);
+  const form = useRef<HTMLFormElement>(null);
+  const [kind, setKind] = useState<DataSource["kind"]>("file");
   const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [editing, setEditing] = useState<KnowledgeDocument | null>(null);
   const [deleting, setDeleting] = useState<KnowledgeDocument | null>(null);
-  const [notice, setNotice] = useState<{ error: boolean; text: string } | null>(null);
-
-  function selectFile(selected?: File) {
-    if (!selected) return;
-    try { validateUpload(selected); setFile(selected); setNotice(null); }
-    catch (error) { setNotice({ error: true, text: error instanceof Error ? error.message : "Invalid file." }); }
-  }
-  function drop(event: DragEvent) { event.preventDefault(); setDragging(false); if (!busy && !preview) selectFile(event.dataTransfer.files[0]); }
-  async function upload() {
-    if (!file || busy) return;
-    setBusy(true); setNotice(null);
+  const [text, setText] = useState("");
+  const [url, setUrl] = useState("");
+  const [name, setName] = useState("");
+  const saveRequest = useRef<string | null>(null);
+  const advancing = useRef(false);
+  const [recoveryDelay, setRecoveryDelay] = useState(0);
+  useEffect(() => {
+    const pending = documents
+      .filter(
+        (document) =>
+          document.status === "processing" && document.indexing_token,
+      )
+      .sort(
+        (a, b) =>
+          Date.parse(a.index_next_attempt_at ?? a.updated_at) -
+          Date.parse(b.index_next_attempt_at ?? b.updated_at),
+      );
+    if (!pending.length) return;
+    const document = pending[0];
+    const next = Date.parse(
+      document.index_next_attempt_at ?? document.updated_at,
+    );
+    const timer = window.setTimeout(
+      async () => {
+        if (advancing.current) return;
+        advancing.current = true;
+        try {
+          const response = await fetch(
+            `/api/knowledge/${document.id}/continue`,
+            { method: "POST" },
+          );
+          const data = await response.json();
+          if (!response.ok)
+            throw new Error(data.error ?? "Could not continue indexing.");
+          setRecoveryDelay(0);
+          if (data.document.status === "ready" && !data.document.error_message)
+            setNotice(data.document.name + " is indexed and ready.");
+          else if (data.document.error_message)
+            setNotice(data.document.error_message);
+        } catch (error) {
+          setRecoveryDelay(30_000);
+          setNotice(
+            (error instanceof Error
+              ? error.message
+              : "Connection interrupted.") + " Saved progress will be retried.",
+          );
+        } finally {
+          advancing.current = false;
+          router.refresh();
+        }
+      },
+      Math.max(1000, recoveryDelay, next - Date.now()),
+    );
+    return () => window.clearTimeout(timer);
+  }, [documents, router, recoveryDelay]);
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setNotice("");
     try {
-      const form = new FormData(); form.append("file", file);
-      const response = await fetch("/api/knowledge", { method: "POST", body: form });
+      let body: BodyInit;
+      const headers: Record<string, string> = {};
+      saveRequest.current ??= crypto.randomUUID();
+      headers["Idempotency-Key"] = saveRequest.current;
+      if (kind === "file") {
+        const fields = new FormData(event.currentTarget);
+        const file = fields.get("file");
+        if (!(file instanceof File))
+          throw new Error("Choose a document to import.");
+        validateUpload(file);
+        body = fields;
+      } else {
+        headers["Content-Type"] = "application/json";
+        body = JSON.stringify(
+          kind === "website" ? { kind, url } : { kind, name, text },
+        );
+      }
+      const response = await fetch(
+        editing ? "/api/knowledge/" + editing.id : "/api/knowledge",
+        { method: editing ? "PATCH" : "POST", headers, body },
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Upload failed.");
-      setNotice({ error: false, text: `${data.document.name} is indexed and ready for answers.` });
-      setFile(null); if (fileInput.current) fileInput.current.value = "";
-    } catch (error) { setNotice({ error: true, text: error instanceof Error ? error.message : "Couldn't upload this file." }); }
-    finally { setBusy(false); router.refresh(); }
+      if (!response.ok) throw new Error(data.error);
+      if (data.document.error_message)
+        throw new Error(data.document.error_message);
+      if (data.document.status === "failed")
+        throw new Error(
+          "The source is saved but indexing is paused. Use Re-index to resume.",
+        );
+      setNotice(
+        data.document.status === "processing"
+          ? data.document.name +
+              " is saved. Indexing will continue automatically here."
+          : data.document.name + " is indexed and ready.",
+      );
+      saveRequest.current = null;
+      setEditing(null);
+      setText("");
+      setUrl("");
+      setName("");
+      form.current?.reset();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Indexing failed.");
+    } finally {
+      setBusy(false);
+      router.refresh();
+    }
   }
-  async function deleteDocument() {
-    if (!deleting || busy) return;
-    setBusy(true); setNotice(null);
+  async function reindex(document: KnowledgeDocument) {
+    setBusy(true);
+    setNotice("");
     try {
-      const response = await fetch(`/api/knowledge/${deleting.id}`, { method: "DELETE" });
+      const response = await fetch(
+        "/api/knowledge/" + document.id + "/reindex",
+        { method: "POST" },
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Delete failed.");
-      setNotice({ error: false, text: `${deleting.name} and its indexed chunks were deleted.` }); setDeleting(null); router.refresh();
-    } catch (error) { setNotice({ error: true, text: error instanceof Error ? error.message : "Couldn't delete this document." }); setDeleting(null); }
-    finally { setBusy(false); }
+      if (!response.ok) throw new Error(data.error);
+      setNotice(
+        data.document.status === "processing"
+          ? document.name + " is continuing from saved indexing progress."
+          : (data.document.error_message ??
+              document.name + " has been re-indexed."),
+      );
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Indexing failed.");
+    } finally {
+      setBusy(false);
+      router.refresh();
+    }
   }
-
-  return <>
-    <section className="mb-6 rounded-xl border bg-white p-5 md:p-6"><div className="mb-5 flex items-center justify-between"><div><h2 className="text-sm font-medium">Give your assistant something to work with.</h2><p className="mt-2 text-xs text-muted-foreground">Upload policies, guides, and answers your customers can rely on.</p></div><BookOpen className="hidden size-5 text-[#91a18a] sm:block" /></div>
-      <div onDragOver={(event) => { event.preventDefault(); if (!preview && !busy) setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={drop} className={cn("rounded-xl border border-dashed px-5 py-8 text-center", dragging ? "border-primary bg-secondary" : "border-[#d4ddcf] bg-[#fbfcf9]", preview && "opacity-70")}>
-        <input type="file" ref={fileInput} id="knowledge-file" accept=".pdf,.txt,.md" disabled={busy || preview} onChange={(event) => selectFile(event.target.files?.[0])} className="sr-only" />
-        <span className="mx-auto mb-3 flex size-10 items-center justify-center rounded-xl border bg-white"><Upload className="size-4 text-primary" /></span>
-        {file ? <div className="flex items-center justify-center gap-2 text-xs font-medium"><FileText className="size-3.5" />{file.name}<button aria-label="Clear selected file" disabled={busy} onClick={() => { setFile(null); if (fileInput.current) fileInput.current.value = ""; }}><X className="size-3.5 text-muted-foreground" /></button></div> : <p className="text-xs"><button type="button" disabled={preview || busy} onClick={() => fileInput.current?.click()} className="font-medium text-primary underline decoration-primary/30 underline-offset-4 disabled:cursor-default">Choose a file</button><span className="text-muted-foreground"> or drag it here</span></p>}
-        <p className="mt-2 text-[10px] text-muted-foreground">PDF, TXT, or Markdown · Up to 4 MB · Text-based documents</p>
-        {preview && <p className="mt-3 text-[11px] text-[#897957]">Connect your workspace to start uploading.</p>}
-      </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-[10px] text-muted-foreground">Documents are split, embedded, and made searchable automatically.</p><Button size="sm" disabled={!file || busy || preview} onClick={() => void upload()}>{busy && !deleting ? <><Loader2 className="animate-spin" />Indexing document…</> : <><Upload />Upload & index</>}</Button></div>
-    </section>
-    {notice && <div role={notice.error ? "alert" : "status"} className={cn("mb-5 flex items-center gap-2 rounded-lg border p-3 text-xs leading-6", notice.error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700")}>{notice.error ? <AlertCircle className="size-4 shrink-0" /> : <CheckCircle2 className="size-4 shrink-0" />}{notice.text}</div>}
-    <section className="overflow-hidden rounded-xl border bg-white"><div className="flex items-center justify-between border-b px-5 py-4"><h2 className="text-xs font-semibold">{preview ? "Sample knowledge files" : "Your documents"}<span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{documents.length}</span></h2><span className="text-[10px] text-muted-foreground">{preview ? "Included in sample-data/" : "Company source of truth"}</span></div>
-      {documents.length === 0 ? <EmptyState title="Every good answer starts with knowledge." description="Upload your first policy or guide to give your assistant a trusted source." /> : <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead className="border-b bg-[#fbfcf9] text-[10px] font-medium text-muted-foreground"><tr><th className="px-5 py-3 font-medium">Document</th><th className="px-4 py-3 font-medium">Status</th><th className="px-4 py-3 font-medium">Chunks</th><th className="px-4 py-3 font-medium">Added</th><th className="px-5 py-3"><span className="sr-only">Actions</span></th></tr></thead><tbody className="divide-y">{documents.map((document) => <tr key={document.id}><td className="min-w-[220px] px-5 py-4"><div className="flex items-center gap-3"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg border bg-muted/40"><FileText className="size-4 text-[#8d9b85]" /></span><div><div className="font-medium">{document.name}</div><div className="mt-1 text-[10px] text-muted-foreground">{document.mime_type.split("/").at(-1)?.toUpperCase()}{!preview && ` · ${(document.size_bytes / 1024).toFixed(1)} KB`}</div>{document.error_message && <p className="mt-2 max-w-sm text-[10px] leading-5 text-red-600">{document.error_message}</p>}</div></div></td><td className="px-4 py-4"><StatusBadge status={document.status} preview={preview} /></td><td className="px-4 py-4 text-muted-foreground">{preview ? "Not indexed" : document.chunk_count}</td><td className="px-4 py-4 whitespace-nowrap text-muted-foreground">{preview ? "Sample" : formatDate(document.created_at)}</td><td className="px-5 py-4"><Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-red-600" aria-label={`Delete ${document.name}`} disabled={preview || busy} onClick={() => setDeleting(document)}><Trash2 className="size-3.5" /></Button></td></tr>)}</tbody></table></div>}
-    </section>
-    <Dialog open={Boolean(deleting)} onOpenChange={(open) => { if (!open && !busy) setDeleting(null); }}><DialogContent><DialogTitle className="text-lg font-semibold">Delete this document?</DialogTitle><DialogDescription className="text-sm leading-7 text-muted-foreground">“{deleting?.name}” and its searchable chunks will be permanently removed. Future answers will no longer use this source. Previous conversation citations are kept as historical excerpts.</DialogDescription><div className="flex justify-end gap-2"><DialogClose asChild><Button variant="outline" disabled={busy}>Keep document</Button></DialogClose><Button variant="destructive" disabled={busy} onClick={() => void deleteDocument()}>{busy && <Loader2 className="animate-spin" />}Delete document</Button></div></DialogContent></Dialog>
-  </>;
+  async function edit(document: KnowledgeDocument) {
+    const source = sources.find((item) => item.id === document.data_source_id);
+    if (!source) return;
+    setEditing(document);
+    setKind(source.kind);
+    setName(document.name);
+    setUrl(source.locator ?? "");
+    setText("");
+    setNotice("");
+    if (source.kind === "manual") {
+      setBusy(true);
+      try {
+        const response = await fetch("/api/knowledge/" + document.id + "/file");
+        if (!response.ok)
+          throw new Error("The original knowledge could not be loaded.");
+        setText(await response.text());
+      } catch (error) {
+        setNotice(
+          error instanceof Error ? error.message : "Could not load knowledge.",
+        );
+      } finally {
+        setBusy(false);
+      }
+    }
+    form.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  async function remove() {
+    if (!deleting) return;
+    setBusy(true);
+    try {
+      const response = await fetch("/api/knowledge/" + deleting.id, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setNotice("Source, document and indexed chunks deleted.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Delete failed.");
+    } finally {
+      setBusy(false);
+      setDeleting(null);
+      router.refresh();
+    }
+  }
+  return (
+    <>
+      <form
+        ref={form}
+        onSubmit={submit}
+        onChange={() => {
+          saveRequest.current = null;
+        }}
+        className="mb-6 space-y-5 rounded-xl border bg-white p-5 md:p-6"
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium">
+            {editing ? "Update " + editing.name : "Connect company knowledge"}
+          </h2>
+          {editing && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(null);
+                setText("");
+                setName("");
+                setUrl("");
+                form.current?.reset();
+              }}
+              className="text-xs text-muted-foreground"
+            >
+              Cancel edit
+            </button>
+          )}
+        </div>
+        <div className="flex gap-2">
+          {(["file", "website", "manual"] as const).map((item) => (
+            <Button
+              key={item}
+              type="button"
+              size="sm"
+              variant={kind === item ? "default" : "outline"}
+              disabled={busy || Boolean(editing)}
+              onClick={() => setKind(item)}
+            >
+              {item === "file"
+                ? "Upload document"
+                : item === "website"
+                  ? "Website URL"
+                  : "Write knowledge"}
+            </Button>
+          ))}
+        </div>
+        {kind === "file" ? (
+          <label className="block rounded-xl border border-dashed bg-[#fbfcf9] p-6 text-sm">
+            <Upload className="mb-3 size-5 text-primary" />
+            <input
+              name="file"
+              type="file"
+              accept=".pdf,.docx,.txt,.md"
+              required
+              disabled={busy}
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                event.currentTarget.setCustomValidity("");
+                setNotice("");
+                if (!file) return;
+                try {
+                  validateUpload(file);
+                } catch (error) {
+                  const message =
+                    error instanceof Error
+                      ? error.message
+                      : "Choose a valid document.";
+                  event.currentTarget.setCustomValidity(message);
+                  setNotice(message);
+                }
+              }}
+              className="w-full text-xs"
+            />
+            <span className="mt-3 block text-xs text-muted-foreground">
+              PDF, DOCX, TXT or Markdown · Up to 4 MB
+            </span>
+          </label>
+        ) : kind === "website" ? (
+          <label className="block text-xs">
+            Public web page
+            <input
+              type="url"
+              required
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              maxLength={2048}
+              disabled={busy}
+              className="mt-2 w-full rounded-lg border p-3 text-sm"
+              placeholder="https://your-company.com/knowledge"
+            />
+            <span className="mt-2 block text-[11px] text-muted-foreground">
+              Imports this page’s visible text. Re-index to fetch its latest
+              content.
+            </span>
+          </label>
+        ) : (
+          <>
+            <label className="block text-xs">
+              Source name
+              <input
+                required
+                minLength={1}
+                maxLength={160}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                disabled={busy}
+                className="mt-2 w-full rounded-lg border p-3 text-sm"
+              />
+            </label>
+            <label className="block text-xs">
+              Knowledge
+              <textarea
+                required
+                minLength={20}
+                maxLength={250000}
+                rows={8}
+                value={text}
+                onChange={(event) => setText(event.target.value)}
+                disabled={busy}
+                className="mt-2 w-full rounded-lg border p-3 text-sm"
+              />
+            </label>
+          </>
+        )}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[11px] text-muted-foreground">
+            Private to your company. Updates replace the previous index
+            atomically.
+          </p>
+          <Button disabled={busy}>
+            {busy ? (
+              <>
+                <Loader2 className="animate-spin" />
+                Indexing…
+              </>
+            ) : (
+              "Save & index"
+            )}
+          </Button>
+        </div>
+      </form>
+      {documents.some((document) => document.status === "processing") && (
+        <p
+          className="mb-5 text-xs leading-6 text-muted-foreground"
+          role="status"
+        >
+          Indexing continues automatically while this page is open. Progress is
+          saved after each batch. If you leave, reopen Company knowledge or use
+          Re-index to resume.
+        </p>
+      )}
+      {notice && (
+        <p
+          role="status"
+          className="mb-5 rounded-lg border bg-white p-4 text-xs leading-6"
+        >
+          {notice}
+        </p>
+      )}
+      <section className="overflow-hidden rounded-xl border bg-white">
+        <h2 className="border-b p-5 text-xs font-semibold">
+          Connected documents · {documents.length} shown
+        </h2>
+        {!documents.length ? (
+          <EmptyState
+            title="No company knowledge yet."
+            description="Add a document, web page or written source to start receiving grounded answers."
+          />
+        ) : (
+          <div className="divide-y">
+            {documents.map((document) => {
+              const source = sources.find(
+                (item) => item.id === document.data_source_id,
+              );
+              return (
+                <div
+                  key={document.id}
+                  className="flex flex-wrap items-center justify-between gap-4 p-5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{document.name}</p>
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      {source?.kind} · {document.chunk_count} chunks ·{" "}
+                      {formatDate(document.updated_at, true)} UTC
+                    </p>
+                    {source?.locator && (
+                      <p className="mt-2 truncate text-[11px] text-muted-foreground">
+                        {source.locator}
+                      </p>
+                    )}
+                    {document.error_message && (
+                      <p className="mt-2 text-xs leading-6 text-red-700">
+                        {document.error_message}
+                      </p>
+                    )}
+                    {document.indexing_token &&
+                      Boolean(document.index_total) && (
+                        <div
+                          className="mt-3 space-y-2 text-xs text-muted-foreground"
+                          role="status"
+                        >
+                          <p>
+                            {document.index_completed ?? 0} of{" "}
+                            {document.index_total} chunks embedded
+                            {document.status === "processing" &&
+                            document.index_next_attempt_at &&
+                            Date.parse(document.index_next_attempt_at) >
+                              Date.parse(document.updated_at) + 2000
+                              ? " · waiting for the next batch"
+                              : ""}
+                          </p>
+                          <progress
+                            className="h-2 w-full max-w-xs"
+                            value={document.index_completed ?? 0}
+                            max={document.index_total}
+                          />
+                        </div>
+                      )}
+                  </div>
+                  <StatusBadge status={document.status} />
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={"Edit " + document.name}
+                      disabled={busy || document.status === "processing"}
+                      onClick={() => void edit(document)}
+                    >
+                      <Pencil />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={"Re-index " + document.name}
+                      disabled={busy}
+                      onClick={() => void reindex(document)}
+                    >
+                      <RefreshCw />
+                    </Button>
+                    <Button asChild size="icon" variant="ghost">
+                      <a
+                        href={"/api/knowledge/" + document.id + "/file"}
+                        aria-label={"Download " + document.name}
+                      >
+                        <Download />
+                      </a>
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={"Delete " + document.name}
+                      disabled={busy}
+                      onClick={() => setDeleting(document)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+      <Dialog
+        open={Boolean(deleting)}
+        onOpenChange={(open) => {
+          if (!open && !busy) setDeleting(null);
+        }}
+      >
+        <DialogContent>
+          <DialogTitle>Delete this knowledge source?</DialogTitle>
+          <DialogDescription>
+            {deleting?.name} and its indexed knowledge will be removed. Saved
+            conversation excerpts remain historical records.
+          </DialogDescription>
+          <Button
+            variant="destructive"
+            disabled={busy}
+            onClick={() => void remove()}
+          >
+            Delete source
+          </Button>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }

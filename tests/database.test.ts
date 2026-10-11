@@ -1,101 +1,391 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
 import { vector } from "@electric-sql/pglite-pgvector";
-
-test("actual migrations and seed execute in PostgreSQL with pgvector; constraints, RLS, retrieval, and retries work", async () => {
+const embedding = JSON.stringify([1, ...Array(1023).fill(0)]);
+async function initialize() {
   const db = new PGlite({ extensions: { vector } });
+  await db.exec(`create schema extensions;create schema storage;create schema auth;
+ create role anon;create role authenticated;create role service_role bypassrls;
+ alter default privileges in schema public grant all on tables to anon,authenticated,service_role;
+ alter default privileges in schema public grant all on functions to anon,authenticated,service_role;
+ create table auth.users(id uuid primary key,email text);
+ create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;
+ create function auth.uid() returns uuid language sql stable as $$select (auth.jwt()->>'sub')::uuid$$;
+ grant usage on schema auth to authenticated,anon,service_role;grant execute on function auth.uid(),auth.jwt() to authenticated,anon,service_role;
+ create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+ create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text);
+ alter table storage.objects enable row level security;grant usage on schema storage to authenticated;
+ grant select,insert,update,delete on storage.objects to authenticated;`);
+  for (const file of [
+    "202610040001_initial.sql",
+    "202610050001_voyage_embeddings.sql",
+  ])
+    await db.exec(await readFile("supabase/migrations/" + file, "utf8"));
+  return db;
+}
+async function asUser(db: PGlite, user: string, provider = "google") {
+  await db.exec("reset role");
+  await db.query("select set_config('request.jwt.claims',$1,false)", [
+    JSON.stringify({
+      sub: user,
+      role: "authenticated",
+      app_metadata: { provider },
+    }),
+  ]);
+  await db.exec("set role authenticated");
+}
+async function startDocument(
+  db: PGlite,
+  org: string,
+  name: string,
+  kind = "file",
+) {
+  const id = randomUUID();
+  const revision = randomUUID();
+  const path = `organizations/${org}/documents/${id}/${revision}/knowledge.txt`;
+  await db.query(
+    "insert into storage.objects(bucket_id,name) values('support-documents',$1)",
+    [path],
+  );
+  await db.query(
+    "select begin_document_index($1,$2,$3,$4,null,$5,'text/plain',100,false)",
+    [id, revision, name, kind, path],
+  );
+  return { id, revision, path };
+}
+async function commit(
+  db: PGlite,
+  doc: { id: string; revision: string; path: string },
+  content: string,
+) {
+  return db.query(
+    "select commit_document_index($1,$2,$3,$4,'Knowledge','text/plain',100,$5,null)",
+    [
+      doc.id,
+      doc.revision,
+      JSON.stringify([{ content, embedding: JSON.parse(embedding) }]),
+      doc.path,
+      "a".repeat(64),
+    ],
+  );
+}
+
+test("actual migrations enforce tenant RLS, scoped vector search, private paths, resource FKs and atomic replacement", async () => {
+  const db = await initialize();
   try {
-    // Supabase supplies these roles and Storage tables. This fixture supplies their schema only.
-    await db.exec(`create schema extensions; create schema storage;
-      create role anon; create role authenticated; create role service_role bypassrls;
-      create table storage.buckets(id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);`);
-    await db.exec(await readFile(resolve("supabase/migrations/202610040001_initial.sql"), "utf8"));
-    await db.exec(await readFile(resolve("supabase/migrations/202610050001_voyage_embeddings.sql"), "utf8"));
-    const seed = await readFile(resolve("supabase/seed.sql"), "utf8");
-    await db.exec(seed); await db.exec(seed);
-    assert.equal((await db.query<{ total: number }>("select count(*)::int as total from orders")).rows[0].total, 5);
-
-    const docId = randomUUID();
-    const embedding = JSON.stringify([1, ...Array.from({ length: 1023 }, () => 0)]);
-    const metadata = { documentId: docId, title: "Return Policy", source: "return-policy.md" };
-    await db.query("insert into documents(id,name,file_path,mime_type,size_bytes) values($1,'Return Policy','test/policy.md','text/markdown',100)", [docId]);
-    await db.query("insert into document_chunks(content,embedding,metadata) values('Return within 30 days',$1,$2)", [embedding, JSON.stringify(metadata)]);
-    assert.equal((await db.query("select * from match_document_chunks($1, 5, '{}')", [embedding])).rows.length, 0, "Unfinished ingestion must be invisible");
-    await db.query("update documents set status = 'ready' where id = $1", [docId]);
-    const matches = await db.query<{ content: string; metadata: typeof metadata; similarity: number }>("select * from match_document_chunks($1, 5, '{}')", [embedding]);
-    assert.equal(matches.rows[0].metadata.title, "Return Policy");
-    assert.equal(matches.rows[0].metadata.documentId, docId);
-    assert.ok(matches.rows[0].similarity > 0.99);
-    await assert.rejects(db.query("insert into document_chunks(content,embedding,metadata) values('wrong dimensions','[1,0]',$1)", [JSON.stringify(metadata)]));
-    await assert.rejects(db.query("insert into document_chunks(content,embedding,metadata) values('legacy dimensions',$1,$2)", [JSON.stringify(Array(1536).fill(1)), JSON.stringify(metadata)]), /expected 1024 dimensions/);
-    await db.query("delete from documents where id=$1", [docId]);
-    assert.equal((await db.query("select * from document_chunks")).rows.length, 0, "Deleting a document must delete its vectors");
-
-    const requestId = randomUUID();
-    const started = await db.query<{ result: { conversationId: string } }>("select begin_chat_request($1,null,'Where is ORD-1002?') as result", [requestId]);
-    const conversationId = started.rows[0].result.conversationId;
-    await assert.rejects(db.query("select begin_chat_request($1,$2,'Another question')", [randomUUID(), conversationId]), /in progress/);
-    await db.query("update chat_requests set status='failed' where id=$1", [requestId]);
-    await db.query("select begin_chat_request($1,$2,'Where is ORD-1002?')", [requestId, conversationId]);
-    const completed = await db.query<{ result: unknown }>("select finish_chat_request($1,'It has shipped.','[]') as result", [requestId]);
-    const replay = await db.query<{ result: unknown }>("select begin_chat_request($1,null,'Where is ORD-1002?') as result", [requestId]);
-    assert.deepEqual(replay.rows[0].result, completed.rows[0].result);
-    assert.equal((await db.query("select * from messages where request_id=$1", [requestId])).rows.length, 2, "Retry must not duplicate messages");
-    await assert.rejects(db.query("select begin_chat_request($1,null,'A different message')", [requestId]), /mismatch/);
-
-    await db.query("insert into tickets(order_number,customer_email,issue,idempotency_key) values('ORD-1003','taylor@example.com','The order arrived damaged',$1)", [requestId]);
-    const ticket = await db.query<{ ticket_number: string }>("select ticket_number from tickets where idempotency_key=$1", [requestId]);
-    assert.equal(ticket.rows[0].ticket_number, "SUP-1024");
-    await assert.rejects(db.query("insert into tickets(customer_email,issue,idempotency_key) values('taylor@example.com','Duplicate damaged order',$1)", [requestId]), /unique/);
-    await assert.rejects(db.query("insert into tickets(order_number,customer_email,issue,idempotency_key) values('ORD-9999','taylor@example.com','Unknown order damaged',$1)", [randomUUID()]), /foreign key/);
-    await db.exec("set role anon");
-    await assert.rejects(db.query("select * from orders"), /permission denied/);
-    await assert.rejects(db.query("select begin_chat_request($1,null,'Hello')", [randomUUID()]), /permission denied/);
-    await assert.rejects(db.query("select * from match_document_chunks($1,5,'{}')", [embedding]), /permission denied/);
-    await db.exec("reset role");
-  } finally { await db.close(); }
-});
-
-test("Voyage upgrade removes incompatible vectors while retaining originals and business history", async () => {
-  const db = new PGlite({ extensions: { vector } });
-  try {
-    await db.exec(`create schema extensions; create schema storage;
-      create role anon; create role authenticated; create role service_role bypassrls;
-      create table storage.buckets(id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);`);
-    await db.exec(await readFile(resolve("supabase/migrations/202610040001_initial.sql"), "utf8"));
-    await db.exec(await readFile(resolve("supabase/seed.sql"), "utf8"));
-    const docId = randomUUID();
-    const pendingId = randomUUID();
-    await db.query("insert into documents(id,name,file_path,mime_type,size_bytes,status,chunk_count) values($1,'Policy','original/policy.md','text/markdown',100,'ready',1),($2,'Pending','original/pending.txt','text/plain',100,'processing',0)", [docId, pendingId]);
-    await db.query("insert into document_chunks(content,embedding,metadata) values('Legacy policy',$1,$2)", [JSON.stringify(Array(1536).fill(1)), JSON.stringify({ documentId: docId, title: "Policy", source: "policy.md" })]);
-    const requestId = randomUUID();
-    await db.query("select begin_chat_request($1,null,'Where is ORD-1002?')", [requestId]);
-    await db.query("select finish_chat_request($1,'Historical answer.','[]')", [requestId]);
-    await db.query("insert into tickets(order_number,customer_email,issue,idempotency_key) values('ORD-1003','taylor@example.com','Historical damaged order',$1)", [requestId]);
-
-    await db.exec(await readFile(resolve("supabase/migrations/202610050001_voyage_embeddings.sql"), "utf8"));
-    const documents = await db.query<{ id: string; file_path: string; status: string; chunk_count: number; error_message: string }>("select * from documents");
-    assert.equal(documents.rows.length, 2);
-    assert.equal(documents.rows.find((row) => row.id === docId)?.file_path, "original/policy.md");
-    for (const document of documents.rows) {
-      assert.equal(document.status, "failed");
-      assert.equal(document.chunk_count, 0);
-      assert.match(document.error_message, /voyage-4-lite/);
+    const oldId = randomUUID();
+    await db.query(
+      "insert into documents(id,name,file_path,mime_type,size_bytes,status) values($1,'Historical private file','old/private.txt','text/plain',100,'ready')",
+      [oldId],
+    );
+    await db.exec(
+      "create policy historical_broad_storage on storage.objects for all to authenticated using(true) with check(true)",
+    );
+    await db.exec(
+      await readFile(
+        "supabase/migrations/202610050002_tenant_workspaces.sql",
+        "utf8",
+      ),
+    );
+    const a = randomUUID();
+    const b = randomUUID();
+    await db.query(
+      "insert into auth.users(id,email) values($1,'a@fixture.invalid'),($2,'b@fixture.invalid')",
+      [a, b],
+    );
+    await asUser(db, a);
+    const orgA = (
+      await db.query<{ id: string }>(
+        "select create_workspace('Fixture hospital','Healthcare') as id",
+      )
+    ).rows[0].id;
+    assert.equal(
+      (
+        await db.query<{ id: string }>(
+          "select create_workspace('Another name','Other') as id",
+        )
+      ).rows[0].id,
+      orgA,
+      "Onboarding is idempotent",
+    );
+    assert.equal(
+      (await db.query("select * from documents where id=$1", [oldId])).rows
+        .length,
+      0,
+      "Unowned historical data is not assigned to the first user",
+    );
+    for (const table of [
+      "organizations",
+      "organization_members",
+      "data_sources",
+      "query_embeddings",
+      "documents",
+      "document_chunks",
+      "messages",
+      "conversations",
+      "tickets",
+      "chat_requests",
+    ]) {
+      await assert.rejects(
+        db.exec(`truncate public.${table} cascade`),
+        /permission denied/,
+        table + " cannot bypass RLS with TRUNCATE",
+      );
     }
-    const counts = await db.query<{ chunks: number; orders: number; tickets: number; conversations: number; messages: number; requests: number; buckets: number }>(`select
-      (select count(*)::int from document_chunks) as chunks, (select count(*)::int from orders) as orders,
-      (select count(*)::int from tickets) as tickets, (select count(*)::int from conversations) as conversations,
-      (select count(*)::int from messages) as messages, (select count(*)::int from chat_requests) as requests,
-      (select count(*)::int from storage.buckets) as buckets`);
-    assert.deepEqual(counts.rows[0], { chunks: 0, orders: 5, tickets: 1, conversations: 1, messages: 2, requests: 1, buckets: 1 });
-    const permissions = await db.query<{ anon: boolean; authenticated: boolean; service: boolean }>(`select
-      has_function_privilege('anon','public.match_document_chunks(extensions.vector,integer,jsonb)','execute') as anon,
-      has_function_privilege('authenticated','public.match_document_chunks(extensions.vector,integer,jsonb)','execute') as authenticated,
-      has_function_privilege('service_role','public.match_document_chunks(extensions.vector,integer,jsonb)','execute') as service`);
-    assert.deepEqual(permissions.rows[0], { anon: false, authenticated: false, service: true });
-  } finally { await db.close(); }
+    const docA = await startDocument(db, orgA, "Clinical workflow");
+    await commit(db, docA, "Company A: clinical workflow one.");
+    const requestA = randomUUID();
+    const convA = (
+      await db.query<{ data: { conversationId: string } }>(
+        "select begin_chat_request($1,null,'Workflow question') as data",
+        [requestA],
+      )
+    ).rows[0].data.conversationId;
+    await db.query("select finish_chat_request($1,'Company A answer.','[]')", [
+      requestA,
+    ]);
+    await db.query(
+      "insert into tickets(organization_id,customer_email,issue,idempotency_key) values($1,'a@fixture.invalid','Clinical workflow issue',$2)",
+      [orgA, requestA],
+    );
+    await asUser(db, b);
+    const orgB = (
+      await db.query<{ id: string }>(
+        "select create_workspace('Fixture transport','Logistics') as id",
+      )
+    ).rows[0].id;
+    const docB = await startDocument(db, orgB, "Dispatch workflow");
+    await commit(db, docB, "Company B: confidential dispatch instructions.");
+    const matchesB = await db.query<{ content: string }>(
+      "select * from match_document_chunks($1,5,'{}')",
+      [embedding],
+    );
+    assert.deepEqual(
+      matchesB.rows.map((row) => row.content),
+      ["Company B: confidential dispatch instructions."],
+    );
+    for (const table of [
+      "documents",
+      "document_chunks",
+      "data_sources",
+      "conversations",
+      "messages",
+      "tickets",
+      "chat_requests",
+    ]) {
+      assert.equal(
+        (
+          await db.query(`select * from ${table} where organization_id=$1`, [
+            orgA,
+          ])
+        ).rows.length,
+        0,
+        table + " hides another tenant",
+      );
+    }
+    assert.equal(
+      (
+        await db.query("delete from documents where id=$1 returning id", [
+          docA.id,
+        ])
+      ).rows.length,
+      0,
+    );
+    await assert.rejects(
+      db.query(
+        "insert into data_sources(organization_id,name,kind) values($1,'Unauthorized','manual')",
+        [orgA],
+      ),
+      /row-level security/,
+    );
+    await assert.rejects(
+      db.query(
+        "insert into organization_members(organization_id,user_id,role) values($1,$2,'owner')",
+        [orgA, b],
+      ),
+      /permission denied/,
+    );
+    await assert.rejects(
+      db.query("select begin_chat_request($1,$2,'Cross-tenant conversation')", [
+        randomUUID(),
+        convA,
+      ]),
+      /not found/,
+    );
+    assert.equal(
+      (
+        await db.query("select * from storage.objects where name=$1", [
+          docA.path,
+        ])
+      ).rows.length,
+      0,
+    );
+    await assert.rejects(
+      db.query(
+        "insert into storage.objects(bucket_id,name) values('support-documents',$1)",
+        [docA.path],
+      ),
+      /row-level security/,
+    );
+    await assert.rejects(
+      db.query(
+        "insert into document_chunks(organization_id,content,embedding,metadata,index_revision) values($1,'Forged reference',$2,$3,$4)",
+        [
+          orgB,
+          embedding,
+          JSON.stringify({ documentId: docA.id, organizationId: orgB }),
+          docB.revision,
+        ],
+      ),
+      /foreign key/,
+    );
+    await asUser(db, a);
+    const matchesA = await db.query<{ content: string }>(
+      "select * from match_document_chunks($1,5,'{}')",
+      [embedding],
+    );
+    assert.deepEqual(
+      matchesA.rows.map((row) => row.content),
+      ["Company A: clinical workflow one."],
+    );
+    assert.equal(
+      (
+        await db.query("select * from match_document_chunks($1,5,$2)", [
+          embedding,
+          JSON.stringify({ organizationId: orgB }),
+        ])
+      ).rows.length,
+      0,
+    );
+    const next = { ...docA, revision: randomUUID(), path: "" };
+    next.path = `organizations/${orgA}/documents/${docA.id}/${next.revision}/updated.txt`;
+    await db.query(
+      "select begin_document_index($1,$2,'Updated workflow','file',null,$3,'text/plain',100,true)",
+      [next.id, next.revision, next.path],
+    );
+    assert.deepEqual(
+      (
+        await db.query<{ content: string }>(
+          "select * from match_document_chunks($1,4,'{}')",
+          [embedding],
+        )
+      ).rows.map((row) => row.content),
+      ["Company A: clinical workflow one."],
+      "The previous revision stays searchable during indexing",
+    );
+    await commit(db, next, "Company A: updated clinical workflow two.");
+    const updated = await db.query<{ content: string }>(
+      "select * from match_document_chunks($1,4,'{}')",
+      [embedding],
+    );
+    assert.deepEqual(
+      updated.rows.map((row) => row.content),
+      ["Company A: updated clinical workflow two."],
+    );
+    assert.equal(
+      (
+        await db.query("select * from document_chunks where document_id=$1", [
+          docA.id,
+        ])
+      ).rows.length,
+      1,
+      "No stale duplicate vectors",
+    );
+    await assert.rejects(
+      commit(db, docA, "Stale concurrent result."),
+      /conflict/,
+    );
+    const failedRevision = randomUUID();
+    const failedPath = `organizations/${orgA}/documents/${docA.id}/${failedRevision}/failed.txt`;
+    await db.query(
+      "select begin_document_index($1,$2,'Failed replacement','file',null,$3,'text/plain',100,true)",
+      [docA.id, failedRevision, failedPath],
+    );
+    await assert.rejects(
+      db.query(
+        "select commit_document_index($1,$2,$3,$4,'Invalid','text/plain',100,$5,null)",
+        [
+          docA.id,
+          failedRevision,
+          JSON.stringify([
+            { content: "Wrong dimensions", embedding: Array(1536).fill(1) },
+          ]),
+          failedPath,
+          "b".repeat(64),
+        ],
+      ),
+      /1024 dimensions/,
+    );
+    await db.query(
+      "select fail_document_index($1,$2,'Provider temporarily unavailable')",
+      [docA.id, failedRevision],
+    );
+    assert.deepEqual(
+      (
+        await db.query<{ content: string }>(
+          "select * from match_document_chunks($1,4,'{}')",
+          [embedding],
+        )
+      ).rows.map((row) => row.content),
+      ["Company A: updated clinical workflow two."],
+      "Failed replacement retains the last successful version",
+    );
+    const replay = await db.query<{ result: { message: { content: string } } }>(
+      "select begin_chat_request($1,null,'Workflow question') as result",
+      [requestA],
+    );
+    assert.equal(replay.rows[0].result.message.content, "Company A answer.");
+    await db.query(
+      "insert into query_embeddings(organization_id,query_hash,model,embedding,created_at) select $1,lpad(n::text,64,'0'),'voyage-4-lite',$2,now()-n*interval '1 second' from generate_series(1,513) n",
+      [orgA, embedding],
+    );
+    await db.query("select cache_query_embedding($1,$2)", [
+      "f".repeat(64),
+      embedding,
+    ]);
+    assert.equal(
+      (
+        await db.query<{ count: number }>(
+          "select count(*)::int as count from query_embeddings",
+        )
+      ).rows[0].count,
+      512,
+      "Query cache stays bounded per tenant",
+    );
+    await asUser(db, b);
+    assert.equal(
+      (
+        await db.query(
+          "select * from query_embeddings where organization_id=$1",
+          [orgA],
+        )
+      ).rows.length,
+      0,
+      "Query vectors are tenant private",
+    );
+    await asUser(db, a, "email");
+    assert.equal(
+      (await db.query("select * from documents")).rows.length,
+      0,
+      "Non-Google identities have no tenant access",
+    );
+    await assert.rejects(
+      db.query("select create_workspace('Unauthorized provider','Other')"),
+      /Authentication/,
+    );
+    await db.exec("reset role;set role anon");
+    await assert.rejects(
+      db.query("select * from documents"),
+      /permission denied/,
+    );
+    await assert.rejects(
+      db.query("select * from match_document_chunks($1,4,'{}')", [embedding]),
+      /permission denied/,
+    );
+  } finally {
+    await db.close();
+  }
 });

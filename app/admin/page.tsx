@@ -1,25 +1,4 @@
-import Link from "next/link";
-import { ArrowUpRight, BookOpen, Package, Ticket, MessageSquare, ArrowRight, CheckCircle2 } from "lucide-react";
-import { getWorkspace } from "@/lib/supabase/queries";
-import { PageHeading } from "@/components/admin/page-heading";
-import { EmptyState } from "@/components/admin/empty-state";
-import { StatusBadge } from "@/components/status-badge";
-import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils";
-
-export default async function OverviewPage() {
-  const data = await getWorkspace();
-  const metrics = [
-    { label: "Knowledge documents", value: data.documents.length, note: data.preview ? "5 sample files to get started" : `${data.documents.filter((item) => item.status === "ready").length} indexed and ready`, icon: BookOpen, href: "/admin/knowledge" },
-    { label: "Orders", value: data.orders.length, note: data.preview ? "Realistic sample orders" : "Available for order lookup", icon: Package, href: "/admin/orders" },
-    { label: "Open tickets", value: data.tickets.filter((item) => item.status !== "resolved").length, note: "Waiting for your team", icon: Ticket, href: "/admin/tickets" },
-    { label: "Conversations", value: data.conversations.length, note: "Customer support history", icon: MessageSquare, href: "/admin/conversations" },
-  ];
-  return <>
-    <PageHeading eyebrow="Your support, at a glance" title="A calmer support inbox." description="Everything your assistant needs. Everything your team should know."><Button asChild variant="outline" size="sm"><Link href="/support">Try support chat<ArrowUpRight /></Link></Button></PageHeading>
-    <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">{metrics.map(({ label, value, note, icon: Icon, href }) => <Link key={label} href={href} className="group rounded-xl border bg-white p-5 transition-colors hover:border-[#b5cbb8]"><div className="mb-5 flex items-center justify-between"><span className="text-xs text-muted-foreground">{label}</span><Icon className="size-4 text-[#8a9783]" strokeWidth={1.7} /></div><div className="text-3xl font-medium tracking-tight">{value.toString().padStart(2, "0")}</div><div className="mt-3 flex justify-between gap-2 text-[10px] text-muted-foreground">{note}<ArrowUpRight className="size-3 opacity-0 group-hover:opacity-100" /></div></Link>)}</div>
-    <div className="grid gap-5 xl:grid-cols-2"><section className="overflow-hidden rounded-xl border bg-white"><div className="flex items-center justify-between border-b px-5 py-4"><h2 className="text-xs font-semibold">Recent support tickets</h2><Link href="/admin/tickets" className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary">View all<ArrowRight className="size-3" /></Link></div>{data.tickets.length === 0 ? <EmptyState title="A little breathing room." description="Tickets created in the support chat will appear here for your team to review." /> : <div className="divide-y">{data.tickets.slice(0, 4).map((ticket) => <Link href="/admin/tickets" key={ticket.id} className="flex items-center justify-between gap-4 p-5 hover:bg-muted/40"><div className="min-w-0"><div className="text-xs font-medium">{ticket.ticket_number}</div><p className="mt-1.5 truncate text-xs text-muted-foreground">{ticket.issue}</p></div><StatusBadge status={ticket.status} /></Link>)}</div>}</section>
-    <section className="overflow-hidden rounded-xl border bg-white"><div className="flex items-center justify-between border-b px-5 py-4"><h2 className="text-xs font-semibold">Recent conversations</h2><Link href="/admin/conversations" className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary">View all<ArrowRight className="size-3" /></Link></div>{data.conversations.length === 0 ? <EmptyState title="Good conversations start here." description="Once customers start chatting, you’ll see their questions and your assistant’s answers." /> : <div className="divide-y">{data.conversations.slice(0, 4).map((conversation) => <Link href="/admin/conversations" key={conversation.id} className="flex items-center justify-between gap-4 p-5 hover:bg-muted/40"><div className="min-w-0"><div className="truncate text-xs font-medium">{conversation.title}</div><p className="mt-1.5 text-[10px] text-muted-foreground">{formatDate(conversation.updated_at, true)} UTC</p></div><MessageSquare className="size-4 shrink-0 text-muted-foreground" /></Link>)}</div>}</section></div>
-    <section className="mt-6 flex flex-wrap items-center justify-between gap-5 rounded-xl border bg-[#edf3e9] p-6"><div className="flex items-start gap-4"><span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white bg-white/70"><CheckCircle2 className="size-5 text-primary" strokeWidth={1.5} /></span><div><h2 className="text-sm font-medium">Better knowledge. Better answers.</h2><p className="mt-2 text-xs leading-6 text-[#788572]">Keep your policies up to date so your assistant can give grounded, useful answers.</p></div></div><Button asChild variant="outline" size="sm" className="bg-white/80"><Link href="/admin/knowledge">Manage knowledge<ArrowRight /></Link></Button></section>
-  </>;
+import { redirect } from "next/navigation";
+export default function AdminPage() {
+  redirect("/dashboard");
 }

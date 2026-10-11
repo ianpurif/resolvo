@@ -1,8 +1,16 @@
 import { getWorkspace } from "@/lib/supabase/queries";
-import { PageHeading } from "@/components/admin/page-heading";
 import { TicketsTable } from "@/components/admin/tickets-table";
-
+import { PageHeading } from "@/components/admin/page-heading";
 export default async function TicketsPage() {
   const data = await getWorkspace();
-  return <><PageHeading eyebrow="A human touch, when it matters" title="Your support inbox." description="Customer issues, captured by your assistant and ready for your team." /><TicketsTable tickets={data.tickets} /></>;
+  return (
+    <>
+      <PageHeading
+        eyebrow="Team follow-up"
+        title="Support tickets"
+        description="Issues raised in your company’s workspace."
+      />
+      <TicketsTable tickets={data.tickets} />
+    </>
+  );
 }
