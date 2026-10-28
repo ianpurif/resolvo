@@ -159,7 +159,10 @@ progress {
   .workspace-shell,
   .auth-content,
   .recovery-page,
-  .dashboard-start
+  .dashboard-start,
+  .landing .product-story,
+  .landing .preview-toolbar,
+  .landing .action-button
 ) {
   position: relative;
   isolation: isolate;
@@ -181,7 +184,10 @@ progress {
   .recovery-page,
   .dashboard-start,
   .marketing-hero,
-  .auth-art
+  .auth-art,
+  .landing .product-story,
+  .landing .preview-toolbar,
+  .landing .action-button
 )::before {
   content: "";
   position: absolute;
@@ -190,7 +196,7 @@ progress {
   border-radius: inherit;
   background-image: var(--surface-grain);
   background-repeat: repeat;
-  background-size: 180px 180px;
+  background-size: var(--grain-size, 180px) var(--grain-size, 180px);
   opacity: var(--grain-strength, 0.055);
   mix-blend-mode: var(--grain-blend, multiply);
   pointer-events: none;
@@ -242,7 +248,10 @@ progress {
     .recovery-page,
     .dashboard-start,
     .marketing-hero,
-    .auth-art
+    .auth-art,
+    .landing .product-story,
+    .landing .preview-toolbar,
+    .landing .action-button
   )::before {
     display: none;
   }
@@ -309,8 +318,102 @@ progress {
 
 /* The public experience: an editorial sequence, with one tactile hero artwork. */
 .landing {
+  --surface-grain: url("/art/tactile-grain.svg");
+  --grain-size: 240px;
+  --grain-strength: 0.14;
+  --muted-foreground: #354f5d;
+  --primary: #174b55;
   overflow-x: clip;
-  background: #f9fbfc;
+  background:
+    radial-gradient(ellipse at 0% 38%, #dbe8ed 0%, transparent 55%),
+    linear-gradient(150deg, #f0f4f3, #eaf0ef 65%, #f2f5f2);
+}
+.landing .marketing-top,
+.landing .marketing-close {
+  --grain-strength: 0.17;
+  --muted-foreground: #2c4957;
+}
+.landing .marketing-hero {
+  max-width: none;
+}
+.landing .marketing-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse at 0% 45%, #82aabd55, transparent 65%),
+    radial-gradient(ellipse at 85% 90%, #80b2b52e, transparent 65%);
+  mask-image: linear-gradient(180deg, transparent, #000 20%, #000 78%, transparent);
+  pointer-events: none;
+}
+.landing .hero-copy > p:not(.eyebrow) {
+  color: #2c4957;
+}
+.landing .hero-footnote {
+  color: var(--foreground);
+}
+.landing .product-story {
+  --grain-strength: 0.16;
+  border-color: #acc5d0;
+  background:
+    radial-gradient(ellipse at 0% 100%, #c4dce2, transparent 75%),
+    linear-gradient(125deg, #e2edf0, #edf2ee);
+  box-shadow:
+    inset 0 1px #ffffffb3,
+    0 14px 40px #1733420a;
+}
+.landing .product-preview {
+  box-shadow:
+    0 20px 50px #17334217,
+    0 2px 5px #17334208;
+}
+.landing .preview-toolbar {
+  --grain-strength: 0.1;
+  background: linear-gradient(110deg, #e3edef, #f3f6f3);
+  border-radius: 9px 9px 0 0;
+}
+.landing .action-button {
+  --grain-strength: 0.16;
+  --grain-blend: screen;
+  background: linear-gradient(140deg, #1d4859, #102e3d);
+  border-color: #264c5c;
+  box-shadow:
+    inset 0 1px #ffffff40,
+    0 4px 10px #1237481a;
+}
+.landing .action-button:hover {
+  background: linear-gradient(140deg, #285c6d, #173c4c);
+}
+.landing .source-section {
+  --grain-strength: 0.14;
+  background:
+    radial-gradient(ellipse at 5% 100%, #24515b80, transparent 70%),
+    radial-gradient(ellipse at 90% 0%, #42677755, transparent 65%),
+    #0a2432;
+}
+.landing .source-section .eyebrow {
+  color: #b4d8dc;
+}
+.landing .source-section p:not(.eyebrow),
+.landing .source-ledger-row span {
+  color: #c9dce4;
+}
+.landing .source-ledger-row .source-index {
+  color: #add1d9;
+}
+.landing .process-list {
+  border-top-color: #b3c8d0;
+}
+.landing .process-row {
+  border-bottom-style: dashed;
+  border-bottom-color: #b3c8d0;
+}
+.landing .marketing-close {
+  background:
+    radial-gradient(ellipse at 85% 0%, #94bac84d, transparent 60%),
+    linear-gradient(120deg, #e6eee9, #c9dee2);
+  border-block-color: #b8cfd6;
 }
 .marketing-header {
   position: relative;
@@ -1635,6 +1738,9 @@ progress {
   }
 }
 @media (max-width: 767px) {
+  .landing .marketing-hero {
+    padding-bottom: 307px;
+  }
   .marketing-header nav {
     display: none;
   }
