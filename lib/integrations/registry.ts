@@ -19,7 +19,8 @@ import { zendesk } from "./providers/zendesk";
 import { supabase } from "./providers/supabase";
 import { gmail } from "./providers/gmail";
 import { outlook } from "./providers/outlook";
-const connectors = new Map<string, Connector>([googleDrive, microsoftFiles, dropbox, box, github, notion, confluence, slackConnector, jira, asana, airtable, hubspot, zendesk, supabase, gmail, outlook, customApi, website, mcp].map((c) => [c.id, c]));
+import { gitlab } from "./providers/gitlab";
+const connectors = new Map<string, Connector>([googleDrive, microsoftFiles, dropbox, box, github, gitlab, notion, confluence, slackConnector, jira, asana, airtable, hubspot, zendesk, supabase, gmail, outlook, customApi, website, mcp].map((c) => [c.id, c]));
 export function connector(id: string) {
   const result = connectors.get(id);
   if (!result) throw new AppError("This connector is not installed. Use Custom REST API or MCP for another service.", 400);

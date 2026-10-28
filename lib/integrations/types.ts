@@ -32,7 +32,7 @@ export interface ConnectorContext {
 }
 export interface ConnectorResponse { status: number; headers: Record<string, string>; bytes: Buffer }
 export type ConnectorRequest = (url: string, options?: {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "HEAD";
   headers?: Record<string, string>;
   body?: string;
   // Explicitly permitted, credential-free downloads only. Each hop is validated.
