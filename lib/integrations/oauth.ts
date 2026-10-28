@@ -11,6 +11,7 @@ export type OAuthConfig = z.infer<typeof oauthInputSchema> & { pkce?: boolean; e
 export function configuredOAuth(provider: string): OAuthConfig | null {
   const definitions: Record<string, { prefix: string; authorizationUrl: string; tokenUrl: string; scope: string; extra?: Record<string, string> }> = {
     "google-drive": { prefix: "GOOGLE", authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth", tokenUrl: "https://oauth2.googleapis.com/token", scope: "https://www.googleapis.com/auth/drive.readonly", extra: { access_type: "offline", prompt: "consent" } },
+    gmail: { prefix: "GOOGLE", authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth", tokenUrl: "https://oauth2.googleapis.com/token", scope: "https://www.googleapis.com/auth/gmail.readonly", extra: { access_type: "offline", prompt: "consent" } },
     "microsoft-files": { prefix: "MICROSOFT", authorizationUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize", tokenUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/token", scope: "offline_access Files.Read.All Sites.Read.All" },
     github: { prefix: "GITHUB", authorizationUrl: "https://github.com/login/oauth/authorize", tokenUrl: "https://github.com/login/oauth/access_token", scope: "repo read:user" },
     dropbox: { prefix: "DROPBOX", authorizationUrl: "https://www.dropbox.com/oauth2/authorize", tokenUrl: "https://api.dropboxapi.com/oauth2/token", scope: "files.metadata.read files.content.read", extra: { token_access_type: "offline" } },
