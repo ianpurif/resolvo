@@ -4,6 +4,7 @@ const once = process.argv.includes("--once");
 let stopping = false;
 process.on("SIGINT", () => { stopping = true; });
 process.on("SIGTERM", () => { stopping = true; });
+async function main() {
 do {
   try {
     await cleanIntegrationFiles();
@@ -11,3 +12,5 @@ do {
     if (!worked && !once && !stopping) await new Promise((resolve) => setTimeout(resolve, 5000));
   } catch { console.error("Integration worker failed. Check database migrations and server configuration."); if (once) process.exitCode = 1; else await new Promise((resolve) => setTimeout(resolve, 10000)); }
 } while (!once && !stopping);
+}
+void main().catch(() => { console.error("Integration worker could not start. Check server configuration."); process.exitCode = 1; });
