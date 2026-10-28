@@ -163,6 +163,11 @@ begin
     delete from public.data_sources where id=(select data_source_id from public.documents where id=i.document_id and organization_id=c.organization_id);
     delete from public.integration_items where id=i.id;
     update public.integration_tasks set done=true where id=task.id;
+  elsif p_action='rejected' then
+    insert into public.integration_items(connection_id,organization_id,external_id,name,seen_generation,last_error)
+      values(c.id,c.organization_id,task.payload->>'id',left(coalesce(task.payload->>'name',task.payload->>'id'),160),c.generation,left(p_data->>'error',300))
+      on conflict(connection_id,external_id) do update set last_error=excluded.last_error,seen_generation=c.generation,access_until=now(),updated_at=now();
+    update public.integration_tasks set done=true where id=task.id;
   elsif p_action='error' then
     if i.document_id is not null then
       update public.document_index_jobs set lease=null,lease_until=null where document_id=i.document_id and lease=p_lease;

@@ -88,6 +88,7 @@ export async function syncOne(connectionId?: string) {
     return true;
   } catch (error) {
     if (error instanceof AppError && error.status === 404 && task.payload.type === "read") await step("missing");
+    else if (error instanceof AppError && [400,413,422].includes(error.status) && task.payload.type === "read") await step("rejected", { error: error.message });
     else if (error instanceof AppError && error.status === 409) await step("wait", { delay: 15 }).catch(() => {});
     else {
       const status = error instanceof AppError ? error.status : 502;

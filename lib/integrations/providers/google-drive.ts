@@ -1,5 +1,5 @@
 import { AppError } from "@/lib/config";
-import { authHeaders, documentText, enc, item, json } from "../provider-utils";
+import { authHeaders, documentText, enc, item, json, readableFile } from "../provider-utils";
 import type { Connector } from "../types";
 type DriveFile = { id: string; name: string; mimeType: string; webViewLink?: string; version?: string; trashed?: boolean };
 const base = "https://www.googleapis.com/drive/v3";
@@ -17,7 +17,7 @@ export const googleDrive: Connector = {
     if (ctx.config.driveId) { q.set("driveId", ctx.config.driveId); q.set("corpora", "drive"); }
     const data = await json<{ files: DriveFile[]; nextPageToken?: string; incompleteSearch?: boolean }>(ctx, `${base}/files?${q}`);
     if (data.incompleteSearch) throw new AppError("Drive could not return a complete listing. Connect a specific shared drive.", 422);
-    return { items: data.files.filter((f) => f.mimeType !== "application/vnd.google-apps.shortcut").map((f) => item(f.id, f.name, f.mimeType === folder ? "container" : "document", f.webViewLink, f.version)), cursor: data.nextPageToken };
+    return { items: data.files.filter((f) => f.mimeType === folder || /^application\/vnd\.google-apps\.(document|spreadsheet|presentation|drawing)$/.test(f.mimeType) || readableFile(f.name)).map((f) => item(f.id, f.name, f.mimeType === folder ? "container" : "document", f.webViewLink, f.version)), cursor: data.nextPageToken };
   },
   async read(ctx, id, previous) {
     const f = await json<DriveFile>(ctx, `${base}/files/${enc(id)}?fields=${fields}&supportsAllDrives=true`);

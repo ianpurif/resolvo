@@ -42,6 +42,17 @@ test("sync leases publish private content through existing checkpoints and disco
     assert.equal((await db.query<{ allowed: boolean }>("select private.can_read_integration_file($1) allowed", [path])).rows[0].allowed, false);
     await service();
     await assert.rejects(db.query("select configure_integration($1,$2,$3,'settings',$4)", [connection, org, member, '{"visibility":"workspace"}']), /owners/);
+    await db.query("select configure_integration($1,$2,$3,'selections',$4)", [connection, org, member, JSON.stringify({ items: [{ id: "policy", name: "Policy", kind: "document" }, { id: "unreadable", name: "Unsupported binary", kind: "document" }] })]);
+    for (let n = 0; n < 2; n++) {
+      const selected = (await claim())!;
+      await step(selected.connection.lease, selected.task.id, "rejected", { error: "This file is not supported text." });
+    }
+    await claim();
+    assert.equal((await db.query("select * from integration_tasks where not done")).rows.length, 0);
+    assert.equal((await db.query("select * from integration_items where last_error is not null")).rows.length, 2);
+    await asUser(db, member);
+    assert.equal((await db.query("select * from search_knowledge('personal leave',null,24)")).rows.length, 0);
+    await service();
     await db.query("select configure_integration($1,$2,$3,'sync')", [connection, org, member]);
     const pending = (await claim())!;
     await db.query("select configure_integration($1,$2,$3,'disconnect')", [connection, org, member]);
