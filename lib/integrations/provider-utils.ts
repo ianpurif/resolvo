@@ -2,7 +2,7 @@ import "server-only";
 import { AppError } from "@/lib/config";
 import { prepareFile, normalizeText } from "@/lib/rag/ingest";
 import { extractVisibleText } from "@/lib/rag/website";
-import { checkResponse, responseJson, sameOriginUrl } from "./http";
+import { checkResponse, hasUrlCredentials, responseJson, sameOriginUrl } from "./http";
 import type { ConnectorContext, ConnectorResponse, RemoteItem } from "./types";
 export const enc = encodeURIComponent;
 export function setting(ctx: ConnectorContext, key: string) {
@@ -27,7 +27,7 @@ export async function json<T>(ctx: ConnectorContext, url: string, body?: unknown
 export function pageUrl(base: string, path: string, cursor?: string) { return sameOriginUrl(base, cursor || path); }
 export function sourceUrl(value?: string): string | undefined {
   if (!value) return undefined;
-  try { const u = new URL(value); return ["https:", "http:"].includes(u.protocol) && !u.username && !u.password ? u.href : undefined; } catch { return undefined; }
+  try { const u = new URL(value); return ["https:", "http:"].includes(u.protocol) && !hasUrlCredentials(value) ? u.href : undefined; } catch { return undefined; }
 }
 export function item(id: string, name: string, kind: RemoteItem["kind"], url?: string, version?: string): RemoteItem {
   if (!id || id.length > 2048) throw new AppError("The provider returned an invalid source identifier.", 502);

@@ -3,6 +3,8 @@ import test from "node:test";
 import { randomBytes } from "node:crypto";
 import { seal, unseal } from "@/lib/integrations/credentials";
 import { integrationUrl, sameOriginUrl, publicAddresses, checkResponse } from "@/lib/integrations/http";
+import { validateConfig } from "@/lib/integrations/registry";
+import { sourceUrl } from "@/lib/integrations/provider-utils";
 test("credentials authenticate ciphertext and bind it to the tenant and connection", () => {
   process.env.INTEGRATION_ENCRYPTION_KEY = randomBytes(32).toString("base64");
   const value = seal({ token: "test-private-token" }, "tenant/connection");
@@ -22,4 +24,12 @@ test("connector transport rejects unsafe URLs, DNS addresses and off-origin pagi
   assert.throws(() => sameOriginUrl("https://api.github.com", "https://attacker.example/steal"), /outside/);
   assert.equal(sameOriginUrl("https://api.github.com", "/user/repos?page=2"), "https://api.github.com/user/repos?page=2");
   assert.throws(() => checkResponse({ status: 429, bytes: Buffer.from("secret response"), headers: { "retry-after": "120" } }), (e: unknown) => e instanceof Error && !e.message.includes("secret"));
+});
+
+test("relative and encoded credential URLs cannot enter plaintext configuration or citations", () => {
+  for (const path of ["/records?api_key=private", "/records?%61ccess_token=private", "https://user:password@api.example.com/records", "/records?X-Amz-Signature=private"]) {
+    assert.throws(() => validateConfig("custom-api", { baseUrl: "https://api.example.com", listPath: path, readPath: "/records/{id}" }), /authentication fields/);
+    assert.equal(sourceUrl(new URL(path, "https://api.example.com").href), undefined);
+  }
+  assert.equal(sourceUrl("https://docs.example.com/page?id=policy"), "https://docs.example.com/page?id=policy");
 });

@@ -1,5 +1,6 @@
 import "server-only";
 import { AppError } from "@/lib/config";
+import { hasUrlCredentials } from "./http";
 import type { Connector, ConnectorConfig } from "./types";
 import { googleDrive } from "./providers/google-drive";
 import { microsoftFiles } from "./providers/microsoft-files";
@@ -33,7 +34,7 @@ export function validateConfig(id: string, config: ConnectorConfig) {
   for (const field of provider.fields) if (field.required && !config[field.key]?.trim()) throw new AppError(`Enter ${field.label}.`, 400);
   for (const [key, value] of Object.entries(config)) {
     if (!allowed.has(key)) throw new AppError(`Unknown connector setting: ${key}.`, 400);
-    if (/^https?:\/\//.test(value) && /[?&](?:access_token|api_key|apikey|token|secret|key)=/i.test(value))
+    if (value.split(/\s+/).some(hasUrlCredentials))
       throw new AppError("Put credentials in the authentication fields, not in URLs.", 400);
   }
   return config;

@@ -14,6 +14,12 @@ export function integrationUrl(value: string) {
   if (url.protocol !== "https:") throw new AppError("Integration endpoints must use public HTTPS.", 400);
   return url;
 }
+export function hasUrlCredentials(value: string) {
+  try {
+    const url = new URL(value, "https://connector.invalid");
+    return Boolean(url.username || url.password) || [...url.searchParams.keys()].some((key) => /^(access_token|refresh_token|api_key|apikey|x-api-key|token|secret|key|authorization|x-amz-signature|x-amz-credential|x-amz-security-token|sig)$/i.test(key));
+  } catch { return false; }
+}
 export function sameOriginUrl(base: string, value: string) {
   const url = integrationUrl(new URL(value, base).href);
   if (url.origin !== integrationUrl(base).origin) throw new AppError("A provider returned a URL outside its API origin.", 502);
