@@ -52,6 +52,8 @@ npm run integrations:worker
 
 The worker repeatedly claims one unit of work, respects saved retry times and exits gracefully on SIGINT/SIGTERM. `npm run integrations:worker -- --once` performs one unit for an external job runner. On hosts that inject environment variables, invoke `node --conditions=react-server --import tsx scripts/integration-worker.ts` without the env-file flag.
 
+On Windows, `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-integration-worker.ps1 -StartNow` installs and starts the hidden `ResolvoIntegrationWorker` task for the current user. It starts again at that user's logon, restarts failed runs, and writes logs under `.local/worker/`. The machine must remain awake and the user logged on; use a server worker or scheduled HTTP calls for availability independent of this workstation. The task reads the existing protected `.env.local` and contains no secrets in its command line.
+
 For a scheduled HTTP invocation, set a random `INTEGRATION_SYNC_SECRET` of at least 32 characters and call:
 
 ```http
