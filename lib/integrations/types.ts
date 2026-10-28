@@ -37,6 +37,7 @@ export type ConnectorRequest = (url: string, options?: {
   body?: string;
   // Explicitly permitted, credential-free downloads only. Each hop is validated.
   redirect?: boolean;
+  manualRedirect?: boolean;
 }) => Promise<ConnectorResponse>;
 export interface Connector {
   id: string;

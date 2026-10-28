@@ -60,6 +60,7 @@ export const connectorRequest: ConnectorRequest = async (value, options = {}) =>
       req.end(options.body);
     });
     if (result.status >= 300 && result.status < 400 && result.headers.location) {
+      if (options.manualRedirect) return result;
       if (!options.redirect || options.body || options.method === "POST" || Object.keys(options.headers ?? {}).some((k) => /authorization|token|key|cookie/i.test(k)))
         throw new ConnectorError("The provider redirected an authenticated request. Check its API endpoint.", 502);
       url = integrationUrl(new URL(result.headers.location, url).href); continue;
