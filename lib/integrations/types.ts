@@ -1,6 +1,7 @@
 export type ConnectorAuth = "oauth2" | "token" | "basic" | "service-account" | "none";
 export type ConnectorConfig = Record<string, string>;
 export interface Credential {
+  webhookSecret?: string;
   accessToken?: string;
   refreshToken?: string;
   expiresAt?: number;
