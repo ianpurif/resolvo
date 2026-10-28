@@ -56,7 +56,7 @@ export function KnowledgeManager({
     const pending = documents
       .filter(
         (document) =>
-          document.status === "processing" && document.indexing_token,
+          document.status === "processing" && document.indexing_token && !document.integration_connection_id,
       )
       .sort(
         (a, b) =>
@@ -496,7 +496,7 @@ export function KnowledgeManager({
                     </div>
                     <div className="knowledge-source-actions">
                       <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-                        {source?.kind === "manual"
+                        {document.integration_connection_id ? "Connected source" : source?.kind === "manual"
                           ? "Written knowledge"
                           : source?.kind === "website"
                             ? "Web page"
@@ -509,6 +509,7 @@ export function KnowledgeManager({
                           aria-label={"Edit " + document.name}
                           disabled={
                             !canManage ||
+                            Boolean(document.integration_connection_id) ||
                             busy ||
                             document.status === "processing"
                           }
@@ -520,7 +521,7 @@ export function KnowledgeManager({
                           size="icon"
                           variant="ghost"
                           aria-label={"Re-index " + document.name}
-                          disabled={!canManage || busy}
+                          disabled={!canManage || busy || Boolean(document.integration_connection_id)}
                           onClick={() => void reindex(document)}
                         >
                           <RefreshCw />
@@ -537,7 +538,7 @@ export function KnowledgeManager({
                           size="icon"
                           variant="ghost"
                           aria-label={"Delete " + document.name}
-                          disabled={!canManage || busy}
+                          disabled={!canManage || busy || Boolean(document.integration_connection_id)}
                           onClick={() => setDeleting(document)}
                         >
                           <Trash2 />

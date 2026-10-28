@@ -26,11 +26,14 @@ import {
 } from "@/components/workspace/workspace-frame";
 import { ConversationActions } from "./conversation-actions";
 import { MessageBubble } from "./message-bubble";
+import { KnowledgeFilter } from "./knowledge-filter";
+import type { KnowledgeFilter as FilterValue } from "@/lib/validations";
 import { consumeChatStream } from "@/lib/chat/stream";
 import type { SavedConversation } from "@/lib/chat/history";
 import type { ChatMessage, Organization } from "@/types";
 
 type Pending = {
+  filters?: FilterValue;
   id: string;
   text: string;
   userId: string;
@@ -56,6 +59,7 @@ export function SupportChat({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [input, setInput] = useState("");
+  const [filters, setFilters] = useState<FilterValue>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [draft, setDraft] = useState("");
@@ -182,6 +186,7 @@ export function SupportChat({
       text: text.trim(),
       userId: crypto.randomUUID(),
       conversationId,
+      filters,
     };
     busyRef.current = true;
     setBusy(true);
@@ -218,6 +223,7 @@ export function SupportChat({
           message: turn.text,
           conversationId: turn.conversationId,
           requestId: turn.id,
+          filters: turn.filters,
         }),
         signal: controller.signal,
       });
@@ -539,13 +545,7 @@ export function SupportChat({
             className="min-h-14 w-full resize-none bg-transparent px-2 py-2 text-sm leading-6 outline-none! placeholder:text-muted-foreground disabled:opacity-60"
           />
           <div className="flex items-center justify-between px-1">
-            <Link
-              href="/admin/knowledge"
-              className="flex items-center gap-1.5 rounded-md border bg-[#f0f6f9] px-2.5 py-1.5 text-[10px] text-muted-foreground hover:text-primary"
-            >
-              <BookOpen className="size-3" />
-              Company knowledge
-            </Link>
+            <KnowledgeFilter value={filters} onChange={setFilters} disabled={busy || Boolean(pending)} />
             <div className="flex items-center gap-3">
               <span className="hidden text-[9px] text-muted-foreground sm:block">
                 Enter to send · Shift + Enter for a new line

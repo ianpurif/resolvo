@@ -27,6 +27,14 @@ test("sync leases publish private content through existing checkpoints and disco
     await claim();
     await asUser(db, member);
     assert.equal((await db.query("select * from search_knowledge('personal leave',null,24)")).rows.length, 1);
+    assert.equal((await db.query("select * from search_knowledge('personal leave',null,24,null,array['uploads'])")).rows.length, 0);
+    assert.equal((await db.query("select * from search_knowledge('personal leave',null,24,null,array['custom-api'])")).rows.length, 1);
+    assert.equal((await db.query("select * from search_knowledge('personal leave',null,24,array[$1::uuid],null)", [randomUUID()])).rows.length, 0);
+    const metadata = (await db.query<{ source_url: string }>("select * from knowledge_source_metadata(array[$1::uuid])", [doc])).rows[0];
+    assert.equal(metadata.source_url, "https://source.example/policy");
+    const chat = randomUUID();
+    await db.query("select begin_filtered_chat_request($1,null,'What is the leave policy?',$2)", [chat, '{"platforms":["custom-api"]}']);
+    await assert.rejects(db.query("select begin_filtered_chat_request($1,null,'What is the leave policy?',$2)", [chat, '{"platforms":["uploads"]}']), /mismatch/);
     await assert.rejects(db.query("select claim_integration(null)"), /permission denied/);
     await asUser(db, owner);
     assert.equal((await db.query("select * from documents where id=$1", [doc])).rows.length, 0);

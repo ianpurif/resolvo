@@ -197,6 +197,7 @@ export function MessageBubble({
             This excerpt is saved with the conversation. The original document
             may have changed since this answer.
           </p>
+          {source?.url && /^https?:\/\//.test(source.url) && <a href={source.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-medium text-primary">Open original source <ArrowUpRight className="size-4" /></a>}
         </DialogContent>
       </Dialog>
     </div>
