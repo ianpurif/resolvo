@@ -19,8 +19,8 @@ export function GoogleButton({ disabled = false }: { disabled?: boolean }) {
           <Image
             src="/google-g.png"
             alt=""
-            width={20}
-            height={20}
+            width={32}
+            height={33}
             style={{ height: "auto" }}
             className="w-5 shrink-0"
           />

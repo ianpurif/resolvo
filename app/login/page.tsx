@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, LockKeyhole } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { GoogleButton } from "@/components/auth/google-button";
@@ -24,42 +25,59 @@ export default async function LoginPage({
         ? "Sign-in didn’t finish. Please try Google again."
         : "";
   return (
-    <main
-      id="main-content"
-      className="auth-page relative flex min-h-dvh flex-col bg-[#f6f8f7] px-6"
-    >
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between py-7">
-        <Link href="/" aria-label="Resolvo home">
-          <Brand />
-        </Link>
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary"
-        >
-          <ArrowLeft className="size-3.5" />
-          Back to home
-        </Link>
-      </header>
-      <section className="relative mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center pb-24 text-center">
-        <Brand compact className="mx-auto mb-7 [&_.brand-mark]:size-16" />
-        <h1 className="text-[34px] font-semibold tracking-[-0.055em]">
-          Welcome to Resolvo
-        </h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Your knowledge. A conversation away.
-        </p>
-        <div className="mt-9">
-          <GoogleButton disabled={!configured} />
+    <main id="main-content" className="auth-layout">
+      <aside className="auth-art" aria-label="Connected knowledge">
+        <Image
+          src="/art/knowledge-weave.webp"
+          alt="A sculpture of interwoven blue and teal threads"
+          fill
+          sizes="50vw"
+          className="object-cover"
+        />
+        <div className="auth-art-caption">
+          <p className="eyebrow mb-5 text-[#b2d9de]!">
+            Many sources. A shared understanding.
+          </p>
+          <h2>
+            A little more context.
+            <br />
+            <em>A lot more clarity.</em>
+          </h2>
+          <p>Your company’s knowledge, thoughtfully connected.</p>
         </div>
-        <AuthNotice message={message} warning={error === "signout"} />
-        <p className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <LockKeyhole className="size-3.5" />A private workspace for your
-          company
-        </p>
-      </section>
-      <footer className="pb-7 text-center text-[11px] text-muted-foreground">
-        Company knowledge, thoughtfully connected.
-      </footer>
+      </aside>
+      <div className="auth-content">
+        <header>
+          <Link href="/" aria-label="Resolvo home">
+            <Brand />
+          </Link>
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary"
+          >
+            <ArrowLeft className="size-3.5" />
+            Back to home
+          </Link>
+        </header>
+        <section className="auth-form-section">
+          <p className="eyebrow">Your next chapter</p>
+          <h1>Welcome to Resolvo</h1>
+          <p className="mt-4 text-sm leading-7 text-muted-foreground">
+            Sign in to your company’s knowledge workspace.
+          </p>
+          <div className="mt-9">
+            <GoogleButton disabled={!configured} />
+          </div>
+          <AuthNotice message={message} warning={error === "signout"} />
+          <p className="auth-rule flex items-center gap-2 text-[11px] text-muted-foreground">
+            <LockKeyhole className="size-3.5" />A private workspace for your
+            company
+          </p>
+        </section>
+        <footer className="pb-1 text-[10px] text-muted-foreground">
+          Company knowledge, thoughtfully connected.
+        </footer>
+      </div>
     </main>
   );
 }

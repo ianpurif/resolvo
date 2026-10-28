@@ -62,8 +62,8 @@ function CodeBlock({ children }: { children?: ReactNode }) {
     ? element.props.className?.replace("language-", "")
     : "";
   return (
-    <div className="my-4 overflow-hidden rounded-xl border border-[#2b4637] bg-[#183328]">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5 text-[10px] text-[#a7c6b3]">
+    <div className="code-block">
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5 text-[10px] text-[#adcbd8]">
         <span>{language || "Code"}</span>
         <button
           aria-label="Copy code"
@@ -91,9 +91,7 @@ export function MessageBubble({
   if (message.role === "user")
     return (
       <div className="flex justify-end pl-8 sm:pl-16">
-        <div className="max-w-[94%] rounded-[20px] rounded-br-md bg-[#eef3ec] px-5 py-3.5 text-[13px] leading-7 whitespace-pre-wrap break-words">
-          {message.content}
-        </div>
+        <div className="chat-user-message">{message.content}</div>
       </div>
     );
   return (
@@ -144,9 +142,9 @@ export function MessageBubble({
                   key={item.chunkId ?? item.id}
                   onClick={() => setSource(item)}
                   aria-label={"View source: " + item.title}
-                  className="flex max-w-full items-center gap-1.5 rounded-lg border bg-[#f8faf6] px-2.5 py-2 text-[10px] text-primary transition-colors hover:border-[#a6bea9] hover:bg-secondary"
+                  className="source-citation"
                 >
-                  <span className="flex size-4 shrink-0 items-center justify-center rounded bg-[#e7eee1] text-[8px]">
+                  <span className="flex size-4 shrink-0 items-center justify-center rounded bg-[#dcecef] text-[8px]">
                     {index + 1}
                   </span>
                   <FileText className="size-3 shrink-0" />
@@ -162,7 +160,7 @@ export function MessageBubble({
             <button
               aria-label="Copy answer"
               onClick={() => void copy(message.content)}
-              className="rounded-lg p-2 text-[#95a48f] hover:bg-accent hover:text-primary"
+              className="rounded-lg p-2 text-[#6d8a99] hover:bg-accent hover:text-primary"
             >
               {copied ? (
                 <Check className="size-3.5" />
@@ -192,7 +190,7 @@ export function MessageBubble({
             <FileText className="size-3.5" />
             Source excerpt used for this answer
           </DialogDescription>
-          <div className="max-h-[50dvh] overflow-y-auto rounded-xl border bg-[#f7faf5] p-5 text-sm leading-7 whitespace-pre-wrap break-words">
+          <div className="max-h-[50dvh] overflow-y-auto rounded-lg border border-dashed bg-[#f2f7fa] p-5 text-sm leading-7 whitespace-pre-wrap break-words">
             {source?.excerpt}
           </div>
           <p className="text-[10px] leading-5 text-muted-foreground">

@@ -1,1 +1,21 @@
-export default function Loading() { return <div role="status" className="space-y-5"><div className="h-8 w-64 rounded-lg bg-border/50" /><div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{[1, 2, 3, 4].map((id) => <div key={id} className="h-36 rounded-xl border bg-white" />)}</div><p className="text-xs text-muted-foreground">Loading your workspace…</p></div>; }
+export default function Loading() {
+  return (
+    <div
+      role="status"
+      aria-label="Loading your workspace"
+      className="space-y-8"
+    >
+      <div className="space-y-4">
+        <div className="skeleton h-3 w-36 rounded" />
+        <div className="skeleton h-10 w-64 rounded-lg" />
+        <div className="skeleton h-3 w-48 rounded" />
+      </div>
+      <div className="skeleton h-40 rounded-xl" />
+      <div className="grid grid-cols-2 gap-7">
+        <div className="skeleton h-56 rounded-xl" />
+        <div className="skeleton h-56 rounded-xl" />
+      </div>
+      <p className="text-xs text-muted-foreground">Gathering your workspace…</p>
+    </div>
+  );
+}

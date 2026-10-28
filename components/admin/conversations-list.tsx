@@ -22,7 +22,7 @@ export function ConversationsList({
   return (
     <>
       <div className="mb-6 flex items-center justify-between gap-3">
-        <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border bg-white px-4 sm:max-w-sm">
+        <label className="search-field flex-1 sm:max-w-sm">
           <Search className="size-4 shrink-0 text-muted-foreground" />
           <input
             aria-label="Search conversations"
@@ -34,13 +34,20 @@ export function ConversationsList({
         </label>
         <Link
           href="/support"
-          className="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-3 text-xs text-white"
+          className="flex shrink-0 items-center gap-2 rounded-[7px] bg-primary px-4 py-3 text-xs font-semibold text-white transition-colors hover:bg-primary/90"
         >
           <Plus className="size-3.5" />
           New chat
         </Link>
       </div>
-      <div className="overflow-hidden rounded-2xl border bg-white">
+      <div className="surface">
+        <div className="surface-heading">
+          <span>Your conversation library</span>
+          <span className="text-[10px] font-normal text-muted-foreground">
+            {filtered.length}{" "}
+            {filtered.length === 1 ? "conversation" : "conversations"}
+          </span>
+        </div>
         {!filtered.length ? (
           <EmptyState
             title={
@@ -57,15 +64,12 @@ export function ConversationsList({
         ) : (
           <div className="divide-y">
             {filtered.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 px-4 py-5 hover:bg-muted/30 sm:gap-4 sm:px-6"
-              >
+              <div key={item.id} className="conversation-row list-row">
                 <Link
                   href={"/support?conversation=" + item.id}
                   className="flex min-w-0 flex-1 items-center gap-4"
                 >
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#cfe0e7] bg-[#f1f7fa]">
                     <MessageSquare className="size-4 text-primary" />
                   </span>
                   <div className="min-w-0 flex-1">

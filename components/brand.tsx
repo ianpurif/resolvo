@@ -24,7 +24,7 @@ export function Brand({
         />
       </span>
       {!compact && (
-        <span className="text-[23px] font-semibold tracking-[-0.065em]">
+        <span className="brand-wordmark text-[23px] font-semibold tracking-[-0.065em]">
           resolvo<span className="text-primary">.</span>
         </span>
       )}

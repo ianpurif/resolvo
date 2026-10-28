@@ -29,10 +29,16 @@ export function OnboardingForm() {
       router.refresh();
     } catch (error) {
       toast.error(
-        friendlyError(error, "Could not create your workspace. Check your connection and try again."),
+        friendlyError(
+          error,
+          "Could not create your workspace. Check your connection and try again.",
+        ),
       );
       setError(
-        friendlyError(error, "Could not create your workspace. Check your connection and try again."),
+        friendlyError(
+          error,
+          "Could not create your workspace. Check your connection and try again.",
+        ),
       );
       setBusy(false);
     }
@@ -46,7 +52,7 @@ export function OnboardingForm() {
           required
           minLength={2}
           maxLength={120}
-          className="mt-2 w-full rounded-lg border p-3"
+          className="field mt-2"
           disabled={busy}
         />
       </label>
@@ -58,7 +64,7 @@ export function OnboardingForm() {
           minLength={2}
           maxLength={80}
           placeholder="Your company’s industry"
-          className="mt-2 w-full rounded-lg border p-3"
+          className="field mt-2"
           disabled={busy}
         />
       </label>

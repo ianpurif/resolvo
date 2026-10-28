@@ -51,10 +51,16 @@ export function TicketsTable({ tickets }: { tickets: Ticket[] }) {
       router.refresh();
     } catch (error) {
       toast.error(
-        friendlyError(error, "Could not update the ticket. Check your connection and try again."),
+        friendlyError(
+          error,
+          "Could not update the ticket. Check your connection and try again.",
+        ),
       );
       setError(
-        friendlyError(error, "Could not update the ticket. Check your connection and try again."),
+        friendlyError(
+          error,
+          "Could not update the ticket. Check your connection and try again.",
+        ),
       );
     } finally {
       setSaving(null);
@@ -63,7 +69,7 @@ export function TicketsTable({ tickets }: { tickets: Ticket[] }) {
   return (
     <>
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <label className="flex h-10 min-w-[200px] flex-1 items-center gap-2 rounded-lg border bg-white px-3 sm:max-w-sm">
+        <label className="search-field min-w-[200px] flex-1 sm:max-w-sm">
           <Search className="size-3.5 text-muted-foreground" />
           <input
             aria-label="Search tickets"
@@ -77,7 +83,7 @@ export function TicketsTable({ tickets }: { tickets: Ticket[] }) {
           aria-label="Filter ticket status"
           value={status}
           onChange={(event) => setStatus(event.target.value)}
-          className="h-10 rounded-lg border bg-white px-3 text-xs"
+          className="h-11 rounded-[7px] border border-input bg-white px-3 text-xs"
         >
           <option value="all">All statuses</option>
           <option value="open">Open</option>
@@ -97,7 +103,7 @@ export function TicketsTable({ tickets }: { tickets: Ticket[] }) {
           {error}
         </div>
       )}
-      <div className="overflow-hidden rounded-xl border bg-white">
+      <div className="surface">
         {filtered.length === 0 ? (
           <EmptyState
             title={
@@ -111,37 +117,55 @@ export function TicketsTable({ tickets }: { tickets: Ticket[] }) {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b bg-[#fbfcf9] text-[10px] text-muted-foreground">
-                <tr>
+            <table
+              role="table"
+              className="ticket-table w-full text-left text-xs"
+            >
+              <thead role="rowgroup" className="border-b text-muted-foreground">
+                <tr role="row">
                   {["Ticket", "Raised by", "Issue", "Status", "Created"].map(
                     (label) => (
-                      <th key={label} className="px-5 py-3.5 font-medium">
+                      <th
+                        key={label}
+                        scope="col"
+                        className="px-5 py-3.5 font-medium"
+                      >
                         {label}
                       </th>
                     ),
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody role="rowgroup" className="divide-y">
                 {filtered.map((ticket) => (
-                  <tr key={ticket.id}>
-                    <td className="px-5 py-5">
+                  <tr key={ticket.id} role="row">
+                    <td role="cell" className="ticket-id px-5 py-5">
                       <button
                         onClick={() => setSelected(ticket)}
                         className="flex items-center gap-2 whitespace-nowrap font-medium text-primary hover:underline"
                       >
-                        <TicketIcon className="size-3.5 text-[#96a38e]" />
+                        <TicketIcon className="size-3.5 text-[#7296a6]" />
                         {ticket.ticket_number}
                       </button>
                     </td>
-                    <td className="min-w-[170px] px-5 py-5">
-                      <div>{"Workspace inquiry"}</div>
+                    <td
+                      role="cell"
+                      className="ticket-customer min-w-[170px] px-5 py-5"
+                    >
+                      <div className="ticket-customer-heading">
+                        Workspace inquiry
+                      </div>
+                      <span aria-hidden="true" className="ticket-mobile-label">
+                        Raised by
+                      </span>
                       <div className="mt-1.5 text-[10px] text-muted-foreground">
                         {ticket.customer_email}
                       </div>
                     </td>
-                    <td className="min-w-[200px] max-w-[300px] px-5 py-5">
+                    <td
+                      role="cell"
+                      className="ticket-issue min-w-[200px] max-w-[300px] px-5 py-5"
+                    >
                       <button
                         onClick={() => setSelected(ticket)}
                         className="line-clamp-2 text-left text-[11px] leading-6 text-muted-foreground hover:text-foreground"
@@ -149,7 +173,10 @@ export function TicketsTable({ tickets }: { tickets: Ticket[] }) {
                         {ticket.issue}
                       </button>
                     </td>
-                    <td className="px-5 py-5">
+                    <td role="cell" className="ticket-status px-5 py-5">
+                      <span aria-hidden="true" className="ticket-mobile-label">
+                        Status
+                      </span>
                       <div className="flex items-center gap-2">
                         <select
                           aria-label={`Status for ${ticket.ticket_number}`}
@@ -172,7 +199,10 @@ export function TicketsTable({ tickets }: { tickets: Ticket[] }) {
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-5 text-[11px] whitespace-nowrap text-muted-foreground">
+                    <td
+                      role="cell"
+                      className="ticket-created px-5 py-5 text-[11px] whitespace-nowrap text-muted-foreground"
+                    >
                       {formatDate(ticket.created_at)}
                     </td>
                   </tr>

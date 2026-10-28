@@ -12,11 +12,9 @@ export function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-md border border-current/10 px-2 py-1 text-[10px] font-medium",
         {
-          "bg-emerald-50 text-emerald-700": ["resolved", "ready"].includes(
-            status,
-          ),
+          "bg-teal-50 text-teal-800": ["resolved", "ready"].includes(status),
           "bg-blue-50 text-blue-700": status === "in_progress",
           "bg-amber-50 text-amber-700": ["processing", "open"].includes(status),
           "bg-red-50 text-red-700": status === "failed",

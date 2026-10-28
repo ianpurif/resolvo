@@ -243,282 +243,314 @@ export function KnowledgeManager({
   }
   return (
     <>
-      {canManage ? <form
-        ref={form}
-        onSubmit={submit}
-        onChange={() => {
-          saveRequest.current = null;
-        }}
-        className="mb-6 space-y-5 rounded-xl border bg-white p-5 md:p-6"
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium">
-            {editing ? "Update " + editing.name : "Connect company knowledge"}
-          </h2>
-          {editing && (
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(null);
-                setText("");
-                setName("");
-                setUrl("");
-                form.current?.reset();
+      <div className="knowledge-layout">
+        <div>
+          {canManage ? (
+            <form
+              ref={form}
+              onSubmit={submit}
+              onChange={() => {
+                saveRequest.current = null;
               }}
-              className="text-xs text-muted-foreground"
+              className="knowledge-form space-y-5"
             >
-              Cancel edit
-            </button>
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold tracking-tight">
+                  {editing
+                    ? "Update " + editing.name
+                    : "Connect company knowledge"}
+                </h2>
+                {editing && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(null);
+                      setText("");
+                      setName("");
+                      setUrl("");
+                      form.current?.reset();
+                    }}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Cancel edit
+                  </button>
+                )}
+              </div>
+              <div className="source-tabs" aria-label="Knowledge source type">
+                {(["file", "website", "manual"] as const).map((item) => (
+                  <Button
+                    key={item}
+                    type="button"
+                    size="sm"
+                    variant={kind === item ? "default" : "outline"}
+                    disabled={busy || Boolean(editing)}
+                    aria-pressed={kind === item}
+                    onClick={() => {
+                      setKind(item);
+                      saveRequest.current = null;
+                    }}
+                  >
+                    {item === "file"
+                      ? "Upload document"
+                      : item === "website"
+                        ? "Website URL"
+                        : "Write knowledge"}
+                  </Button>
+                ))}
+              </div>
+              {kind === "file" ? (
+                <label className="upload-zone">
+                  <Upload
+                    className="mb-4 size-6 text-primary"
+                    strokeWidth={1.5}
+                  />
+                  <span className="mb-5 text-sm font-medium">
+                    Choose a file to connect
+                  </span>
+                  <input
+                    key="file"
+                    name="file"
+                    type="file"
+                    accept=".pdf,.docx,.txt,.md,.csv,.tsv,.json"
+                    required
+                    disabled={busy}
+                    onChange={(event) => {
+                      const file = event.currentTarget.files?.[0];
+                      event.currentTarget.setCustomValidity("");
+                      saveRequest.current = null;
+                      setNotice("");
+                      if (!file) return;
+                      try {
+                        validateUpload(file);
+                      } catch (error) {
+                        const message =
+                          error instanceof Error
+                            ? error.message
+                            : "Choose a valid document.";
+                        event.currentTarget.setCustomValidity(message);
+                        setNotice(message);
+                      }
+                    }}
+                    className="w-full text-xs"
+                  />
+                  <span className="mt-3 block text-xs text-muted-foreground">
+                    PDF, DOCX, TXT, Markdown, CSV, TSV or JSON · Up to 4 MB
+                  </span>
+                </label>
+              ) : kind === "website" ? (
+                <label className="field-label">
+                  Public web page
+                  <input
+                    key="website"
+                    type="url"
+                    required
+                    value={url}
+                    onChange={(event) => {
+                      setUrl(event.target.value);
+                      saveRequest.current = null;
+                    }}
+                    maxLength={2048}
+                    disabled={busy}
+                    className="field"
+                    placeholder="https://your-company.com/knowledge"
+                  />
+                  <span className="mt-2 block text-[11px] text-muted-foreground">
+                    Imports this page’s visible text. Re-index to fetch its
+                    latest content.
+                  </span>
+                </label>
+              ) : (
+                <>
+                  <label className="field-label">
+                    Source name
+                    <input
+                      required
+                      minLength={1}
+                      maxLength={160}
+                      value={name}
+                      onChange={(event) => {
+                        setName(event.target.value);
+                        saveRequest.current = null;
+                      }}
+                      disabled={busy}
+                      className="field"
+                    />
+                  </label>
+                  <label className="field-label">
+                    Knowledge
+                    <textarea
+                      required
+                      minLength={20}
+                      maxLength={250000}
+                      rows={8}
+                      value={text}
+                      onChange={(event) => {
+                        setText(event.target.value);
+                        saveRequest.current = null;
+                      }}
+                      disabled={busy}
+                      className="field"
+                    />
+                  </label>
+                </>
+              )}
+              <div className="flex flex-wrap items-center justify-between gap-4 border-t border-dashed pt-5">
+                <p className="text-[11px] text-muted-foreground">
+                  Only members of your company can access these sources.
+                </p>
+                <Button disabled={busy}>
+                  {busy ? (
+                    <>
+                      <Loader2 className="animate-spin" />
+                      Indexing…
+                    </>
+                  ) : (
+                    "Save & index"
+                  )}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <p className="mb-6 text-sm text-muted-foreground">
+              You can read company knowledge. Workspace owners manage sources
+              and indexing.
+            </p>
+          )}
+          {documents.some((document) => document.status === "processing") && (
+            <p
+              className="mt-4 text-xs leading-6 text-muted-foreground"
+              role="status"
+            >
+              Keep this page open while indexing. Progress is saved if you
+              leave.
+            </p>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {(["file", "website", "manual"] as const).map((item) => (
-            <Button
-              key={item}
-              type="button"
-              size="sm"
-              variant={kind === item ? "default" : "outline"}
-              disabled={busy || Boolean(editing)}
-              aria-pressed={kind === item}
-              onClick={() => {
-                setKind(item);
-                saveRequest.current = null;
-              }}
-            >
-              {item === "file"
-                ? "Upload document"
-                : item === "website"
-                  ? "Website URL"
-                  : "Write knowledge"}
-            </Button>
-          ))}
-        </div>
-        {kind === "file" ? (
-          <label className="block rounded-xl border border-dashed bg-[#fbfcf9] p-6 text-sm">
-            <Upload className="mb-3 size-5 text-primary" />
-            <input
-              key="file"
-              name="file"
-              type="file"
-              accept=".pdf,.docx,.txt,.md,.csv,.tsv,.json"
-              required
-              disabled={busy}
-              onChange={(event) => {
-                const file = event.currentTarget.files?.[0];
-                event.currentTarget.setCustomValidity("");
-                saveRequest.current = null;
-                setNotice("");
-                if (!file) return;
-                try {
-                  validateUpload(file);
-                } catch (error) {
-                  const message =
-                    error instanceof Error
-                      ? error.message
-                      : "Choose a valid document.";
-                  event.currentTarget.setCustomValidity(message);
-                  setNotice(message);
-                }
-              }}
-              className="w-full text-xs"
-            />
-            <span className="mt-3 block text-xs text-muted-foreground">
-              PDF, DOCX, TXT, Markdown, CSV, TSV or JSON · Up to 4 MB
+        <section className="surface">
+          <h2 className="surface-heading">
+            Connected sources{" "}
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              {documents.length}
             </span>
-          </label>
-        ) : kind === "website" ? (
-          <label className="block text-xs">
-            Public web page
-            <input
-              key="website"
-              type="url"
-              required
-              value={url}
-              onChange={(event) => {
-                setUrl(event.target.value);
-                saveRequest.current = null;
-              }}
-              maxLength={2048}
-              disabled={busy}
-              className="mt-2 w-full rounded-lg border p-3 text-sm"
-              placeholder="https://your-company.com/knowledge"
+          </h2>
+          {!documents.length ? (
+            <EmptyState
+              title="No company knowledge yet."
+              description="Add a document, web page or written source to start receiving grounded answers."
             />
-            <span className="mt-2 block text-[11px] text-muted-foreground">
-              Imports this page’s visible text. Re-index to fetch its latest
-              content.
-            </span>
-          </label>
-        ) : (
-          <>
-            <label className="block text-xs">
-              Source name
-              <input
-                required
-                minLength={1}
-                maxLength={160}
-                value={name}
-                onChange={(event) => {
-                  setName(event.target.value);
-                  saveRequest.current = null;
-                }}
-                disabled={busy}
-                className="mt-2 w-full rounded-lg border p-3 text-sm"
-              />
-            </label>
-            <label className="block text-xs">
-              Knowledge
-              <textarea
-                required
-                minLength={20}
-                maxLength={250000}
-                rows={8}
-                value={text}
-                onChange={(event) => {
-                  setText(event.target.value);
-                  saveRequest.current = null;
-                }}
-                disabled={busy}
-                className="mt-2 w-full rounded-lg border p-3 text-sm"
-              />
-            </label>
-          </>
-        )}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[11px] text-muted-foreground">
-            Only members of your company can access these sources.
-          </p>
-          <Button disabled={busy}>
-            {busy ? (
-              <>
-                <Loader2 className="animate-spin" />
-                Indexing…
-              </>
-            ) : (
-              "Save & index"
-            )}
-          </Button>
-        </div>
-      </form> : <p className="mb-6 text-sm text-muted-foreground">You can read company knowledge. Workspace owners manage sources and indexing.</p>}
-      {documents.some((document) => document.status === "processing") && (
-        <p
-          className="mb-5 text-xs leading-6 text-muted-foreground"
-          role="status"
-        >
-          Keep this page open while indexing. Progress is saved if you leave.
-        </p>
-      )}
-      <section className="overflow-hidden rounded-xl border bg-white">
-        <h2 className="border-b p-5 text-sm font-semibold">
-          Connected sources{" "}
-          <span className="ml-2 text-xs font-normal text-muted-foreground">
-            {documents.length}
-          </span>
-        </h2>
-        {!documents.length ? (
-          <EmptyState
-            title="No company knowledge yet."
-            description="Add a document, web page or written source to start receiving grounded answers."
-          />
-        ) : (
-          <div className="divide-y">
-            {documents.map((document) => {
-              const source = sources.find(
-                (item) => item.id === document.data_source_id,
-              );
-              return (
-                <div
-                  key={document.id}
-                  className="flex flex-wrap items-center justify-between gap-4 p-5"
-                >
-                  <div className="min-w-0 basis-full sm:flex-1 sm:basis-auto">
-                    <p className="text-sm font-medium break-words">
-                      {document.name}
-                    </p>
-                    <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
-                      {source?.kind} · {document.chunk_count} chunks ·{" "}
-                      {formatDate(document.updated_at, true)} UTC
-                    </p>
-                    {source?.locator && (
-                      <p className="mt-2 truncate text-[11px] text-muted-foreground">
-                        {source.locator}
-                      </p>
-                    )}
-                    {document.error_message && (
-                      <p className="mt-2 text-xs leading-6 text-red-700">
-                        {document.error_message}
-                      </p>
-                    )}
-                    {document.indexing_token &&
-                      Boolean(document.index_total) && (
-                        <div
-                          className="mt-3 space-y-2 text-xs text-muted-foreground"
-                          role="status"
-                        >
-                          <p>
-                            {document.index_completed ?? 0} of{" "}
-                            {document.index_total} chunks embedded
-                            {document.status === "processing" &&
-                            document.index_next_attempt_at &&
-                            Date.parse(document.index_next_attempt_at) >
-                              Date.parse(document.updated_at) + 2000
-                              ? " · waiting for the next batch"
-                              : ""}
+          ) : (
+            <div className="divide-y">
+              {documents.map((document) => {
+                const source = sources.find(
+                  (item) => item.id === document.data_source_id,
+                );
+                return (
+                  <div key={document.id} className="knowledge-source">
+                    <div className="knowledge-source-heading">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium break-words">
+                          {document.name}
+                        </p>
+                        <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
+                          {document.chunk_count} chunks ·{" "}
+                          {formatDate(document.updated_at, true)} UTC
+                        </p>
+                        {source?.locator && (
+                          <p className="mt-2 truncate text-[11px] text-muted-foreground">
+                            {source.locator}
                           </p>
-                          <progress
-                            aria-label={
-                              "Indexing progress for " + document.name
-                            }
-                            className="h-2 w-full max-w-xs"
-                            value={document.index_completed ?? 0}
-                            max={document.index_total}
-                          />
-                        </div>
-                      )}
+                        )}
+                        {document.error_message && (
+                          <p className="mt-2 text-xs leading-6 text-red-700">
+                            {document.error_message}
+                          </p>
+                        )}
+                        {document.indexing_token &&
+                          Boolean(document.index_total) && (
+                            <div
+                              className="mt-3 space-y-2 text-xs text-muted-foreground"
+                              role="status"
+                            >
+                              <p>
+                                {document.index_completed ?? 0} of{" "}
+                                {document.index_total} chunks embedded
+                                {document.status === "processing" &&
+                                document.index_next_attempt_at &&
+                                Date.parse(document.index_next_attempt_at) >
+                                  Date.parse(document.updated_at) + 2000
+                                  ? " · waiting for the next batch"
+                                  : ""}
+                              </p>
+                              <progress
+                                aria-label={
+                                  "Indexing progress for " + document.name
+                                }
+                                className="h-2 w-full max-w-xs"
+                                value={document.index_completed ?? 0}
+                                max={document.index_total}
+                              />
+                            </div>
+                          )}
+                      </div>
+                      <StatusBadge status={document.status} />
+                    </div>
+                    <div className="knowledge-source-actions">
+                      <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                        {source?.kind === "manual"
+                          ? "Written knowledge"
+                          : source?.kind === "website"
+                            ? "Web page"
+                            : "Document"}
+                      </span>
+                      <div className="flex items-center gap-0.5">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label={"Edit " + document.name}
+                          disabled={
+                            !canManage ||
+                            busy ||
+                            document.status === "processing"
+                          }
+                          onClick={() => void edit(document)}
+                        >
+                          <Pencil />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label={"Re-index " + document.name}
+                          disabled={!canManage || busy}
+                          onClick={() => void reindex(document)}
+                        >
+                          <RefreshCw />
+                        </Button>
+                        <Button asChild size="icon" variant="ghost">
+                          <a
+                            href={"/api/knowledge/" + document.id + "/file"}
+                            aria-label={"Download " + document.name}
+                          >
+                            <Download />
+                          </a>
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label={"Delete " + document.name}
+                          disabled={!canManage || busy}
+                          onClick={() => setDeleting(document)}
+                        >
+                          <Trash2 />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <StatusBadge status={document.status} />
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label={"Edit " + document.name}
-                      disabled={!canManage || busy || document.status === "processing"}
-                      onClick={() => void edit(document)}
-                    >
-                      <Pencil />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label={"Re-index " + document.name}
-                      disabled={!canManage || busy}
-                      onClick={() => void reindex(document)}
-                    >
-                      <RefreshCw />
-                    </Button>
-                    <Button asChild size="icon" variant="ghost">
-                      <a
-                        href={"/api/knowledge/" + document.id + "/file"}
-                        aria-label={"Download " + document.name}
-                      >
-                        <Download />
-                      </a>
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label={"Delete " + document.name}
-                      disabled={!canManage || busy}
-                      onClick={() => setDeleting(document)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
       <Dialog
         open={Boolean(deleting)}
         onOpenChange={(open) => {

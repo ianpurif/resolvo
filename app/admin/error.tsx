@@ -9,9 +9,13 @@ export default function AdminError({
   retry: () => void;
 }) {
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center rounded-xl border bg-white p-10 text-center">
-      <AlertCircle className="mb-4 size-7 text-amber-600" />
-      <h1 className="text-lg font-medium">We couldn’t load your workspace.</h1>
+    <div className="surface mx-auto flex max-w-lg flex-col items-center p-8 text-center sm:p-12">
+      <span className="empty-state-icon">
+        <AlertCircle className="size-6 text-amber-700" />
+      </span>
+      <h1 className="editorial text-[32px] leading-tight">
+        We couldn’t load your workspace.
+      </h1>
       <p className="mt-3 text-sm leading-7 text-muted-foreground">
         Please try again. If this continues, contact your workspace
         administrator.

@@ -12,10 +12,10 @@ export default function AppError({
   return (
     <main
       id="main-content"
-      className="flex min-h-[80dvh] flex-col items-center justify-center px-6 text-center"
+      className="recovery-page flex min-h-dvh flex-col items-center justify-center px-6 text-center"
     >
       <Brand />
-      <h1 className="mt-8 text-2xl font-medium tracking-tight">
+      <h1 className="editorial mt-8 max-w-lg text-[40px] leading-tight">
         We couldn’t open your workspace.
       </h1>
       <p className="mt-3 max-w-sm text-sm leading-7 text-muted-foreground">

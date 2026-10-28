@@ -14,45 +14,36 @@ export default async function DashboardPage() {
   const data = await getWorkspace();
   return (
     <>
-      <div className="mb-8 flex items-center justify-between gap-5">
+      <div className="workspace-heading">
         <div>
-          <p className="mb-3 text-[11px] text-muted-foreground">
-            A clearer view of your company knowledge
-          </p>
-          <h1 className="text-3xl font-medium tracking-[-.045em] sm:text-4xl">
-            Your workspace
-          </h1>
+          <p className="eyebrow">Your connected knowledge</p>
+          <h1>Your workspace</h1>
         </div>
         <Link
           href="/admin/knowledge"
-          className="flex shrink-0 items-center gap-2 rounded-lg border bg-white px-3 py-2.5 text-xs sm:px-4"
+          className="flex shrink-0 items-center gap-2 rounded-[7px] border border-input bg-white px-4 py-3 text-xs font-semibold transition-colors hover:bg-accent"
         >
           <Plus className="size-3.5" />
           <span className="hidden sm:inline">Add knowledge</span>
           <span className="sm:hidden">Add source</span>
         </Link>
       </div>
-      <Link
-        href="/support"
-        className="group mb-8 flex items-center justify-between gap-5 overflow-hidden rounded-2xl border border-[#d4e3d6] bg-[#eaf3e9] px-6 py-7 sm:px-8"
-      >
+      <Link href="/support" className="dashboard-start group">
         <div>
-          <span className="mb-4 flex items-center gap-2 text-[10px] font-semibold tracking-wider text-primary">
+          <span className="eyebrow mb-4">
             <MessageSquare className="size-3.5" />
             RESOLVO ASSISTANT
           </span>
-          <h2 className="text-2xl font-medium tracking-[-.035em]">
-            Start with a good question.
-          </h2>
-          <p className="mt-2 text-xs leading-6 text-[#6a826d]">
+          <h2>Start with a good question.</h2>
+          <p className="mt-3 text-xs leading-6 text-muted-foreground">
             Find answers in your company’s own sources.
           </p>
         </div>
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-transform group-hover:translate-x-1">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#123c4d] text-white transition-transform group-hover:translate-x-1">
           <ArrowRight className="size-5" />
         </span>
       </Link>
-      <div className="mb-9 grid grid-cols-3 divide-x rounded-2xl border bg-white py-5">
+      <div className="workspace-metrics">
         {[
           {
             label: "Sources",
@@ -73,12 +64,12 @@ export default async function DashboardPage() {
             icon: Ticket,
           },
         ].map(({ label, value, href, icon: Icon }) => (
-          <Link href={href} key={label} className="px-4 sm:px-6">
+          <Link href={href} key={label} className="group">
             <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
               <Icon className="hidden size-3.5 sm:block" />
               {label}
             </div>
-            <p className="mt-3 text-2xl font-medium tracking-tight">{value}</p>
+            <p className="metric-value group-hover:text-primary">{value}</p>
           </Link>
         ))}
       </div>
@@ -94,14 +85,10 @@ export default async function DashboardPage() {
               <ArrowUpRight className="size-3" />
             </Link>
           </div>
-          <div className="overflow-hidden rounded-2xl border bg-white">
+          <div className="surface">
             {data.documents.length ? (
               data.documents.slice(0, 5).map((doc) => (
-                <Link
-                  href="/admin/knowledge"
-                  key={doc.id}
-                  className="flex items-center gap-3 border-b px-5 py-5 last:border-0 hover:bg-muted/40"
-                >
+                <Link href="/admin/knowledge" key={doc.id} className="list-row">
                   <BookOpen className="size-4 shrink-0 text-primary" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-medium">{doc.name}</p>
@@ -114,7 +101,7 @@ export default async function DashboardPage() {
               ))
             ) : (
               <div className="px-6 py-9">
-                <BookOpen className="mb-4 size-6 text-[#9bac9c]" />
+                <BookOpen className="mb-4 size-6 text-[#7399aa]" />
                 <p className="text-sm font-medium">Connect your first source</p>
                 <p className="mt-2 text-xs leading-6 text-muted-foreground">
                   A document, a public web page, or something your team knows.
@@ -141,13 +128,13 @@ export default async function DashboardPage() {
               <ArrowUpRight className="size-3" />
             </Link>
           </div>
-          <div className="overflow-hidden rounded-2xl border bg-white">
+          <div className="surface">
             {data.conversations.length ? (
               data.conversations.slice(0, 5).map((conv) => (
                 <Link
                   href={"/support?conversation=" + conv.id}
                   key={conv.id}
-                  className="flex items-center gap-3 border-b px-5 py-5 last:border-0 hover:bg-muted/40"
+                  className="list-row"
                 >
                   <MessageSquare className="size-4 shrink-0 text-primary" />
                   <div className="min-w-0 flex-1">
@@ -161,7 +148,7 @@ export default async function DashboardPage() {
               ))
             ) : (
               <div className="px-6 py-9">
-                <MessageSquare className="mb-4 size-6 text-[#9bac9c]" />
+                <MessageSquare className="mb-4 size-6 text-[#7399aa]" />
                 <p className="text-sm font-medium">A fresh start</p>
                 <p className="mt-2 text-xs leading-6 text-muted-foreground">
                   Your personal conversations will be saved automatically.

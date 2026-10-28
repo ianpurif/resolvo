@@ -12,10 +12,11 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
   const db = await tenantDatabase();
   const owner: string = randomUUID(),
     colleague: string = randomUUID(),
-    outsider: string = randomUUID();
+    outsider: string = randomUUID(),
+    newUser: string = randomUUID();
   await db.query(
-    "insert into auth.users(id,email) values($1,'owner@fixture.invalid'),($2,'member@fixture.invalid'),($3,'outside@fixture.invalid')",
-    [owner, colleague, outsider],
+    "insert into auth.users(id,email) values($1,'owner@fixture.invalid'),($2,'member@fixture.invalid'),($3,'outside@fixture.invalid'),($4,'new@fixture.invalid')",
+    [owner, colleague, outsider, newUser],
   );
   await asUser(db, owner);
   const org = (
@@ -31,8 +32,14 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
   await asUser(db, outsider);
   await db.query("select create_workspace('Other company','Other')");
   await db.exec("reset role");
+  const ticket = (
+    await db.query<{ id: string; ticket_number: string }>(
+      "insert into public.tickets(organization_id,created_by,customer_email,issue,idempotency_key) values($1,$2,'owner@fixture.invalid','Please review access to the company handbook.',$3) returning id,ticket_number",
+      [org, owner, randomUUID()],
+    )
+  ).rows[0];
   const users = new Map(
-    [owner, colleague, outsider].map((id) => [
+    [owner, colleague, outsider, newUser].map((id) => [
       id,
       {
         id,
@@ -60,7 +67,7 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
           app_metadata: { provider: "google" },
         }),
       ).toString("base64url"),
-        Buffer.from("fixture-signature").toString("base64url"),
+      Buffer.from("fixture-signature").toString("base64url"),
     ].join(".");
   }
   const files = new Map<string, { bytes: Buffer; type: string }>();
@@ -182,8 +189,7 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
       const sourceId = /"passageId":"([0-9a-f-]{36})"/.exec(
         body.messages[0].content,
       )?.[1];
-      const answer =
-        `The documented review process has **two steps**: [[source:${sourceId}]]\n\n1. Submit the change. [[source:${sourceId}]]\n2. A department manager reviews it. [[source:${sourceId}]]\n\n\`\`\`typescript\nconst status = 'review';\n\`\`\`\n\n[[source:${sourceId}]]`;
+      const answer = `The documented review process has **two steps**: [[source:${sourceId}]]\n\n1. Submit the change. [[source:${sourceId}]]\n2. A department manager reviews it. [[source:${sourceId}]]\n\n\`\`\`typescript\nconst status = 'review';\n\`\`\`\n\n[[source:${sourceId}]]`;
       response.writeHead(200, { "Content-Type": "text/event-stream" });
       for (let offset = 0; offset < answer.length; offset += 30) {
         if (response.destroyed) return;
@@ -244,10 +250,18 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
         const parameters = entries.map(([key, value]) =>
           Array.isArray(value) && /^(?:p_passage_ids|p_document_ids)$/.test(key)
             ? `{${value.join(",")}}`
-            : typeof value === "object" && value !== null ? JSON.stringify(value) : value);
+            : typeof value === "object" && value !== null
+              ? JSON.stringify(value)
+              : value,
+        );
         if (entries.some(([key]) => !/^[a-z_]+$/.test(key)))
           throw new Error("Unknown fixture parameter");
-        const isSet = ["match_document_chunks", "search_knowledge", "knowledge_passage_context", "knowledge_overview"].includes(name);
+        const isSet = [
+          "match_document_chunks",
+          "search_knowledge",
+          "knowledge_passage_context",
+          "knowledge_overview",
+        ].includes(name);
         const result = await db.query<{ data: unknown }>(
           (isSet ? "select * from public." : "select public.") +
             name +
@@ -258,8 +272,7 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
             (isSet ? ")" : ") as data"),
           parameters,
         );
-        if (isSet)
-          json(response, result.rows);
+        if (isSet) json(response, result.rows);
         else json(response, result.rows[0]?.data ?? null);
         return;
       }
@@ -332,9 +345,15 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
           throw new Error("Unsupported fixture filter");
         const operator = filter.slice(0, filter.indexOf("."));
         if (operator === "in") {
-          const items = filter.slice(3).replace(/^\(|\)$/g, "").split(",");
-          const parameters = items.map((item) => { values.push(item.replace(/^"|"$/g, "")); return "$" + values.length; });
-          conditions.push('"' + key + '" in (' + parameters.join(",") + ')');
+          const items = filter
+            .slice(3)
+            .replace(/^\(|\)$/g, "")
+            .split(",");
+          const parameters = items.map((item) => {
+            values.push(item.replace(/^"|"$/g, ""));
+            return "$" + values.length;
+          });
+          conditions.push('"' + key + '" in (' + parameters.join(",") + ")");
           continue;
         }
         const operators: Record<string, string> = {
@@ -484,6 +503,8 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
     owner,
     colleague,
     outsider,
+    newUser,
+    ticket,
     org,
     modelCalls,
     token,

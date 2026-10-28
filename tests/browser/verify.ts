@@ -159,7 +159,7 @@ async function main() {
     });
     await page.goto(appOrigin);
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      "Great answers",
+      "Your knowledge.",
     );
     await expect(page.locator('img[src*="resolvo-logo"]')).not.toHaveCount(0);
     await expect
@@ -185,6 +185,10 @@ async function main() {
       true,
     );
     await page.screenshot({ path: join(output, "landing-desktop.png") });
+    await page.screenshot({
+      path: join(output, "landing-desktop-full.png"),
+      fullPage: true,
+    });
     record(
       "Landing page, responsive width, supplied logo, and reduced-motion rendering",
     );
@@ -216,12 +220,56 @@ async function main() {
     record(
       "Settings displays the actual authenticated account and company workspace",
     );
+    await page
+      .getByRole("link", { name: "Support tickets", exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Support tickets", exact: true }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: backend.ticket.ticket_number, exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toContainText(
+      "Please review access to the company handbook.",
+    );
+    await page.screenshot({ path: join(output, "ticket-dialog-desktop.png") });
+    await page.keyboard.press("Escape");
+    await expect(
+      page.getByRole("button", {
+        name: backend.ticket.ticket_number,
+        exact: true,
+      }),
+    ).toBeFocused();
+    const ticketUpdate = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/tickets/" + backend.ticket.id) &&
+        response.request().method() === "PATCH",
+    );
+    await page
+      .getByLabel("Status for " + backend.ticket.ticket_number)
+      .selectOption("in_progress");
+    assert.equal((await ticketUpdate).status(), 200);
+    await page.reload();
+    await expect(
+      page.getByLabel("Status for " + backend.ticket.ticket_number),
+    ).toHaveValue("in_progress");
+    await page.getByLabel("Search tickets").fill("no matching issue");
+    await expect(
+      page.getByText("No matching tickets.", { exact: true }),
+    ).toBeVisible();
+    await page.getByLabel("Search tickets").fill("");
+    await page.screenshot({ path: join(output, "tickets-desktop.png") });
+    record(
+      "Ticket details, keyboard focus restoration, search, and status updates persist through actual routes",
+    );
     await page.getByRole("link", { name: "Knowledge", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Knowledge", exact: true }),
     ).toBeVisible();
     const websiteUrl = "https://example.com/knowledge";
-    await page.getByRole("button", { name: "Website URL", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Website URL", exact: true })
+      .click();
     await expect(page.locator('input[type="url"]')).toHaveValue("");
     await page.locator('input[type="url"]').fill(websiteUrl);
     await page
@@ -229,13 +277,19 @@ async function main() {
       .click();
     await expect(page.locator('input[type="file"]')).toBeVisible();
     await expect(page.locator('input[type="file"]')).toHaveValue("");
-    await page.getByRole("button", { name: "Website URL", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Website URL", exact: true })
+      .click();
     await expect(page.locator('input[type="url"]')).toHaveValue(websiteUrl);
     await page
       .getByRole("button", { name: "Write knowledge", exact: true })
       .click();
-    await expect(page.getByLabel("Source name", { exact: true })).toHaveValue("");
-    await page.getByRole("button", { name: "Website URL", exact: true }).click();
+    await expect(page.getByLabel("Source name", { exact: true })).toHaveValue(
+      "",
+    );
+    await page
+      .getByRole("button", { name: "Website URL", exact: true })
+      .click();
     await expect(page.locator('input[type="url"]')).toHaveValue(websiteUrl);
     await page
       .getByRole("button", { name: "Upload document", exact: true })
@@ -270,6 +324,7 @@ async function main() {
     await expect(
       page.getByRole("heading", { name: "What would you like to know?" }),
     ).toBeVisible();
+    await page.screenshot({ path: join(output, "chat-empty-desktop.png") });
     const input = page.getByLabel("Ask your company’s assistant");
     await input.fill("How does change review work?");
     await page
@@ -330,6 +385,7 @@ async function main() {
     await expect(
       page.getByRole("heading", { name: "Conversations", exact: true }),
     ).toBeVisible();
+    await page.screenshot({ path: join(output, "conversations-desktop.png") });
     await page
       .getByRole("main")
       .getByRole("link")
@@ -345,10 +401,19 @@ async function main() {
       .click();
     await page.getByRole("menuitem", { name: "Rename", exact: true }).click();
     await page.getByLabel("Conversation name").fill("Our review workflow");
+    await page.screenshot({ path: join(output, "rename-dialog-desktop.png") });
     await page.getByRole("button", { name: "Save name" }).click();
     await expect(
       page.getByRole("button", { name: "Our review workflow", exact: true }),
     ).toBeVisible();
+    await expect(
+      page
+        .getByRole("button", {
+          name: "Options for Our review workflow",
+          exact: true,
+        })
+        .first(),
+    ).toBeFocused();
     await page.reload();
     await expect(
       page.getByRole("button", { name: "Our review workflow", exact: true }),
@@ -470,6 +535,80 @@ async function main() {
       404,
     );
     await stranger.close();
+    const onboardingContext = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      reducedMotion: "reduce",
+    });
+    await onboardingContext.addCookies([
+      {
+        ...tokenCookie,
+        value:
+          "base64-" +
+          Buffer.from(
+            JSON.stringify({
+              access_token: backend.token(backend.newUser),
+              refresh_token: "new-user-fixture",
+              expires_at: Math.floor(Date.now() / 1000) + 3600,
+              token_type: "bearer",
+              user: {
+                id: backend.newUser,
+                app_metadata: { provider: "google" },
+              },
+            }),
+          ).toString("base64url"),
+      },
+    ]);
+    const onboardingPage = await onboardingContext.newPage();
+    onboardingPage.on("pageerror", (error) => errors.push(error.message));
+    await onboardingPage.goto(appOrigin + "/onboarding");
+    await expect(
+      onboardingPage.getByRole("heading", {
+        name: "Make room for your knowledge",
+      }),
+    ).toBeVisible();
+    await onboardingPage.screenshot({
+      path: join(output, "onboarding-mobile.png"),
+      fullPage: true,
+    });
+    await onboardingPage
+      .getByLabel("Company name", { exact: true })
+      .fill("New browser workspace");
+    await onboardingPage
+      .getByLabel("Industry", { exact: true })
+      .fill("Research");
+    await onboardingPage
+      .getByRole("button", { name: "Create company workspace" })
+      .click();
+    await expect(
+      onboardingPage.getByRole("heading", {
+        name: "Your workspace",
+        exact: true,
+      }),
+    ).toBeVisible({ timeout: 60000 });
+    assert.equal(
+      await onboardingPage.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      true,
+    );
+    await onboardingPage.screenshot({
+      path: join(output, "dashboard-mobile.png"),
+      fullPage: true,
+    });
+    await onboardingPage.goto(appOrigin + "/admin/conversations");
+    await expect(
+      onboardingPage.getByText("Your next conversation starts here", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await onboardingPage.screenshot({
+      path: join(output, "conversations-empty-mobile.png"),
+      fullPage: true,
+    });
+    await onboardingContext.close();
+    record(
+      "Mobile onboarding creates a real isolated workspace through the existing authenticated route",
+    );
     record(
       "Actual conversation APIs reject another company member, forged Origin, and browser tenant fields",
     );
@@ -589,6 +728,78 @@ async function main() {
     record(
       "Mobile chat, knowledge form, original-source edit, and navigation drawer fit the viewport",
     );
+    await page.goto(appOrigin + "/admin/settings");
+    await expect(
+      page.getByRole("heading", { name: "Settings", exact: true }),
+    ).toBeVisible();
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      true,
+    );
+    await page.screenshot({
+      path: join(output, "settings-mobile.png"),
+      fullPage: true,
+    });
+    await page.goto(appOrigin + "/admin/tickets");
+    await expect(
+      page.getByLabel("Status for " + backend.ticket.ticket_number),
+    ).toHaveValue("in_progress");
+    await page.getByLabel("Filter ticket status").selectOption("resolved");
+    await expect(
+      page.getByText("No matching tickets.", { exact: true }),
+    ).toBeVisible();
+    await page.getByLabel("Filter ticket status").selectOption("all");
+    await expect(
+      page.getByLabel("Status for " + backend.ticket.ticket_number),
+    ).toBeInViewport();
+    await expect(
+      page.getByRole("button", {
+        name: "Please review access to the company handbook.",
+        exact: true,
+      }),
+    ).toBeInViewport();
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      true,
+    );
+    await page.screenshot({
+      path: join(output, "tickets-mobile.png"),
+      fullPage: true,
+    });
+    await page.goto(appOrigin + "/admin/conversations");
+    await expect(
+      page.getByRole("heading", { name: "Conversations", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByRole("main")
+        .getByRole("link")
+        .filter({ hasText: "slow response" }),
+    ).toBeVisible();
+    await page
+      .getByLabel("Search conversations")
+      .fill("no matching conversation");
+    await expect(
+      page.getByText("No matching conversations", { exact: true }),
+    ).toBeVisible();
+    await page.getByLabel("Search conversations").fill("");
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      true,
+    );
+    await page.screenshot({
+      path: join(output, "conversations-mobile.png"),
+      fullPage: true,
+    });
+    record(
+      "Mobile settings, ticket filters, and the conversation library remain usable without page overflow",
+    );
     await page.getByRole("button", { name: "Open sidebar" }).click();
     await page
       .getByRole("dialog")
@@ -603,6 +814,24 @@ async function main() {
     );
     record(
       "Actual sign-out route clears session and protected APIs deny the logged-out browser",
+    );
+    await page.screenshot({
+      path: join(output, "login-mobile.png"),
+      fullPage: true,
+    });
+    await page.goto(appOrigin + "/a-page-that-does-not-exist");
+    await expect(
+      page.getByRole("heading", { name: "A thread we couldn’t find." }),
+    ).toBeVisible();
+    await page.screenshot({
+      path: join(output, "not-found-mobile.png"),
+      fullPage: true,
+    });
+    await expect(
+      page.getByRole("link", { name: "Back to your workspace" }),
+    ).toHaveAttribute("href", "/support");
+    record(
+      "The responsive not-found state offers a working path back to the workspace",
     );
     await page.goto(appOrigin);
     await page.getByRole("button", { name: "Open menu" }).click();
@@ -641,6 +870,20 @@ async function main() {
           runtimeErrors: errors,
           controlledInputWarnings,
           screenshots: [
+            "chat-empty-desktop.png",
+            "conversations-mobile.png",
+            "conversations-empty-mobile.png",
+            "landing-desktop-full.png",
+            "conversations-desktop.png",
+            "tickets-desktop.png",
+            "ticket-dialog-desktop.png",
+            "rename-dialog-desktop.png",
+            "onboarding-mobile.png",
+            "dashboard-mobile.png",
+            "settings-mobile.png",
+            "tickets-mobile.png",
+            "login-mobile.png",
+            "not-found-mobile.png",
             "landing-desktop.png",
             "login-desktop.png",
             "dashboard-desktop.png",

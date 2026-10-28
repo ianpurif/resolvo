@@ -91,7 +91,7 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
       ? [{ label: "Recent chats", items: filtered }]
       : [];
   const sidebar = (
-    <div className="flex h-full min-h-0 flex-col px-4 py-5">
+    <div className="sidebar-content flex h-full min-h-0 flex-col px-4 py-6">
       <div className="mb-7 flex items-center justify-between px-1">
         <Link href="/" aria-label="Resolvo home">
           <Brand />
@@ -101,7 +101,7 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
             setCollapsed(true);
             setMobile(false);
           }}
-          className="hidden rounded-lg p-2 text-muted-foreground hover:bg-white lg:block"
+          className="sidebar-control hidden lg:block"
           aria-label="Collapse sidebar"
         >
           <PanelLeft className="size-4" />
@@ -114,11 +114,11 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
             onNew();
             setMobile(false);
           }}
-          className="flex w-full items-center gap-3 rounded-xl bg-primary px-4 py-3 text-xs font-medium text-white hover:bg-[#1f674b] disabled:opacity-50"
+          className="sidebar-new"
         >
           <Plus className="size-4" />
           New chat
-          <span aria-hidden="true" className="ml-auto text-white/65">
+          <span aria-hidden="true" className="ml-auto opacity-60">
             ↗
           </span>
         </button>
@@ -126,11 +126,11 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
         <Link
           href="/support"
           onClick={() => setMobile(false)}
-          className="flex items-center gap-3 rounded-xl bg-primary px-4 py-3 text-xs font-medium text-white hover:bg-[#1f674b]"
+          className="sidebar-new"
         >
           <Plus className="size-4" />
           New chat
-          <ArrowUpRight className="ml-auto size-3.5 text-white/65" />
+          <ArrowUpRight className="ml-auto size-3.5 opacity-60" />
         </Link>
       )}
       <nav aria-label="Workspace navigation" className="mt-5 space-y-1">
@@ -140,12 +140,7 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
             key={href}
             onClick={() => setMobile(false)}
             aria-current={path === href ? "page" : undefined}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs transition-colors",
-              path === href
-                ? "bg-[#e2ede4] font-medium text-primary"
-                : "text-[#697e70] hover:bg-white",
-            )}
+            className="sidebar-nav-link"
           >
             <Icon className="size-4" />
             {label}
@@ -153,16 +148,14 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
         ))}
       </nav>
       <div className="mt-7 flex items-center justify-between px-3">
-        <span className="text-[10px] font-medium tracking-[.1em] text-[#819087]">
-          YOUR CHATS
-        </span>
+        <span className="sidebar-label">YOUR CHATS</span>
         <button
           aria-label={searchOpen ? "Close chat search" : "Search chats"}
           onClick={() => {
             setSearchOpen(!searchOpen);
             setSearch("");
           }}
-          className="rounded p-1 text-muted-foreground hover:bg-white"
+          className="sidebar-control"
         >
           {searchOpen ? (
             <X className="size-3.5" />
@@ -194,16 +187,12 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
         ) : (
           groups.map(({ label, items }) => (
             <div key={label} className="mb-4">
-              <p className="px-3 py-2 text-[10px] text-[#88978d]">{label}</p>
+              <p className="px-3 py-2 text-[10px] text-[#91adbb]">{label}</p>
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className={cn(
-                    "group flex items-center gap-1 rounded-lg pr-1",
-                    item.id === activeId
-                      ? "bg-white shadow-xs"
-                      : "hover:bg-white/70",
-                  )}
+                  className="sidebar-chat group flex items-center gap-1 pr-1"
+                  data-active={item.id === activeId}
                 >
                   {onOpen ? (
                     <button
@@ -213,7 +202,7 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
                       }}
                       disabled={busy}
                       aria-current={item.id === activeId ? "page" : undefined}
-                      className="min-w-0 flex-1 truncate px-3 py-2.5 text-left text-[11px] text-[#536b5b]"
+                      className="sidebar-chat-title"
                     >
                       {item.title}
                     </button>
@@ -221,7 +210,7 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
                     <Link
                       href={"/support?conversation=" + item.id}
                       onClick={() => setMobile(false)}
-                      className="min-w-0 flex-1 truncate px-3 py-2.5 text-[11px] text-[#536b5b]"
+                      className="sidebar-chat-title"
                     >
                       {item.title}
                     </Link>
@@ -243,7 +232,7 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
           <button
             disabled={loadingMore || busy}
             onClick={onLoadMore}
-            className="flex w-full items-center justify-center gap-2 py-3 text-[11px] text-primary"
+            className="flex w-full items-center justify-center gap-2 py-3 text-[11px] text-[#a6d5d8]"
           >
             {loadingMore && <LoaderCircle className="size-3 animate-spin" />}
             Load older chats
@@ -254,13 +243,14 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
         <Link
           href="/admin/settings"
           onClick={() => setMobile(false)}
-          className="mb-3 flex items-center gap-3 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:bg-white"
+          className="sidebar-nav-link mb-3"
+          aria-current={path === "/admin/settings" ? "page" : undefined}
         >
           <Settings2 className="size-4" />
           Settings
         </Link>
-        <div className="flex items-center gap-2.5 rounded-xl border bg-white/75 px-3 py-3">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#e8eee6] text-xs font-semibold text-primary">
+        <div className="sidebar-account">
+          <span className="sidebar-avatar">
             {organization.name.charAt(0).toUpperCase()}
           </span>
           <div className="min-w-0 flex-1">
@@ -275,7 +265,7 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
             <button
               aria-label="Sign out"
               title="Sign out"
-              className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent"
+              className="sidebar-control"
             >
               <LogOut className="size-3.5" />
             </button>
@@ -287,21 +277,21 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
   return (
     <div
       className={cn(
-        "flex bg-[#fbfcfa]",
+        "workspace-shell flex",
         chat ? "h-dvh min-h-[420px] overflow-hidden" : "min-h-dvh",
       )}
     >
       <aside
         aria-label="Sidebar"
         className={cn(
-          "sticky top-0 hidden h-dvh shrink-0 border-r bg-[#f1f5f1] lg:block",
-          collapsed ? "w-0 overflow-hidden border-0" : "w-[260px]",
+          "workspace-sidebar sticky top-0 hidden h-dvh shrink-0 border-r lg:block",
+          collapsed ? "w-0 overflow-hidden border-0" : "w-[252px]",
         )}
       >
         {!collapsed && sidebar}
       </aside>
       <Dialog open={mobile} onOpenChange={setMobile}>
-        <DialogContent className="top-0 left-0 h-dvh max-h-none w-[min(290px,90vw)] translate-x-0 translate-y-0 rounded-none border-0 bg-[#f1f5f1] p-0">
+        <DialogContent className="workspace-sidebar top-0 left-0 h-dvh max-h-none w-[min(290px,90vw)] translate-x-0 translate-y-0 rounded-none border-0 p-0">
           <DialogTitle className="sr-only">Workspace navigation</DialogTitle>
           <DialogDescription className="sr-only">
             Your conversations and company workspace.
@@ -310,7 +300,7 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
         </DialogContent>
       </Dialog>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-[68px] shrink-0 items-center gap-3 border-b bg-white/90 px-4 sm:px-7">
+        <header className="workspace-header flex shrink-0 items-center gap-3 px-4 sm:px-8">
           <button
             aria-label="Expand sidebar"
             onClick={() => setCollapsed(false)}
@@ -328,11 +318,17 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
           >
             <PanelLeft className="size-4" />
           </button>
-          <p className="min-w-0 flex-1 truncate text-[13px] font-medium">
+          <p className="min-w-0 flex-1 truncate text-xs font-medium">
+            <span className="hidden font-normal text-muted-foreground md:inline">
+              {organization.name}
+              <span aria-hidden="true" className="mx-3 text-[#afc1ca]">
+                /
+              </span>
+            </span>
             {title}
           </p>
           {headerActions}
-          <span className="hidden items-center gap-1.5 rounded-full bg-[#f1f5ef] px-3 py-1.5 text-[10px] text-[#758772] sm:flex">
+          <span className="hidden items-center gap-1.5 rounded-md border border-dashed bg-[#f2f7f9] px-3 py-1.5 text-[10px] text-muted-foreground sm:flex">
             <LockKeyhole className="size-3" />
             Private workspace
           </span>
@@ -342,8 +338,8 @@ export function WorkspaceFrame(props: WorkspaceFrameProps) {
           className={cn(
             "min-w-0 flex-1",
             chat
-              ? "flex min-h-0 flex-col bg-white"
-              : "mx-auto w-full max-w-[1180px] px-5 py-8 sm:px-9 sm:py-10",
+              ? "flex min-h-0 flex-col bg-[#fbfdfe]"
+              : "mx-auto w-full max-w-[1280px] px-5 py-8 sm:px-10 sm:py-11",
           )}
         >
           {children}

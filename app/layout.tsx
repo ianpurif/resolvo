@@ -9,6 +9,22 @@ const manrope = localFont({
   variable: "--font-manrope",
   display: "swap",
 });
+const editorial = localFont({
+  src: [
+    {
+      path: "../public/fonts/instrument-serif-regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/instrument-serif-italic.ttf",
+      weight: "400",
+      style: "italic",
+    },
+  ],
+  variable: "--font-editorial",
+  display: "swap",
+});
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -29,7 +45,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={manrope.variable}>
+    <html lang="en" className={`${manrope.variable} ${editorial.variable}`}>
       <body>
         <a href="#main-content" className="skip-link">
           Skip to content

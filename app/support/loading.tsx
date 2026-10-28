@@ -4,7 +4,7 @@ export default function ChatLoading() {
     <main
       id="main-content"
       role="status"
-      className="flex h-dvh items-center justify-center gap-3 bg-[#fbfcfa] text-xs text-muted-foreground"
+      className="recovery-page flex h-dvh items-center justify-center gap-3 text-xs text-muted-foreground"
     >
       <Brand compact />
       <span className="thinking-dot">Opening your workspace…</span>

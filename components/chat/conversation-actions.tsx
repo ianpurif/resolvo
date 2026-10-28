@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { DropdownMenu } from "radix-ui";
 import { MoreHorizontal, Pencil, Trash2, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ export function ConversationActions({
   const [action, setAction] = useState<"rename" | "delete" | null>(null);
   const [title, setTitle] = useState(conversation.title);
   const [busy, setBusy] = useState(false);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
   async function save(event: FormEvent) {
     event.preventDefault();
     if (busy || (action === "rename" && !title.trim())) return;
@@ -53,7 +54,10 @@ export function ConversationActions({
       setAction(null);
     } catch (error) {
       toast.error(
-        friendlyError(error, "Could not update this conversation. Check your connection and try again."),
+        friendlyError(
+          error,
+          "Could not update this conversation. Check your connection and try again.",
+        ),
       );
     } finally {
       setBusy(false);
@@ -63,9 +67,10 @@ export function ConversationActions({
     <>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger
+          ref={menuTrigger}
           disabled={disabled}
           aria-label={"Options for " + conversation.title}
-          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-white focus-visible:bg-white"
+          className="conversation-menu-trigger flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent focus-visible:bg-accent"
         >
           <MoreHorizontal className="size-4" />
         </DropdownMenu.Trigger>
@@ -73,7 +78,7 @@ export function ConversationActions({
           <DropdownMenu.Content
             align="start"
             sideOffset={5}
-            className="z-50 min-w-40 rounded-xl border bg-white p-1.5 text-xs shadow-lg"
+            className="z-50 min-w-44 rounded-lg border bg-white p-1.5 text-xs shadow-[0_12px_40px_#17334220]"
           >
             <DropdownMenu.Item
               onSelect={() => {
@@ -103,6 +108,12 @@ export function ConversationActions({
       >
         <DialogContent
           className="max-w-sm"
+          onCloseAutoFocus={(event) => {
+            if (menuTrigger.current?.isConnected) {
+              event.preventDefault();
+              menuTrigger.current.focus();
+            }
+          }}
           onEscapeKeyDown={(event) => {
             if (busy) event.preventDefault();
           }}
@@ -134,7 +145,7 @@ export function ConversationActions({
                   required
                   disabled={busy}
                   autoFocus
-                  className="w-full rounded-lg border px-3 py-3 text-sm"
+                  className="field"
                 />
               </>
             )}

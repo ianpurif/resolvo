@@ -363,14 +363,15 @@ export function SupportChat({
       >
         <div className="mx-auto max-w-[760px] py-8 sm:py-11">
           {!messages.length && !busy ? (
-            <div className="flex min-h-[43dvh] flex-col items-center justify-center pt-6 text-center">
-              <Brand compact className="mb-6 [&_.brand-mark]:size-14" />
+            <div className="chat-welcome">
+              <Brand
+                compact
+                className="mb-7 rounded-xl border border-dashed border-[#a9c2cd] bg-[#eef5f8] p-2 [&_.brand-mark]:size-10"
+              />
               <p className="mb-3 text-[11px] text-muted-foreground">
                 Your {organization.name} knowledge assistant
               </p>
-              <h1 className="text-[clamp(29px,4vw,40px)] leading-tight font-medium tracking-[-.055em]">
-                What would you like to know?
-              </h1>
+              <h1>What would you like to know?</h1>
               <p className="mt-4 max-w-sm text-[13px] leading-6 text-muted-foreground">
                 Find an answer. Explore an idea. Start with your company’s
                 knowledge.
@@ -400,7 +401,7 @@ export function SupportChat({
                       composer.current?.focus();
                     }}
                     disabled={!ready}
-                    className="flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-[11px] text-[#627c6c] transition-colors hover:border-[#afc9b8] hover:bg-[#f8fbf7] disabled:opacity-50 sm:flex-col sm:items-start"
+                    className="prompt-suggestion disabled:opacity-50 sm:flex-col sm:items-start"
                   >
                     <Icon className="size-4 text-primary" />
                     {label}
@@ -489,7 +490,7 @@ export function SupportChat({
           )}
         </div>
       </div>
-      <footer className="relative shrink-0 bg-white px-4 pt-2 pb-[max(14px,env(safe-area-inset-bottom))] sm:px-8">
+      <footer className="relative shrink-0 bg-[#fbfdfe] px-4 pt-2 pb-[max(14px,env(safe-area-inset-bottom))] sm:px-8">
         {!atBottom && (
           <button
             aria-label="Jump to latest message"
@@ -507,10 +508,7 @@ export function SupportChat({
             <ArrowDown className="size-4" />
           </button>
         )}
-        <form
-          onSubmit={submit}
-          className="composer-shadow mx-auto max-w-[760px] rounded-[22px] border bg-[#fbfcfa] p-3 transition-colors focus-within:border-[#9fbaa9]"
-        >
+        <form onSubmit={submit} className="composer mx-auto max-w-[760px]">
           <label htmlFor="message" className="sr-only">
             Ask your company’s assistant
           </label>
@@ -538,12 +536,12 @@ export function SupportChat({
               }
             }}
             placeholder="Ask your company’s knowledge…"
-            className="min-h-14 w-full resize-none bg-transparent px-2 py-2 text-[13px] leading-6 outline-none! placeholder:text-[#93a094] disabled:opacity-60"
+            className="min-h-14 w-full resize-none bg-transparent px-2 py-2 text-sm leading-6 outline-none! placeholder:text-muted-foreground disabled:opacity-60"
           />
           <div className="flex items-center justify-between px-1">
             <Link
               href="/admin/knowledge"
-              className="flex items-center gap-1.5 rounded-full border bg-white px-2.5 py-1.5 text-[10px] text-muted-foreground hover:text-primary"
+              className="flex items-center gap-1.5 rounded-md border bg-[#f0f6f9] px-2.5 py-1.5 text-[10px] text-muted-foreground hover:text-primary"
             >
               <BookOpen className="size-3" />
               Company knowledge
@@ -557,7 +555,7 @@ export function SupportChat({
                   type="button"
                   aria-label="Stop response"
                   onClick={() => abort.current?.abort()}
-                  className="flex size-9 items-center justify-center rounded-xl bg-primary text-white"
+                  className="flex size-9 items-center justify-center rounded-lg bg-[#173f51] text-white"
                 >
                   <Square className="size-3.5" fill="currentColor" />
                 </button>
@@ -568,7 +566,7 @@ export function SupportChat({
                   disabled={
                     !input.trim() || !ready || Boolean(pending && error)
                   }
-                  className="flex size-9 items-center justify-center rounded-xl bg-primary text-white transition-colors hover:bg-[#1c6148] disabled:bg-[#e5ebe3] disabled:text-[#9aa99b]"
+                  className="flex size-9 items-center justify-center rounded-lg bg-[#173f51] text-white transition-colors hover:bg-[#236078] disabled:bg-[#e5edf2] disabled:text-[#91a9b5]"
                 >
                   <ArrowUp className="size-4" />
                 </button>
@@ -576,7 +574,7 @@ export function SupportChat({
             </div>
           </div>
         </form>
-        <p className="mx-auto mt-3 max-w-[760px] text-center text-[9px] text-[#879586]">
+        <p className="mx-auto mt-3 max-w-[760px] text-center text-[10px] text-muted-foreground">
           {ready
             ? "AI can make mistakes. Check the sources behind important answers."
             : "Chat is temporarily unavailable. Your workspace administrator can check the connection."}
