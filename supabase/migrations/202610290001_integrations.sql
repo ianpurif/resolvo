@@ -85,10 +85,10 @@ create table public.integration_file_gc (
 
 alter table public.documents add column integration_connection_id uuid;
 alter table public.documents add foreign key(integration_connection_id,organization_id)
-  references public.integration_connections(id,organization_id);
+  references public.integration_connections(id,organization_id) on delete cascade;
 alter table public.data_sources add column integration_connection_id uuid;
 alter table public.data_sources add foreign key(integration_connection_id,organization_id)
-  references public.integration_connections(id,organization_id);
+  references public.integration_connections(id,organization_id) on delete cascade;
 
 do $$ declare tbl text; begin
   foreach tbl in array array['integration_connections','integration_credentials','integration_oauth_states',
