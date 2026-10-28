@@ -2,361 +2,165 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import {
-  ArrowDown,
-  ArrowRight,
-  ArrowUpRight,
-  BookOpen,
-  FileText,
-  Globe2,
-  Layers3,
-  LockKeyhole,
-  Menu,
-  MessageSquare,
-  ShieldCheck,
-  X,
-} from "lucide-react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { ArrowDown, ArrowRight, ArrowUpRight, FileText, Globe2, Menu, Pause, Play, Plus, X } from "lucide-react";
 import { Brand } from "@/components/brand";
-import { ThreadMotif } from "@/components/thread-motif";
+import { CinematicStage } from "./cinematic/cinematic-stage";
+import { CHAPTERS, SOURCES, clamp, scrollProgress, type SourceKind } from "./cinematic/journey";
+import type { SceneInput } from "./cinematic/scene";
+import "./cinematic.css";
 
-const navigation = [
-  ["The workspace", "#product"],
-  ["Capabilities", "#capabilities"],
-  ["How it works", "#how-it-works"],
-];
-const capabilities = [
-  {
-    number: "01",
-    icon: Layers3,
-    title: "A shared source of understanding.",
-    text: "Documents, public web pages, and written knowledge, brought together in a company workspace. Less searching across places. More context in one.",
-  },
-  {
-    number: "02",
-    icon: MessageSquare,
-    title: "Conversations that keep the thread.",
-    text: "Ask a follow-up, explore a detail, or pick up where you left off. Your personal conversation history travels with you.",
-  },
-  {
-    number: "03",
-    icon: ShieldCheck,
-    title: "Answers you can trace back.",
-    text: "Read the source excerpts behind a response. Your company’s evidence stays connected to the conversation, so you can check what matters.",
-  },
-];
+const navigation = [["The workspace", "#product"], ["Capabilities", "#capabilities"], ["How it works", "#how-it-works"]];
+const sourceIcons = [FileText, Globe2, Plus];
+function subscribeMotion(callback: () => void) {
+  const query = matchMedia("(prefers-reduced-motion: reduce)");
+  query.addEventListener("change", callback);
+  return () => query.removeEventListener("change", callback);
+}
+const readMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const serverMotion = () => true;
 
 export function LandingPage() {
   const [menu, setMenu] = useState(false);
+  const [status, setStatus] = useState<"loading" | "ready" | "fallback">("loading");
+  const [paused, setPaused] = useState(false);
+  const [allowMotion, setAllowMotion] = useState(false);
+  const [selected, setSelected] = useState<SourceKind>(0);
+  const [chapter, setChapter] = useState(0);
+  const reducedMotion = useSyncExternalStore(subscribeMotion, readMotion, serverMotion);
+  const reduced = reducedMotion && !allowMotion;
+  const root = useRef<HTMLDivElement>(null);
+  const input = useRef<SceneInput>({ progress: 0, paused: false, selected: 0 });
+  const ready = useCallback(() => setStatus("ready"), []);
+  const failed = useCallback(() => setStatus("fallback"), []);
+  const selectSource = useCallback((kind: SourceKind) => {
+    input.current.selected = kind;
+    setSelected(kind);
+  }, []);
+
+  useEffect(() => {
+    const element = root.current;
+    if (!element) return;
+    const sections = CHAPTERS.map(({ id }) => document.getElementById(id)!);
+    let anchors: number[] = [], pending = 0;
+    const update = () => {
+      pending = 0;
+      const progress = scrollProgress(window.scrollY, anchors);
+      input.current.progress = progress;
+      element.style.setProperty("--journey-progress", String(progress));
+      setChapter(Math.min(4, Math.round(progress * 4)));
+      sections.forEach((section, i) => {
+        const distance = Math.abs(progress * 4 - i);
+        section.style.setProperty("--presence", String(clamp(1 - Math.max(0, distance - 0.38) * 1.7)));
+      });
+    };
+    const measure = () => { anchors = sections.map((section) => section.offsetTop); update(); };
+    const scroll = () => { if (!pending) pending = requestAnimationFrame(update); };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    window.addEventListener("scroll", scroll, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => { observer.disconnect(); cancelAnimationFrame(pending); window.removeEventListener("scroll", scroll); window.removeEventListener("resize", measure); };
+  }, [reduced, status]);
+
+  useEffect(() => {
+    if (!menu) return;
+    const close = (event: KeyboardEvent) => { if (event.key === "Escape") setMenu(false); };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [menu]);
+
+  function toggleMotion() {
+    if (reduced) { setAllowMotion(true); return; }
+    input.current.paused = !paused;
+    setPaused(!paused);
+  }
+  const staticExperience = reduced || status === "fallback";
+
   return (
-    <div className="landing">
-      <div className="marketing-top">
-        <header className="marketing-header">
-          <Link href="/" aria-label="Resolvo home">
-            <Brand />
-          </Link>
-          <nav aria-label="Main navigation">
-            {navigation.map(([label, href]) => (
-              <a key={href} href={href}>
-                {label}
-              </a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-5">
-            <Link href="/login" className="hidden text-xs font-medium sm:block">
-              Sign in
-            </Link>
-            <Link href="/login" className="action-button">
-              Get started <ArrowUpRight />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setMenu(!menu)}
-              aria-label={menu ? "Close menu" : "Open menu"}
-              aria-expanded={menu}
-              aria-controls="mobile-navigation"
-              className="rounded-md p-2 md:hidden"
-            >
-              {menu ? <X className="size-5" /> : <Menu className="size-5" />}
-            </button>
-          </div>
-        </header>
-        {menu && (
-          <nav
-            id="mobile-navigation"
-            aria-label="Mobile navigation"
-            className="mobile-marketing-nav md:hidden"
-          >
-            {[...navigation, ["Sign in", "/login"]].map(([label, href]) => (
-              <Link key={href} href={href} onClick={() => setMenu(false)}>
-                {label}
-              </Link>
-            ))}
-          </nav>
-        )}
+    <div className="cinema" ref={root} data-scene={status} data-motion={staticExperience ? "static" : paused ? "paused" : "live"}>
+      <div className="cinema-world">
+        <div className="cinema-poster" aria-hidden="true"><Image src="/art/knowledge-weave.webp" alt="" fill sizes="100vw" preload className="cinema-poster-image" /></div>
+        <CinematicStage enabled={!reduced && status !== "fallback"} input={input} onReady={ready} onFailure={failed} onSelect={selectSource} />
+        <div className="cinema-vignette" /><div className="cinema-grain" />
       </div>
-      <main id="main-content">
-        <div className="marketing-top">
-          <section className="marketing-hero">
-            <div className="hero-art" aria-hidden="true">
-              <Image
-                src="/art/knowledge-weave.webp"
-                alt=""
-                fill
-                sizes="(max-width: 767px) 110vw, 80vw"
-                preload
-                className="object-cover"
-              />
+      <header className="cinema-header">
+        <Link href="/" aria-label="Resolvo home"><Brand /></Link>
+        <nav className="cinema-desktop-nav" aria-label="Main navigation">{navigation.map(([label, href]) => <a key={href} href={href}>{label}</a>)}</nav>
+        <div className="cinema-header-actions">
+          <Link href="/login" className="cinema-signin">Enter workspace <ArrowUpRight size={15} /></Link>
+          <button type="button" className="cinema-menu-toggle" onClick={() => setMenu(!menu)} aria-label={menu ? "Close menu" : "Open menu"} aria-expanded={menu} aria-controls="cinema-mobile-navigation">{menu ? <X size={22} /> : <Menu size={22} />}</button>
+        </div>
+        {menu && <nav id="cinema-mobile-navigation" className="cinema-mobile-nav" aria-label="Mobile navigation">{[...navigation, ["Sign in", "/login"]].map(([label, href]) => <Link href={href} key={href} onClick={() => setMenu(false)}>{label}<ArrowUpRight size={16} /></Link>)}</nav>}
+      </header>
+      <main id="main-content" className="cinema-story">
+        <section id="begin" className="cinema-scene cinema-arrival" aria-labelledby="arrival-title">
+          <div className="cinema-window">
+            <div className="cinema-copy">
+              <p className="cinema-eyebrow"><span className="cinema-live-dot" /> Knowledge, connected.</p>
+              <h1 id="arrival-title">Your knowledge.<br /><em>A living thread.</em></h1>
+              <p className="cinema-description">From everything your team knows<br className="cinema-desktop-break" /> to the answer that matters.</p>
+              <Link href="/login" className="cinema-primary">Open your workspace <ArrowUpRight size={18} /></Link>
             </div>
-            <div className="hero-copy hero-enter">
-              <p className="eyebrow">
-                Company knowledge, thoughtfully connected
-              </p>
-              <h1>
-                Your knowledge.
-                <br />A clearer <em>thread.</em>
-              </h1>
-              <p>
-                Turn the information your company already has into answers your
-                team can use. Connected sources. Considered responses. A little
-                more clarity.
-              </p>
-              <div className="hero-actions">
-                <Link href="/login" className="action-button">
-                  Open your workspace <ArrowUpRight />
-                </Link>
-                <a href="#product" className="text-link">
-                  Explore Resolvo <ArrowDown />
-                </a>
-              </div>
-              <div className="hero-footnote">
-                <LockKeyhole className="size-3" /> Private company sources.
-                Personal conversations.
-              </div>
-            </div>
-            <span className="hero-art-label" aria-hidden="true">
-              Many sources. One connected understanding.
-            </span>
-          </section>
-          <div className="knowledge-strip">
-            <span>Bring what your team knows</span>
-            <span>
-              <FileText /> Documents & files
-            </span>
-            <span>
-              <Globe2 /> Public web pages
-            </span>
-            <span>
-              <BookOpen /> Written knowledge
-            </span>
-            <span>
-              <MessageSquare /> Grounded conversations
-            </span>
+            <div className="cinema-object-caption" aria-hidden="true"><span className="cinema-cross">+</span> Many sources. One understanding.<span className="cinema-drag-hint">Move to explore · Drag to turn</span></div>
+            <a href="#product" className="cinema-scroll-cue"><span className="cinema-scroll-line" /><span>Follow the thread</span><ArrowDown size={13} /></a>
+            <span className="cinema-edition" aria-hidden="true">A new perspective on knowledge / 01</span>
           </div>
-        </div>
-        <div>
-          <section id="product" className="marketing-section">
-            <div className="section-intro">
-              <div>
-                <p className="eyebrow">A workspace for understanding</p>
-                <h2 className="section-title">
-                  Less looking.
-                  <br />
-                  <em>More knowing.</em>
-                </h2>
-              </div>
-              <p>
-                The answer is often somewhere in your company’s knowledge.
-                Resolvo connects the right pieces, so a simple question can
-                become a useful conversation.
-              </p>
+        </section>
+        <section id="product" className="cinema-scene cinema-sources" aria-labelledby="sources-title">
+          <div className="cinema-window">
+            <div className="cinema-copy">
+              <p className="cinema-eyebrow">01 / The gathering</p>
+              <h2 id="sources-title">A world of knowledge.<br /><em>One place to begin.</em></h2>
+              <p className="cinema-description">Documents. Pages. Ideas.<br />Bring your team’s context together.</p>
+              <div className="cinema-source-picker" role="group" aria-label="Explore source types">{SOURCES.map((source, i) => { const Icon = sourceIcons[i]; return <button key={source.name} type="button" aria-pressed={selected === i} onClick={() => selectSource(i as SourceKind)}><Icon size={17} /><span>{source.name}</span><span className="cinema-source-index">0{i + 1}</span></button>; })}</div>
+              <p className="cinema-source-detail" aria-live="polite">{SOURCES[selected].detail}</p>
             </div>
-            <div className="product-story">
-              <div className="product-story-aside">
-                <div>
-                  <p className="eyebrow mb-6">From information to insight</p>
-                  <h3>
-                    A place to follow
-                    <br />
-                    your curiosity.
-                  </h3>
-                  <p>
-                    Ask in your own words. Read the context. Open the evidence.
-                    Keep going from there.
-                  </p>
-                </div>
-                <ThreadMotif />
-              </div>
-              <div
-                className="product-preview"
-                aria-label="Illustration of how a source-grounded conversation works"
-              >
-                <div className="preview-toolbar">
-                  <span className="flex items-center gap-2">
-                    <Brand compact className="[&_.brand-mark]:size-6" /> Resolvo
-                    assistant
-                  </span>
-                  <span className="text-muted-foreground">A closer look</span>
-                </div>
-                <div className="preview-thread">
-                  <div className="preview-question">
-                    How does this process work?
-                  </div>
-                  <div className="preview-answer">
-                    <Brand compact className="[&_.brand-mark]:size-7" />
-                    <div>
-                      <strong className="font-semibold">
-                        An answer, with its context.
-                      </strong>
-                      <p>
-                        Resolvo finds relevant passages in your connected
-                        knowledge and uses them to build a response. Follow-up
-                        questions keep the conversation moving.
-                      </p>
-                      <span className="preview-source">
-                        <FileText /> Supporting source excerpts <ArrowUpRight />
-                      </span>
-                      <p className="preview-caption">
-                        Illustrative conversation · Your answers use your
-                        company’s sources.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <span className="cinema-scene-note">Explore the illustration · Select a source</span>
+          </div>
+        </section>
+        <section id="how-it-works" className="cinema-scene cinema-connection" aria-labelledby="connection-title">
+          <div className="cinema-window">
+            <div className="cinema-copy">
+              <p className="cinema-eyebrow">02 / The connection</p>
+              <h2 id="connection-title">Separate threads.<br /><em>Shared understanding.</em></h2>
+              <p className="cinema-description">Ask a question. Follow the connections.</p>
             </div>
-            <div id="capabilities" className="capability-grid">
-              {capabilities.map(({ number, icon: Icon, title, text }) => (
-                <article className="capability" key={number}>
-                  <div className="capability-top">
-                    <span>{number} /</span>
-                    <Icon />
-                  </div>
-                  <h3>{title}</h3>
-                  <p>{text}</p>
-                </article>
-              ))}
+            <div className="cinema-coordinate" aria-hidden="true"><span>CONTEXT</span><span className="cinema-coordinate-line" /><span>CLARITY</span></div>
+          </div>
+        </section>
+        <section id="capabilities" className="cinema-scene cinema-evidence" aria-labelledby="evidence-title">
+          <div className="cinema-window">
+            <div className="cinema-copy">
+              <p className="cinema-eyebrow">03 / The evidence</p>
+              <h2 id="evidence-title">An answer.<br /><em>And its origins.</em></h2>
+              <p className="cinema-description">See the sources behind a response.<br />Keep the conversation connected.</p>
+              <div className="cinema-citations" role="group" aria-label="Trace an illustrated source">{SOURCES.map((source, i) => <button key={source.name} type="button" aria-label={`Trace ${source.name.toLowerCase()}`} aria-pressed={selected === i} onClick={() => selectSource(i as SourceKind)}><span>0{i + 1}</span>{source.name}<ArrowUpRight size={13} /></button>)}</div>
+              <p className="cinema-source-detail" aria-live="polite">Tracing {SOURCES[selected].name.toLowerCase()} in the illustration.</p>
             </div>
-          </section>
-          <section className="source-section">
-            <div className="marketing-section source-layout">
-              <div>
-                <p className="eyebrow">Different formats. Shared context.</p>
-                <h2 className="section-title">
-                  Everything you know.
-                  <br />
-                  <em>Woven together.</em>
-                </h2>
-                <p>
-                  Give your company’s knowledge a connected home. Add what you
-                  need, update it as it changes, and let your team ask better
-                  questions.
-                </p>
-                <Link href="/login" className="text-link">
-                  Connect your first source <ArrowUpRight />
-                </Link>
-              </div>
-              <div className="source-ledger">
-                {[
-                  {
-                    icon: FileText,
-                    title: "The documents you rely on",
-                    text: "PDF, DOCX, text, Markdown & structured files",
-                    number: "01",
-                  },
-                  {
-                    icon: Globe2,
-                    title: "The pages worth keeping",
-                    text: "Visible content from public web pages",
-                    number: "02",
-                  },
-                  {
-                    icon: BookOpen,
-                    title: "The knowledge in your team",
-                    text: "Write, edit & index knowledge directly",
-                    number: "03",
-                  },
-                ].map(({ icon: Icon, title, text, number }) => (
-                  <div key={number} className="source-ledger-row">
-                    <Icon />
-                    <div>
-                      <strong>{title}</strong>
-                      <span>{text}</span>
-                    </div>
-                    <span className="source-index">{number}</span>
-                  </div>
-                ))}
-                <p className="flex items-center gap-2 text-[11px]!">
-                  <LockKeyhole className="size-3.5 shrink-0" /> Sources are
-                  shared only within your company.
-                </p>
-              </div>
+            <span className="cinema-scene-note">Every thread has a source.</span>
+          </div>
+        </section>
+        <section id="your-next-answer" className="cinema-scene cinema-ending" aria-labelledby="ending-title">
+          <div className="cinema-window">
+            <div className="cinema-copy">
+              <p className="cinema-eyebrow">04 / A new beginning</p>
+              <h2 id="ending-title">Your next answer<br /><em>starts here.</em></h2>
+              <Link href="/login" className="cinema-primary">Find your thread <ArrowRight size={18} /></Link>
             </div>
-          </section>
-          <section id="how-it-works" className="marketing-section">
-            <div className="section-intro">
-              <div>
-                <p className="eyebrow">A simple beginning</p>
-                <h2 className="section-title">
-                  Make room for
-                  <br />
-                  <em>a better answer.</em>
-                </h2>
-              </div>
-              <p>
-                From the first source to the next question, a straightforward
-                path to working with what you know.
-              </p>
-            </div>
-            <div className="process-list">
-              {[
-                [
-                  "01",
-                  "Create your space",
-                  "Sign in with Google and create a private workspace for your company. Your conversations stay personal to you.",
-                ],
-                [
-                  "02",
-                  "Bring your knowledge",
-                  "Upload a file, connect a public web page, or write a source. Resolvo indexes the content for your company’s assistant.",
-                ],
-                [
-                  "03",
-                  "Start pulling the thread",
-                  "Ask a question, read the source excerpts, and follow up. Come back to your saved conversations whenever you need them.",
-                ],
-              ].map(([number, title, text]) => (
-                <div className="process-row" key={number}>
-                  <span>{number}</span>
-                  <h3>{title}</h3>
-                  <p>{text}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-          <section className="marketing-close">
-            <ThreadMotif />
-            <h2 className="section-title">
-              Your next answer
-              <br />
-              is already <em>taking shape.</em>
-            </h2>
-            <Link href="/login" className="action-button">
-              Get started with Resolvo <ArrowRight />
-            </Link>
-            <p>Google sign-in. A private workspace for your company.</p>
-          </section>
-        </div>
+            <footer className="cinema-footer"><span>Resolvo · Knowledge, connected.</span><a href="#begin">Back to the beginning <ArrowUpRight size={13} /></a></footer>
+          </div>
+        </section>
       </main>
-      <footer className="marketing-footer">
-        <Link href="/" aria-label="Resolvo home">
-          <Brand />
-        </Link>
-        <p>Company knowledge, thoughtfully connected.</p>
-        <Link href="/login" className="text-link">
-          Sign in to Resolvo <ArrowUpRight />
-        </Link>
-      </footer>
+      <nav className="cinema-chapters" aria-label="Journey chapters">
+        <div className="cinema-chapter-track" aria-hidden="true"><span /></div>
+        {CHAPTERS.map((item, i) => <a key={item.id} href={`#${item.id}`} aria-label={item.name} aria-current={chapter === i ? "step" : undefined}><span className="cinema-chapter-name">{item.name}</span><span className="cinema-chapter-dot" /></a>)}
+      </nav>
+      <div className="cinema-controls">
+        <span className="cinema-chapter-count"><b>0{chapter + 1}</b><span>/ 05</span></span>
+        {status !== "fallback" ? <button type="button" onClick={toggleMotion} aria-label={reduced ? "Enable cinematic motion" : paused ? "Play ambient motion" : "Pause ambient motion"} aria-pressed={!reduced && !paused}>{reduced || paused ? <Play size={12} /> : <Pause size={12} />}<span>{reduced ? "Enable motion" : paused ? "Motion paused" : "Motion on"}</span></button> : <span className="cinema-static-label">Still edition</span>}
+      </div>
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
 import { join, resolve, sep } from "node:path";
 import { chromium, expect } from "@playwright/test";
 import { startFixtureBackend } from "./fixture-backend";
+import { verifyCinematic } from "./cinematic-checks";
 
 async function main() {
   const root = process.cwd(),
@@ -129,7 +130,7 @@ async function main() {
         throw new Error("Fixture Next.js server did not start");
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-swiftshader"] });
     const context = await browser.newContext({
       viewport: { width: 1440, height: 900 },
       permissions: ["clipboard-read", "clipboard-write"],
@@ -858,6 +859,7 @@ async function main() {
     );
     assert.deepEqual(errors, []);
     assert.deepEqual(controlledInputWarnings, []);
+    await verifyCinematic(browser, appOrigin, output, record);
     await writeFile(
       join(output, "browser-evidence.json"),
       JSON.stringify(
@@ -870,6 +872,16 @@ async function main() {
           runtimeErrors: errors,
           controlledInputWarnings,
           screenshots: [
+            "cinematic-arrival.png",
+            "cinematic-sources.png",
+            "cinematic-connection.png",
+            "cinematic-evidence.png",
+            "cinematic-ending.png",
+            "cinematic-mobile-arrival.png",
+            "cinematic-mobile-evidence.png",
+            "cinematic-810.png",
+            "cinematic-320.png",
+            "cinematic-reduced-motion.png",
             "chat-empty-desktop.png",
             "conversations-mobile.png",
             "conversations-empty-mobile.png",
