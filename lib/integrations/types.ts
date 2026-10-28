@@ -20,7 +20,7 @@ export interface RemoteItem {
 export interface RemotePage { items: RemoteItem[]; cursor?: string }
 export interface RemoteDocument {
   name: string;
-  text: string;
+  text?: string;
   url?: string;
   version?: string;
 }
@@ -45,7 +45,7 @@ export interface Connector {
   auth: ConnectorAuth[];
   fields: { key: string; label: string; placeholder?: string; required?: boolean }[];
   list(context: ConnectorContext, parent?: string, cursor?: string): Promise<RemotePage>;
-  read(context: ConnectorContext, id: string): Promise<RemoteDocument>;
+  read(context: ConnectorContext, id: string, previousVersion?: string): Promise<RemoteDocument>;
 }
 export interface Connection {
   id: string;
