@@ -44,6 +44,14 @@ export async function syncOne(connectionId?: string) {
       const job = index.job as { completed: number; manifest: { content: string; token_count: number }[] };
       try {
         const batch = selectEmbeddingBatch(job.manifest.slice(job.completed));
+        // A large source can wait across several budget windows. Revalidate it
+        // before publication so a removed or newer revision is not resurrected.
+        if (job.completed + batch.chunks.length === job.manifest.length) {
+          const current = contentIdentity(await connector(connection.provider).read(await connectorContext(connection), task.payload.id, task.payload.meta?.version as string | undefined));
+          if (current.text !== undefined && current.hash !== task.payload.meta?.hash) {
+            await step("restart"); return true;
+          }
+        }
         const vectors = await embedBatch(batch.chunks.map((c) => c.content), "document");
         await step("checkpoint", { offset: job.completed, vectors });
       } catch (error) {
@@ -87,14 +95,14 @@ export async function syncOne(connectionId?: string) {
     }
     return true;
   } catch (error) {
-    if (error instanceof AppError && error.status === 404 && task.payload.type === "read") await step("missing");
-    else if (error instanceof AppError && [400,413,422].includes(error.status) && task.payload.type === "read") await step("rejected", { error: error.message });
+    if (error instanceof AppError && !(error instanceof EmbeddingFailure) && error.status === 404) await step("missing");
+    else if (error instanceof AppError && !(error instanceof EmbeddingFailure) && [400,413,422].includes(error.status) && task.payload.type !== "list") await step("rejected", { error: error.message });
     else if (error instanceof AppError && error.status === 409) await step("wait", { delay: 15 }).catch(() => {});
     else {
       const status = error instanceof AppError ? error.status : 502;
       const message = error instanceof AppError ? error.message : "The connector failed to read this source. Check its configuration and permissions.";
       const retry = error instanceof ConnectorError ? error.retryAfter : error instanceof EmbeddingFailure && error.retryAfterMs ? error.retryAfterMs / 1000 : Math.min(3600, 30 * 2 ** task.attempts);
-      await step("error", { error: message, delay: Math.ceil(retry), reauth: status === 401 || status === 403 }).catch(() => {});
+      await step("error", { error: message, delay: Math.ceil(retry), reauth: !(error instanceof EmbeddingFailure) && (status === 401 || status === 403) }).catch(() => {});
     }
     return true;
   }

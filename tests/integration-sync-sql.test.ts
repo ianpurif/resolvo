@@ -18,7 +18,7 @@ test("sync leases publish private content through existing checkpoints and disco
     const claim = async () => (await db.query<{ result: { connection: { lease: string }; task: { id: string } } | null }>("select claim_integration($1) result", [connection])).rows[0].result;
     const first = (await claim())!;
     assert.equal(await claim(), null);
-    const doc = randomUUID(), rev = randomUUID(), path = `organizations/${org}/documents/${doc}/${rev}/source.md`;
+    const doc = randomUUID(); let rev = randomUUID(), path = `organizations/${org}/documents/${doc}/${rev}/source.md`;
     const step = (lease: string, task: string, action: string, data: object = {}) => db.query<{ result: Record<string, unknown> }>("select integration_step($1,$2,$3,$4,$5) result", [connection, lease, task, action, JSON.stringify(data)]);
     await step(first.connection.lease, first.task.id, "prepare", { itemId: doc, revision: rev, name: "Private policy", url: "https://source.example/policy", path, size: 48, hash: "a".repeat(64), version: "v1", manifest: [{ content: "Personal policy allows 25 days of leave per year.", token_count: 15, start_offset: 0, end_offset: 48 }] });
     await asUser(db, member);
@@ -27,6 +27,14 @@ test("sync leases publish private content through existing checkpoints and disco
     assert.equal((await db.query<{ allowed: boolean }>("select private.can_write_integration_file($1) allowed", [path])).rows[0].allowed, false);
     await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values('support-documents',$1)", [path]), /row-level security/);
     await service();
+    const changedBeforePublish = (await claim())!;
+    await step(changedBeforePublish.connection.lease, changedBeforePublish.task.id, "restart");
+    assert.equal((await db.query("select * from document_index_jobs")).rows.length, 0);
+    assert.equal((await db.query<{ type: string }>("select payload->>'type' as type from integration_tasks where not done")).rows[0].type, "read");
+    assert.equal((await db.query("select * from integration_file_gc")).rows.length, 1);
+    rev = randomUUID(); path = `organizations/${org}/documents/${doc}/${rev}/source.md`;
+    const fresh = (await claim())!;
+    await step(fresh.connection.lease, fresh.task.id, "prepare", { itemId: doc, revision: rev, name: "Private policy", url: "https://source.example/policy", path, size: 48, hash: "a".repeat(64), version: "v2", manifest: [{ content: "Personal policy allows 25 days of leave per year.", token_count: 15, start_offset: 0, end_offset: 48 }] });
     const second = (await claim())!;
     assert.equal((await step(second.connection.lease, second.task.id, "claim-index")).rows[0].result.claimed, true);
     await step(second.connection.lease, second.task.id, "checkpoint", { offset: 0, vectors: [[1, ...Array(1023).fill(0)]] });
@@ -65,7 +73,7 @@ test("sync leases publish private content through existing checkpoints and disco
     await assert.rejects(step(pending.connection.lease, pending.task.id, "unchanged", { name: "Policy", version: "v1" }), /lease expired/);
     await assert.rejects(db.query("select save_integration_credential($1,'new-token')", [connection]), /disconnected/);
     assert.equal((await db.query("select * from integration_credentials")).rows.length, 0);
-    assert.equal((await db.query("select * from integration_file_gc")).rows.length, 1);
+    assert.equal((await db.query("select * from integration_file_gc")).rows.length, 2);
     await asUser(db, member);
     assert.equal((await db.query("select * from search_knowledge('personal leave',null,24)")).rows.length, 0);
     assert.equal((await db.query<{ allowed: boolean }>("select private.can_read_integration_file($1) allowed", [path])).rows[0].allowed, false);
