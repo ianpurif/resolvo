@@ -1,5 +1,6 @@
 import { authConfiguration } from "../lib/config";
 import { MAX_FILE_SIZE } from "../lib/knowledge-limits";
+import { encryptionReady } from "../lib/integrations/credentials";
 async function main() {
   const config = authConfiguration();
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -28,6 +29,8 @@ async function main() {
     "query_embeddings",
     "document_index_jobs",
     "document_index_vectors",
+    "integration_connections", "integration_credentials", "integration_oauth_states",
+    "integration_selections", "integration_items", "integration_tasks", "integration_file_gc",
   ];
   for (const table of tables) {
     const denied = await fetch(
@@ -45,7 +48,7 @@ async function main() {
           "/rest/v1/" +
           table +
           "?select=" +
-          (table === "organizations" ? "id" : "organization_id") +
+          (table === "organizations" ? "id" : table === "integration_credentials" ? "connection_id" : table === "integration_file_gc" ? "path" : "organization_id") +
           "&limit=0",
         { headers: { apikey: service, Authorization: "Bearer " + service } },
       );
@@ -81,6 +84,7 @@ async function main() {
     ["search_knowledge", { p_query_text: "verification", p_query_embedding: null, p_match_count: 1 }],
     ["knowledge_passage_context", { p_passage_ids: [] }],
     ["knowledge_overview", { p_document_ids: [], p_count: 1 }],
+    ["knowledge_source_metadata", { p_ids: [] }],
   ] as const) {
     const denied = await fetch(config.url + "/rest/v1/rpc/" + name, { method: "POST", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify(params) });
     report("Anonymous retrieval RPC denied: " + name, [401, 403].includes(denied.status),
@@ -99,6 +103,10 @@ async function main() {
     [401, 403].includes(deniedBudget.status),
   );
   if (service) {
+    for (const [table, select] of [["documents", "integration_connection_id"], ["chat_requests", "knowledge_filter"], ["integration_credentials", "refresh_lease,refresh_until"]]) {
+      const inspected = await fetch(config.url + `/rest/v1/${table}?select=${select}&limit=0`, { headers: { apikey: service, Authorization: "Bearer " + service } });
+      report("Integration schema: " + table, inspected.ok, inspected.ok ? undefined : "Apply all six 20261029 integration migrations");
+    }
     const cacheSchema = await fetch(config.url + "/rest/v1/query_embeddings?select=server_verified&limit=0", { headers: { apikey: service, Authorization: "Bearer " + service } });
     report("Server-verified query-cache schema", cacheSchema.ok, cacheSchema.ok ? undefined : "Apply 202610110003_server_only_query_cache.sql");
     for (const [table, select] of [["documents", "index_policy_version"], ["document_chunks", "chunk_index,start_offset,end_offset,section,search_tsv"]]) {
@@ -147,6 +155,9 @@ async function main() {
   console.log(
     "Complete Google sign-in, onboarding, and sign-out in a browser to verify an actual user session.",
   );
+  report("Integration credential encryption configured", encryptionReady(), "Server-only base64 key must decode to exactly 32 bytes; no key value is printed");
+  if (process.env.INTEGRATION_SYNC_SECRET) report("HTTP sync worker secret configured", process.env.INTEGRATION_SYNC_SECRET.trim().length >= 32);
+  else console.log("SKIP HTTP sync worker secret: run the supervised Node worker or configure a scheduler secret. Runtime scheduling still needs verification.");
   if (failed) process.exitCode = 1;
 }
 main().catch((error) => {
