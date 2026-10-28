@@ -1,0 +1,81 @@
+{
+  "asset": "/models/embroidery-machine.glb",
+  "coordinateSystem": "glTF Y up; fabric XZ y=0",
+  "needlePivot": [
+    0,
+    1.05,
+    0
+  ],
+  "needleTip": [
+    0,
+    0.2,
+    0
+  ],
+  "needleEye": [
+    0,
+    0.32,
+    0
+  ],
+  "travel": 0.33,
+  "handwheelPivot": [
+    4.2,
+    2.61,
+    -0.89
+  ],
+  "handwheelRotationAxis": "local X",
+  "guides": {
+    "ThreadGuideTop": [
+      2.35,
+      4.57,
+      -1.13
+    ],
+    "ThreadGuideShoulder": [
+      1.12,
+      3.43,
+      -0.48
+    ],
+    "ThreadGuideTension": [
+      0.29,
+      2.4,
+      0.37
+    ],
+    "ThreadGuideTakeup": [
+      -0.09,
+      3.04,
+      0.36
+    ],
+    "ThreadGuideLower": [
+      0.03,
+      1.35,
+      0.17
+    ]
+  },
+  "triangles": 117466,
+  "meshCount": 19,
+  "bytes": 3343236,
+  "staticMeshes": [
+    "MachineStatic_Ceramic_warm_porcelain",
+    "MachineStatic_Ceramic_recessed_warm_edge",
+    "MachineStatic_Enamel_midnight_slate",
+    "MachineStatic_Rubber_charcoal",
+    "MachineStatic_Metal_brushed_satin_steel",
+    "MachineStatic_Metal_polished_needle_steel",
+    "MachineStatic_Metal_burnished_copper",
+    "MachineStatic_Lettering_graphite",
+    "MachineStatic_Thread_kingfisher_teal",
+    "MachineStatic_Spool_unbleached_card",
+    "MachineStatic_Indicator_warm_amber"
+  ],
+  "animatedMeshes": [
+    "NeedleAssembly_brushed_satin_steel",
+    "NeedleAssembly_polished_needle_steel",
+    "NeedleAssembly_burnished_copper"
+  ],
+  "handwheelMeshes": [
+    "HandwheelAssembly_midnight_slate",
+    "HandwheelAssembly_charcoal",
+    "HandwheelAssembly_brushed_satin_steel",
+    "HandwheelAssembly_burnished_copper",
+    "HandwheelAssembly_graphite"
+  ]
+}
