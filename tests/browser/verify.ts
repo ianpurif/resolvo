@@ -17,6 +17,7 @@ import { verifyCinematic } from "./cinematic-checks";
 import { verifyIntegrations } from "./integration-checks";
 
 async function main() {
+  const integrationsOnly = process.argv.includes("--integrations");
   const root = process.cwd(),
     base = resolve(root, ".local"),
     output = join(base, "verification");
@@ -60,7 +61,7 @@ async function main() {
       nextConfigPath,
       (await readFile(nextConfigPath, "utf8")).replace(
         "const nextConfig: NextConfig = {",
-        "const nextConfig: NextConfig = { turbopack: { root: " +
+        "const nextConfig: NextConfig = { experimental: { turbopackFileSystemCacheForDev: false }, turbopack: { root: " +
           JSON.stringify(root) +
           " },",
       ),
@@ -133,7 +134,7 @@ async function main() {
     const deadline = Date.now() + 120_000;
     while (true) {
       try {
-        const response = await fetch(appOrigin, {
+        const response = await fetch(integrationsOnly ? appOrigin + "/login" : appOrigin, {
           signal: AbortSignal.timeout(20_000),
         });
         if (response.ok) break;
@@ -170,7 +171,7 @@ async function main() {
         );
       }
     });
-    if (process.argv.includes("--integrations")) {
+    if (integrationsOnly) {
       await page.goto(appOrigin + "/login");
       await page.getByRole("button", { name: "Continue with Google" }).click();
       await expect(page.getByRole("heading", { name: "Your workspace", exact: true })).toBeVisible({ timeout: 60_000 });
