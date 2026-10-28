@@ -19,6 +19,7 @@ export async function tenantDatabase(throughMigration?: string) {
       "create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text);",
       "alter table storage.objects enable row level security;grant usage on schema storage to authenticated;",
       "grant select,insert,update,delete on storage.objects to authenticated;",
+      "grant usage on schema storage to service_role;grant select,insert,update,delete on storage.objects to service_role;",
     ].join("\n"),
   );
   for (const file of (await readdir("supabase/migrations"))
