@@ -13,7 +13,7 @@ export interface CollectionSpec {
 }
 export function collectionConnector(spec: CollectionSpec): Connector {
   async function get(ctx: ConnectorContext, path: string) {
-    return responseJson<unknown>(await ctx.request(sameOriginUrl(spec.base(ctx), path), { headers: { ...authHeaders(ctx), ...spec.headers?.(ctx) } }));
+    return responseJson<unknown>(await ctx.request(sameOriginUrl(spec.base(ctx), path), { headers: spec.headers ? spec.headers(ctx) : authHeaders(ctx) }));
   }
   return { ...spec.definition,
     async list(ctx, parent, cursor) {
