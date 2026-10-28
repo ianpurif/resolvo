@@ -105,7 +105,7 @@ async function main() {
   if (service) {
     for (const [table, select] of [["documents", "integration_connection_id"], ["chat_requests", "knowledge_filter"], ["integration_credentials", "refresh_lease,refresh_until"]]) {
       const inspected = await fetch(config.url + `/rest/v1/${table}?select=${select}&limit=0`, { headers: { apikey: service, Authorization: "Bearer " + service } });
-      report("Integration schema: " + table, inspected.ok, inspected.ok ? undefined : "Apply all six 20261029 integration migrations");
+      report("Integration schema: " + table, inspected.ok, inspected.ok ? undefined : "Apply all 20261029 integration migrations, including worker nonce protection");
     }
     const cacheSchema = await fetch(config.url + "/rest/v1/query_embeddings?select=server_verified&limit=0", { headers: { apikey: service, Authorization: "Bearer " + service } });
     report("Server-verified query-cache schema", cacheSchema.ok, cacheSchema.ok ? undefined : "Apply 202610110003_server_only_query_cache.sql");
