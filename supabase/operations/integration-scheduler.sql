@@ -4,9 +4,8 @@ begin;
 create extension if not exists pg_cron with schema pg_catalog;
 create extension if not exists pg_net with schema extensions;
 
--- pg_net temporarily queues plaintext headers. Browser roles must never read it.
-revoke all on schema net from public,anon,authenticated,service_role;
-revoke all on net.http_request_queue,net._http_response from public,anon,authenticated,service_role;
+-- Managed pg_net grants may expose queued headers to database roles. Never put
+-- the reusable Vault signing key in that queue: send a single-use HMAC instead.
 
 create table if not exists private.integration_worker_dispatches (
   request_id bigint primary key,
@@ -17,7 +16,7 @@ revoke all on private.integration_worker_dispatches from public,anon,authenticat
 
 create or replace function private.dispatch_integration_sync(p_force boolean default false)
 returns bigint language plpgsql security definer set search_path='' as $$
-declare endpoint text; signing_secret text; request_id bigint;
+declare endpoint text; signing_secret text; request_id bigint; issued_at text; nonce text; signature text;
 begin
   perform pg_advisory_xact_lock(hashtextextended('resolvo-integration-dispatch',0));
   -- A prior HTTP call can still be indexing. Leases protect content; this also
@@ -37,7 +36,11 @@ begin
   select decrypted_secret into signing_secret from vault.decrypted_secrets where name='resolvo_integration_worker_secret';
   if endpoint is null or endpoint !~ '^https://[A-Za-z0-9.-]+/api/integrations/worker$'
     or signing_secret is null or char_length(signing_secret)<32 then raise exception 'Configure the hosted integration scheduler Vault secrets'; end if;
-  select net.http_post(url:=endpoint,headers:=jsonb_build_object('Content-Type','application/json','Authorization','Bearer '||signing_secret),
+  issued_at:=floor(extract(epoch from clock_timestamp()))::bigint::text;
+  nonce:=gen_random_uuid()::text;
+  signature:=encode(extensions.hmac('POST'||chr(10)||'/api/integrations/worker'||chr(10)||issued_at||chr(10)||nonce,signing_secret,'sha256'),'hex');
+  select net.http_post(url:=endpoint,headers:=jsonb_build_object('Content-Type','application/json',
+    'X-Resolvo-Worker-Timestamp',issued_at,'X-Resolvo-Worker-Nonce',nonce,'X-Resolvo-Worker-Signature',signature),
     body:='{}'::jsonb,timeout_milliseconds:=115000) into request_id;
   insert into private.integration_worker_dispatches(request_id) values(request_id);
   delete from private.integration_worker_dispatches where created_at<now()-interval '7 days';

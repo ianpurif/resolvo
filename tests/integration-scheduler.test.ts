@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { tenantDatabase } from "./helpers/database";
 
-test("hosted scheduler avoids idle/overlapping work and keeps signing headers inaccessible to browser roles", async () => {
+test("hosted scheduler avoids idle/overlapping work and never queues its reusable signing credential", async () => {
   const db = await tenantDatabase();
   try {
     // Extension transports are local fixtures. The dispatcher and permission SQL
@@ -16,6 +16,7 @@ test("hosted scheduler avoids idle/overlapping work and keeps signing headers in
       create table vault.decrypted_secrets(name text primary key,decrypted_secret text);
       create table cron.job(jobid bigint,jobname text,active boolean,schedule text);
       create table cron.job_run_details(runid bigint,jobid bigint,status text,start_time timestamptz,end_time timestamptz);
+      create function extensions.hmac(message text,secret text,algorithm text) returns bytea language sql as $$select decode(repeat('ab',32),'hex')$$;
       create function net.http_post(url text,headers jsonb,body jsonb,timeout_milliseconds integer) returns bigint language sql as $$
         insert into net.http_request_queue(url,headers) values(url,headers) returning id;
       $$;
@@ -29,10 +30,16 @@ test("hosted scheduler avoids idle/overlapping work and keeps signing headers in
     assert.ok(first);
     assert.equal((await db.query<{ id: number | null }>("select private.dispatch_integration_sync(true) as id")).rows[0].id, null);
     assert.equal((await db.query("select * from net.http_request_queue")).rows.length, 1);
+    const queued = (await db.query<{ headers: Record<string, string> }>("select headers from net.http_request_queue")).rows[0].headers;
+    assert.equal(queued.Authorization, undefined);
+    assert.match(queued["X-Resolvo-Worker-Signature"], /^[a-f0-9]{64}$/);
+    assert.ok(!JSON.stringify(queued).includes("a-fixture-signing-secret"));
     await db.query("insert into net._http_response values($1,200,false,null)", [first]);
     assert.ok((await db.query<{ id: number }>("select private.dispatch_integration_sync(true) as id")).rows[0].id);
     await db.exec("set role authenticated");
-    await assert.rejects(db.query("select * from net.http_request_queue"), /permission denied/);
+    // Supabase may grant queue reads to database roles; queued headers contain
+    // no reusable key and the application consumes each signature nonce once.
+    assert.ok(!JSON.stringify((await db.query("select headers from net.http_request_queue")).rows).includes("a-fixture-signing-secret"));
     await assert.rejects(db.query("select private.dispatch_integration_sync(true)"), /permission denied/);
     await assert.rejects(db.query("select integration_scheduler_status()"), /permission denied/);
     await db.exec("reset role;set role service_role");
