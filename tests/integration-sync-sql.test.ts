@@ -21,6 +21,12 @@ test("sync leases publish private content through existing checkpoints and disco
     const doc = randomUUID(), rev = randomUUID(), path = `organizations/${org}/documents/${doc}/${rev}/source.md`;
     const step = (lease: string, task: string, action: string, data: object = {}) => db.query<{ result: Record<string, unknown> }>("select integration_step($1,$2,$3,$4,$5) result", [connection, lease, task, action, JSON.stringify(data)]);
     await step(first.connection.lease, first.task.id, "prepare", { itemId: doc, revision: rev, name: "Private policy", url: "https://source.example/policy", path, size: 48, hash: "a".repeat(64), version: "v1", manifest: [{ content: "Personal policy allows 25 days of leave per year.", token_count: 15, start_offset: 0, end_offset: 48 }] });
+    await asUser(db, member);
+    await assert.rejects(db.query("insert into document_index_vectors(revision,organization_id,chunk_index,embedding) values($1,$2,0,$3)", [rev, org, JSON.stringify([1, ...Array(1023).fill(0)])]), /row-level security/);
+    await asUser(db, owner);
+    assert.equal((await db.query<{ allowed: boolean }>("select private.can_write_integration_file($1) allowed", [path])).rows[0].allowed, false);
+    await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values('support-documents',$1)", [path]), /row-level security/);
+    await service();
     const second = (await claim())!;
     assert.equal((await step(second.connection.lease, second.task.id, "claim-index")).rows[0].result.claimed, true);
     await step(second.connection.lease, second.task.id, "checkpoint", { offset: 0, vectors: [[1, ...Array(1023).fill(0)]] });
