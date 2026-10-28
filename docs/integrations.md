@@ -33,7 +33,7 @@ Google Workspace is covered by Drive and Gmail; Microsoft 365 by OneDrive/ShareP
 
 ## Deployment
 
-1. Back up the database and apply every unapplied migration in filename order. This feature adds `202610290001_integrations.sql` through `202610290006_integration_write_boundaries.sql`. They add tables, leased sync/OAuth/webhook functions, restricted file/vector policies and filtered retrieval without rewriting uploaded documents. Building the app does not run migrations.
+1. Back up the database and apply every unapplied migration in filename order. This feature adds `202610290001_integrations.sql` through `202610290007_worker_nonce.sql`. They add tables, leased sync/OAuth/webhook functions, restricted file/vector policies, filtered retrieval and single-use scheduler authorization without rewriting uploaded documents. Building the app does not run migrations.
 2. Set `INTEGRATION_ENCRYPTION_KEY` to a securely generated, standard-base64 32-byte key. Store it in the server secret manager and retain a protected backup separate from the database. All application and worker instances must use the same key. Losing or replacing it makes existing credentials unreadable; reconnect accounts or perform a controlled decrypt/re-encrypt migration before rotation. Never publish this key or use a `NEXT_PUBLIC_` variable.
 3. Retain the existing Supabase service key, Voyage settings and DeepSeek configuration. Source reads and retrieval still use the member's JWT/RLS. The worker uses the server key through narrowly scoped, service-only SQL functions that validate connection membership, generation and lease.
 4. For one-click OAuth, set the relevant `INTEGRATION_<GOOGLE|MICROSOFT|GITHUB|DROPBOX|BOX>_CLIENT_ID` and `_CLIENT_SECRET`. Google credentials serve Drive and Gmail; Microsoft credentials serve files and mail. Enable the relevant APIs and obtain provider consent/verification where required by the provider. Configure exactly **`APP_URL/api/integrations/oauth/callback`** in each integration OAuth app. This callback is separate from the existing Google/Supabase login callback. Production uses HTTPS.
@@ -62,6 +62,16 @@ Authorization: Bearer <INTEGRATION_SYNC_SECRET>
 ```
 
 GET is also supported for schedulers. Invoke about once per minute. Use a scheduler that stores the Authorization header securely; do not place secrets in URLs. The route processes up to 40 steps with a 45-second loop deadline; an in-flight step can take longer, so the hosting function must support the declared 120-second duration. Parallel worker instances are safe because database leases serialize each connection. Existing uploaded-document indexing remains on its original continuation flow.
+
+#### Hosted Supabase scheduler
+
+Production at `https://resolvo-ai.vercel.app` uses Supabase Cron and `pg_net` to invoke the Vercel worker. The `resolvo-integration-sync` job checks for due work every minute and skips HTTP calls when there is none. It runs independently of a workstation and supports the existing per-account sync intervals. The former Windows task is disabled.
+
+The operator setup is `supabase/operations/integration-scheduler.sql`, separate from the portable app migrations because it requires hosted extensions. Apply it with `npx supabase db query --linked --file supabase/operations/integration-scheduler.sql`. Store `resolvo_integration_worker_url` (the production origin plus `/api/integrations/worker`) and `resolvo_integration_worker_secret` (the application's `INTEGRATION_SYNC_SECRET`) using Vault's create/update functions. Schedule `select private.dispatch_integration_sync();` as the named `resolvo-integration-sync` job with `* * * * *`.
+
+Managed `pg_net` queues can be readable by database roles, so this dispatcher never puts the reusable secret in the queue. It signs `POST\n/api/integrations/worker\n<TIMESTAMP>\n<NONCE>` with HMAC-SHA256. The timestamp, UUID nonce and hexadecimal signature are sent in `X-Resolvo-Worker-Timestamp`, `X-Resolvo-Worker-Nonce` and `X-Resolvo-Worker-Signature`. The application accepts them for 60 seconds and consumes each nonce atomically through a service-only RPC. Expired, altered and replayed requests return HTTP 401. Avoid putting a static bearer credential in a shared HTTP queue.
+
+Only operators can dispatch calls; `integration_scheduler_status()` provides service-role-only status, including job activity, its last run and the last HTTP result. In-flight requests are deduplicated and dispatch metadata is retained for seven days. Provider credentials and the connection encryption key stay in their existing protected stores.
 
 Connections poll every 15 minutes to 24 hours (default one hour). Traversals and per-page cursors are durable. Overlapping folder/file selections deduplicate source IDs. Provider revisions avoid repeated downloads when supported; normalized content hashes avoid repeated storage, chunking and embedding. APIs without useful versions are read and hashed. This release polls selected scopes; it does not claim provider-specific delta feeds or zero metadata traffic.
 
