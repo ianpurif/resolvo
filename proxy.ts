@@ -7,6 +7,10 @@ import {
   UPLOAD_SIZE_ERROR,
 } from "@/lib/knowledge-limits";
 export async function proxy(request: NextRequest) {
+  // These endpoints authenticate their own scheduler/HMAC credentials. Never
+  // exempt other integration routes from the normal verified-user session.
+  if (request.nextUrl.pathname === "/api/integrations/worker" || /^\/api\/integrations\/webhooks\/[0-9a-f-]{36}$/.test(request.nextUrl.pathname))
+    return NextResponse.next({ request });
   const api = request.nextUrl.pathname.startsWith("/api/");
   if (
     ["POST", "PATCH"].includes(request.method) &&

@@ -12,7 +12,7 @@ export function connector(id: string) {
   if (!result) throw new AppError("This connector is not installed. Use Custom REST API or MCP for another service.", 400);
   return result;
 }
-export function catalog() { return [...connectors.values()].map(({ list: _list, read: _read, ...definition }) => definition); }
+export function catalog() { return [...connectors.values()].map((c) => ({ id: c.id, name: c.name, category: c.category, description: c.description, auth: c.auth, fields: c.fields })); }
 export function validateConfig(id: string, config: ConnectorConfig) {
   const provider = connector(id);
   const allowed = new Set(provider.fields.map((f) => f.key));

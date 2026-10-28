@@ -71,7 +71,7 @@ begin
       from public.integration_selections where connection_id=c.id;
   end if;
   select * into task from public.integration_tasks where connection_id=c.id and generation=gen and not done and next_attempt_at<=now()
-    order by created_at,id limit 1;
+    order by case when payload->>'type'='index' then 0 else 1 end,created_at,id limit 1;
   if task.id is null then
     if not exists(select 1 from public.integration_tasks where connection_id=c.id and generation=gen and not done) then
       -- Sweep only after a complete successful traversal, never after a partial page.
@@ -123,6 +123,11 @@ begin
         values((p_data->>'itemId')::uuid,c.id,c.organization_id,task.payload->>'id',left(p_data->>'name',160)) returning * into i;
     end if;
     docid:=coalesce(i.document_id,i.id);
+    if exists(select 1 from public.document_index_jobs where document_id=docid and revision<>(p_data->>'revision')::uuid) then
+      insert into public.integration_file_gc(path) select file_path from public.document_index_jobs where document_id=docid on conflict do nothing;
+      delete from public.document_index_jobs where document_id=docid;
+      update public.documents set indexing_token=null,status=case when chunk_count>0 then 'ready' else 'failed' end where id=docid;
+    end if;
     result:=public.start_document_index_job(docid,(p_data->>'revision')::uuid,left(p_data->>'name',160),'manual',p_data->>'url',
       p_data->>'path','text/markdown',(p_data->>'size')::integer,i.document_id is not null,p_data->>'hash',p_data->'manifest');
     update public.documents set integration_connection_id=c.id where id=docid and organization_id=c.organization_id;
@@ -159,6 +164,9 @@ begin
     delete from public.integration_items where id=i.id;
     update public.integration_tasks set done=true where id=task.id;
   elsif p_action='error' then
+    if i.document_id is not null then
+      update public.document_index_jobs set lease=null,lease_until=null where document_id=i.document_id and lease=p_lease;
+    end if;
     update public.integration_tasks set attempts=attempts+1,next_attempt_at=now()+greatest(1,(p_data->>'delay')::integer)*interval '1 second' where id=task.id;
     update public.integration_connections set status=case when (p_data->>'reauth')::boolean then 'reauth' else 'error' end,last_error=left(p_data->>'error',300) where id=c.id;
     update public.integration_items set last_error=left(p_data->>'error',300) where id=i.id;
