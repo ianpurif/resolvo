@@ -10,7 +10,8 @@ import { notion } from "./providers/notion";
 import { slackConnector } from "./providers/slack";
 import { dropbox } from "./providers/dropbox";
 import { box } from "./providers/box";
-const connectors = new Map<string, Connector>([googleDrive, microsoftFiles, dropbox, box, github, notion, slackConnector, customApi, website, mcp].map((c) => [c.id, c]));
+import { jira } from "./providers/jira";
+const connectors = new Map<string, Connector>([googleDrive, microsoftFiles, dropbox, box, github, notion, slackConnector, jira, customApi, website, mcp].map((c) => [c.id, c]));
 export function connector(id: string) {
   const result = connectors.get(id);
   if (!result) throw new AppError("This connector is not installed. Use Custom REST API or MCP for another service.", 400);
