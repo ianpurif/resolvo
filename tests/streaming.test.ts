@@ -82,6 +82,7 @@ test("the actual DeepSeek streaming SDK and LangGraph emit a draft before comple
           });
         }
         if (url.pathname.endsWith("/knowledge_passage_context")) return reply([]);
+        if (url.pathname.endsWith("/knowledge_source_metadata")) return reply([{ id: sourceId, source_url: "https://example.com/workflow", platform: "website" }]);
         assert.ok(url.pathname.endsWith("/search_knowledge"));
         const body = JSON.parse(String(init?.body));
         if (hasEvidence) assert.equal(body.p_query_text, "reviews project changes");
@@ -164,6 +165,7 @@ test("the actual DeepSeek streaming SDK and LangGraph emit a draft before comple
       [sourceId],
     );
     assert.equal(result.content, "Department managers review project changes. [1]");
+    assert.equal(result.sources[0].url, "https://example.com/workflow");
     assert.ok(drafts.every((text) => !text.includes("[[source:")));
     hasEvidence = false;
     const unknown = await runSupportAgent(
