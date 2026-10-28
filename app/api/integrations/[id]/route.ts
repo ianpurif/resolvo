@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireTenant } from "@/lib/auth";
 import { apiError, requireSameOrigin } from "@/lib/api";
 import { readBoundedJson } from "@/lib/bounded-json";
-import { ownedConnection, configureConnection, integrationError } from "@/lib/integrations/database";
+import { ownedConnection, configureConnection, integrationError, integrationDatabase } from "@/lib/integrations/database";
 type Params = { params: Promise<{ id: string }> };
 export async function GET(request: Request, { params }: Params) {
   try {
@@ -14,7 +14,17 @@ export async function GET(request: Request, { params }: Params) {
       context.db.from("integration_selections").select("external_id,name,kind").eq("connection_id", id).eq("organization_id", context.organization.id),
     ]);
     integrationError(items.error); integrationError(selections.error);
-    return NextResponse.json({ connection, items: items.data, total: items.count, selections: selections.data });
+    const db = integrationDatabase();
+    const [total, complete, indexed] = await Promise.all([
+      db.from("integration_tasks").select("id", { count: "exact", head: true }).eq("connection_id", id),
+      db.from("integration_tasks").select("id", { count: "exact", head: true }).eq("connection_id", id).eq("done", true),
+      context.db.from("documents").select("id", { count: "exact", head: true }).eq("integration_connection_id", id).gt("chunk_count", 0),
+    ]);
+    for (const result of [total, complete, indexed]) integrationError(result.error);
+    return NextResponse.json({ connection: { id: connection.id, provider: connection.provider, name: connection.name, visibility: connection.visibility,
+      status: connection.status, sync_interval_minutes: connection.sync_interval_minutes, next_sync_at: connection.next_sync_at, last_sync_at: connection.last_sync_at,
+      last_error: connection.last_error, generation: connection.generation }, items: items.data, total: items.count, selections: selections.data,
+      progress: { total: total.count ?? 0, completed: complete.count ?? 0, indexed: indexed.count ?? 0 } });
   } catch (error) { return apiError(error); }
 }
 export async function PATCH(request: Request, { params }: Params) {

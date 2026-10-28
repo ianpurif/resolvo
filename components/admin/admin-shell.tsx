@@ -26,6 +26,7 @@ export function AdminShell({
   const titles: Record<string, string> = {
     "/dashboard": "Workspace",
     "/admin/knowledge": "Knowledge",
+    "/admin/integrations": "Integrations",
     "/admin/conversations": "Conversations",
     "/admin/tickets": "Support tickets",
     "/admin/settings": "Settings",

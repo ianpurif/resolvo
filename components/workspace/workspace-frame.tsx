@@ -17,6 +17,7 @@ import {
   Settings2,
   Ticket,
   Search,
+  Plug,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -53,6 +54,7 @@ export type WorkspaceFrameProps = {
 const nav = [
   { href: "/dashboard", label: "Workspace", icon: LayoutGrid },
   { href: "/admin/knowledge", label: "Knowledge", icon: BookOpen },
+  { href: "/admin/integrations", label: "Integrations", icon: Plug },
   { href: "/admin/conversations", label: "Conversations", icon: MessageSquare },
   { href: "/admin/tickets", label: "Support tickets", icon: Ticket },
 ];
