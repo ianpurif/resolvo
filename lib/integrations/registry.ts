@@ -6,7 +6,8 @@ import { microsoftFiles } from "./providers/microsoft-files";
 import { github } from "./providers/github";
 import { customApi, website } from "./providers/custom";
 import { mcp } from "./providers/mcp";
-const connectors = new Map<string, Connector>([googleDrive, microsoftFiles, github, customApi, website, mcp].map((c) => [c.id, c]));
+import { notion } from "./providers/notion";
+const connectors = new Map<string, Connector>([googleDrive, microsoftFiles, github, notion, customApi, website, mcp].map((c) => [c.id, c]));
 export function connector(id: string) {
   const result = connectors.get(id);
   if (!result) throw new AppError("This connector is not installed. Use Custom REST API or MCP for another service.", 400);
