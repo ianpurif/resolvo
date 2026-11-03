@@ -437,7 +437,7 @@ export function createScene({
     const visibility = () => {
       cancelAnimationFrame(frame);
       previous = 0;
-      if (!document.hidden) {
+      if (loaded && !document.hidden) {
         frame = requestAnimationFrame(tick);
       }
     };
@@ -485,13 +485,14 @@ export function createScene({
         await gl.compileAsync(world, camera);
         if (disposed) return;
         gl.shadowMap.needsUpdate = true;
+        progress = input.progress;
         loaded = true;
         canvas.dataset.model = "blender-atelier";
+        visibility();
       })
       .catch((error) => {
         if (error?.name !== "AbortError") fail();
       });
-    frame = requestAnimationFrame(tick);
     return { dispose };
   } catch {
     fail();

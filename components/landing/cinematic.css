@@ -34,7 +34,8 @@
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 1s ease;
+  pointer-events: none;
+  transition: opacity 450ms ease-out;
   cursor: grab;
   touch-action: pan-y pinch-zoom;
 }
@@ -43,20 +44,21 @@
 }
 .cinema[data-scene="ready"]:not([data-motion="static"]) .cinema-canvas {
   opacity: 1;
+  pointer-events: auto;
 }
+/* A normal visit reveals the first 3D frame over the stage backdrop, never the still. */
 .cinema-poster {
+  display: none;
   position: absolute;
   inset: 0;
-  opacity: 1;
-  transition: opacity 1s ease;
   pointer-events: none;
 }
 .cinema-poster-image {
   object-fit: cover;
   object-position: 65% center;
 }
-.cinema[data-scene="ready"]:not([data-motion="static"]) .cinema-poster {
-  opacity: 0;
+.cinema[data-scene="fallback"] .cinema-poster {
+  display: block;
 }
 .cinema-vignette {
   position: absolute;
@@ -581,9 +583,6 @@
 .cinema[data-motion="static"] .cinema-drag-hint {
   display: none;
 }
-.cinema[data-motion="static"] .cinema-poster {
-  opacity: 1;
-}
 .cinema[data-motion="static"] .cinema-shot-7 {
   background: #17282e;
 }
@@ -856,6 +855,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .cinema-poster {
+    display: block;
+  }
   html:has(.cinema[data-motion="static"]) {
     scroll-behavior: auto;
   }

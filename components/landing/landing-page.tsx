@@ -56,6 +56,8 @@ export function LandingPage() {
     readMotion,
     serverMotion,
   );
+  // Restoring motion after an OS preference change requires a fresh first frame.
+  if (reduced && status === "ready") setStatus("loading");
   const staticExperience = reduced || status === "fallback";
   const root = useRef<HTMLDivElement>(null);
   const input = useRef<SceneInput>({
@@ -148,16 +150,15 @@ export function LandingPage() {
             alt=""
             fill
             sizes="100vw"
-            preload
             className="cinema-poster-image"
           />
         </div>
-        <CinematicStage
-          enabled={!reduced && status !== "fallback"}
-          input={input}
-          onReady={ready}
-          onFailure={failed}
-        />
+        <noscript>
+          <style>{".cinema-poster{display:block}"}</style>
+        </noscript>
+        {!staticExperience && (
+          <CinematicStage input={input} onReady={ready} onFailure={failed} />
+        )}
         <div className="cinema-vignette" />
         <div className="cinema-grain" />
       </div>

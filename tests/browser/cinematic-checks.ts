@@ -72,14 +72,36 @@ export async function verifyCinematic(
     if (message.type() === "error") errors.push(message.text());
   });
   try {
-    await page.goto(origin);
+    const canvas = page.getByTestId("cinematic-canvas");
+    const poster = page.locator(".cinema-poster");
+    const model = "**/models/embroidery-machine.glb";
+    const release = Promise.withResolvers<void>();
+    await page.route(
+      model,
+      async (route) => {
+        await release.promise;
+        await route.continue();
+      },
+      { times: 1 },
+    );
+    try {
+      await Promise.all([page.waitForRequest(model), page.goto(origin)]);
+      await expect(poster).toBeHidden();
+      await expect(canvas).toHaveCSS("opacity", "0");
+    } finally {
+      release.resolve();
+    }
     await expect(page.locator(".cinema")).toHaveAttribute(
       "data-scene",
       "ready",
       { timeout: 60_000 },
     );
-    const canvas = page.getByTestId("cinematic-canvas");
     await expect(canvas).toHaveAttribute("data-model", "blender-atelier");
+    await expect(canvas).toHaveCSS("opacity", "1", { timeout: 60_000 });
+    await expect(poster).toBeHidden();
+    record(
+      "A delayed model reveals only the first rendered 3D frame, with no poster flash",
+    );
     await expect(page.locator(".cinema-controls button")).toHaveCount(0);
     await page.waitForTimeout(1000);
     const initial = digest(await canvasShot(page));
