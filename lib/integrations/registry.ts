@@ -1,0 +1,41 @@
+import "server-only";
+import { AppError } from "@/lib/config";
+import { hasUrlCredentials } from "./http";
+import type { Connector, ConnectorConfig } from "./types";
+import { googleDrive } from "./providers/google-drive";
+import { microsoftFiles } from "./providers/microsoft-files";
+import { github } from "./providers/github";
+import { customApi, website } from "./providers/custom";
+import { mcp } from "./providers/mcp";
+import { notion } from "./providers/notion";
+import { slackConnector } from "./providers/slack";
+import { dropbox } from "./providers/dropbox";
+import { box } from "./providers/box";
+import { jira } from "./providers/jira";
+import { confluence } from "./providers/confluence";
+import { hubspot } from "./providers/hubspot";
+import { asana } from "./providers/asana";
+import { airtable } from "./providers/airtable";
+import { zendesk } from "./providers/zendesk";
+import { supabase } from "./providers/supabase";
+import { gmail } from "./providers/gmail";
+import { outlook } from "./providers/outlook";
+import { gitlab } from "./providers/gitlab";
+const connectors = new Map<string, Connector>([googleDrive, microsoftFiles, dropbox, box, github, gitlab, notion, confluence, slackConnector, jira, asana, airtable, hubspot, zendesk, supabase, gmail, outlook, customApi, website, mcp].map((c) => [c.id, c]));
+export function connector(id: string) {
+  const result = connectors.get(id);
+  if (!result) throw new AppError("This connector is not installed. Use Custom REST API or MCP for another service.", 400);
+  return result;
+}
+export function catalog() { return [...connectors.values()].map((c) => ({ id: c.id, name: c.name, category: c.category, description: c.description, auth: c.auth, fields: c.fields })); }
+export function validateConfig(id: string, config: ConnectorConfig) {
+  const provider = connector(id);
+  const allowed = new Set(provider.fields.map((f) => f.key));
+  for (const field of provider.fields) if (field.required && !config[field.key]?.trim()) throw new AppError(`Enter ${field.label}.`, 400);
+  for (const [key, value] of Object.entries(config)) {
+    if (!allowed.has(key)) throw new AppError(`Unknown connector setting: ${key}.`, 400);
+    if (value.split(/\s+/).some(hasUrlCredentials))
+      throw new AppError("Put credentials in the authentication fields, not in URLs.", 400);
+  }
+  return config;
+}

@@ -25,6 +25,7 @@ export interface Ticket {
   created_at: string;
 }
 export interface KnowledgeDocument {
+  integration_connection_id?: string | null;
   id: string;
   organization_id: string;
   data_source_id: string;
@@ -46,6 +47,8 @@ export interface KnowledgeDocument {
   updated_at: string;
 }
 export interface Source {
+  url?: string;
+  platform?: string;
   id: string;
   title: string;
   excerpt: string;

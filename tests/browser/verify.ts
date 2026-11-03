@@ -14,8 +14,10 @@ import { join, resolve, sep } from "node:path";
 import { chromium, expect } from "@playwright/test";
 import { startFixtureBackend } from "./fixture-backend";
 import { verifyCinematic } from "./cinematic-checks";
+import { verifyIntegrations } from "./integration-checks";
 
 async function main() {
+  const integrationsOnly = process.argv.includes("--integrations");
   const root = process.cwd(),
     base = resolve(root, ".local"),
     output = join(base, "verification");
@@ -59,7 +61,7 @@ async function main() {
       nextConfigPath,
       (await readFile(nextConfigPath, "utf8")).replace(
         "const nextConfig: NextConfig = {",
-        "const nextConfig: NextConfig = { turbopack: { root: " +
+        "const nextConfig: NextConfig = { experimental: { turbopackFileSystemCacheForDev: false }, turbopack: { root: " +
           JSON.stringify(root) +
           " },",
       ),
@@ -84,6 +86,15 @@ async function main() {
         backendOrigin + "/voyage/embeddings",
       ),
     );
+    const integrationPath = join(directory, "lib/integrations/http.ts");
+    const transport = await readFile(integrationPath, "utf8");
+    const start = transport.indexOf("export const connectorRequest:");
+    const end = transport.indexOf("export function checkResponse", start);
+    assert.ok(start > 0 && end > start);
+    await writeFile(integrationPath, transport.slice(0, start) + `export const connectorRequest: ConnectorRequest = async (url, options = {}) => {
+      const response = await fetch('${backendOrigin}/integration-provider?url=' + encodeURIComponent(url), { method: options.method || 'GET', headers: options.headers, body: options.body });
+      return { status: response.status, headers: Object.fromEntries(response.headers), bytes: Buffer.from(await response.arrayBuffer()) };
+    };\n` + transport.slice(end));
     child = spawn(
       process.execPath,
       [
@@ -107,6 +118,8 @@ async function main() {
           VOYAGE_API_KEY: "fixture-voyage",
           VOYAGE_REQUESTS_PER_MINUTE: "100",
           VOYAGE_TOKENS_PER_MINUTE: "100000",
+          INTEGRATION_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
+          INTEGRATION_SYNC_SECRET: "fixture-worker-secret-at-least-32-characters",
           NEXT_TELEMETRY_DISABLED: "1",
         },
         stdio: ["ignore", "pipe", "pipe"],
@@ -121,7 +134,7 @@ async function main() {
     const deadline = Date.now() + 120_000;
     while (true) {
       try {
-        const response = await fetch(appOrigin, {
+        const response = await fetch(integrationsOnly ? appOrigin + "/login" : appOrigin, {
           signal: AbortSignal.timeout(20_000),
         });
         if (response.ok) break;
@@ -158,6 +171,18 @@ async function main() {
         );
       }
     });
+    if (integrationsOnly) {
+      await page.goto(appOrigin + "/login");
+      await page.getByRole("button", { name: "Continue with Google" }).click();
+      await expect(page.getByRole("heading", { name: "Your workspace", exact: true })).toBeVisible({ timeout: 60_000 });
+      await verifyIntegrations(page, browser, backend, appOrigin, output, record);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(controlledInputWarnings, []);
+      const evidence = { status: "passed", scope: "integrations", checks, environment: "Isolated local SQL and provider transports; no live accounts or paid calls" };
+      await writeFile(join(output, "integrations-evidence.json"), JSON.stringify(evidence, null, 2));
+      console.log(JSON.stringify({ status: "passed", checks: checks.length, evidence: join(output, "integrations-evidence.json") }));
+      return;
+    }
     await page.goto(appOrigin);
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       "Your knowledge.",
@@ -801,6 +826,7 @@ async function main() {
     record(
       "Mobile settings, ticket filters, and the conversation library remain usable without page overflow",
     );
+    await verifyIntegrations(page, browser, backend, appOrigin, output, record);
     await page.getByRole("button", { name: "Open sidebar" }).click();
     await page
       .getByRole("dialog")
@@ -910,6 +936,7 @@ async function main() {
             "chat-mobile.png",
             "chat-tablet.png",
             "landing-mobile.png",
+            "integrations-desktop.png", "integrations-mobile.png", "integration-citation.png",
           ],
         },
         null,

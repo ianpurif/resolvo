@@ -8,6 +8,8 @@ import type { TenantContext } from "@/lib/auth";
 import { asEvidence, selectEvidence, type SearchHit, type EvidenceCoverage } from "./evidence";
 import { planRetrieval, searchTerms, type RetrievalPlan } from "./query-plan";
 import { queryEmbeddingHash, readQueryEmbedding, storeQueryEmbedding } from "./query-cache";
+import type { KnowledgeFilter } from "@/lib/validations";
+import { sourceUrl } from "@/lib/integrations/provider-utils";
 export { cachedQueryVector, queryEmbeddingHash } from "./query-cache";
 
 const hitSchema = z.object({
@@ -24,7 +26,7 @@ function retrievalError(error: { message: string; code?: string } | null) {
   checkDatabaseError(error, "search company knowledge");
 }
 
-export async function retrieveForPlan(context: TenantContext, plan: RetrievalPlan, signal?: AbortSignal) {
+export async function retrieveForPlan(context: TenantContext, plan: RetrievalPlan, signal?: AbortSignal, filters: KnowledgeFilter = {}) {
   const started = performance.now();
   const boundedSignal = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(75000)]);
   boundedSignal.throwIfAborted();
@@ -54,17 +56,20 @@ export async function retrieveForPlan(context: TenantContext, plan: RetrievalPla
   };
   const found = await context.db.rpc("search_knowledge", {
     p_query_text: plan.lexicalQuery || plan.question, p_query_embedding: vector, p_match_count: 24,
+    p_document_ids: filters.documentIds?.length ? filters.documentIds : null,
+    p_platforms: filters.platforms?.length ? filters.platforms : null,
   }).abortSignal(boundedSignal);
   retrievalError(found.error);
   const hits = parseHits(found.data);
   let selected: SearchHit[];
   let availablePassages: number | null = null, availableDocuments: number | null = null;
   if (plan.mode === "summary") {
-    const catalog = await context.db.from("documents").select("id,name,chunk_count")
-      .eq("organization_id", context.organization.id).in("status", ["ready", "processing"])
-      .gt("chunk_count", 0).order("name").limit(101).abortSignal(boundedSignal);
+    const catalog = await context.db.rpc("knowledge_source_metadata", {
+      p_ids: filters.documentIds?.length ? filters.documentIds : null,
+      p_platforms: filters.platforms?.length ? filters.platforms : null, p_limit: 101,
+    }).abortSignal(boundedSignal);
     checkDatabaseError(catalog.error, "read source coverage");
-    const documents = (catalog.data ?? []) as { id: string; name: string; chunk_count: number }[];
+    const documents = ((catalog.data ?? []) as { id: string; title: string; chunk_count: number }[]).map((d) => ({ ...d, name: d.title }));
     const terms = searchTerms(plan.question);
     const named = documents.filter((doc) => {
       const words = searchTerms(doc.name);
@@ -89,6 +94,17 @@ export async function retrieveForPlan(context: TenantContext, plan: RetrievalPla
   }
   boundedSignal.throwIfAborted();
   const evidence = selected.map(asEvidence);
+  if (evidence.length) {
+    const metadata = await context.db.rpc("knowledge_source_metadata", { p_ids: [...new Set(selected.map((h) => h.document_id))] }).abortSignal(boundedSignal);
+    retrievalError(metadata.error);
+    const rows = metadata.data as { id: string; source_url: string | null; platform: string }[];
+    for (const entry of evidence) {
+      const row = rows.find((r) => r.id === entry.source.id);
+      if (!row) throw new AppError("Source access changed during retrieval. Retry the question.", 409);
+      entry.source.url = sourceUrl(row.source_url ?? undefined);
+      entry.source.platform = row.platform;
+    }
+  }
   const selectedDocuments = new Set(selected.map((hit) => hit.document_id)).size;
   const coverage: EvidenceCoverage = { selectedPassages: selected.length, selectedDocuments, availablePassages, availableDocuments,
     partial: plan.mode === "summary" && (availablePassages === null || availableDocuments === null || selected.length < availablePassages || selectedDocuments < availableDocuments), degraded };

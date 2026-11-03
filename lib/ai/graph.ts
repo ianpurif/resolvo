@@ -26,6 +26,7 @@ import type { Evidence, EvidenceCoverage } from "@/lib/rag/evidence";
 import { AppError } from "@/lib/config";
 import type { TenantContext } from "@/lib/auth";
 import type { ChatMessage } from "@/types";
+import type { KnowledgeFilter } from "@/lib/validations";
 const SupportState = new StateSchema({ messages: MessagesValue });
 export function buildSupportGraph(
   invokeModel: (messages: BaseMessage[]) => Promise<AIMessage | AIMessageChunk>,
@@ -79,9 +80,11 @@ export async function runSupportAgent(
   requestId: string,
   onDraft: (text: string) => void,
   signal: AbortSignal,
+  filters: KnowledgeFilter = {},
 ) {
-  const plan = planRetrieval(history);
-  const { evidence, coverage } = await retrieveForPlan(context, plan, signal);
+  const scopedHistory = filters.platforms?.length || filters.documentIds?.length ? history.filter((m) => m.role === "user") : history;
+  const plan = planRetrieval(scopedHistory);
+  const { evidence, coverage } = await retrieveForPlan(context, plan, signal, filters);
   const consented = hasTicketConsent(history);
   if (!evidence.length && !consented)
     return {
@@ -89,7 +92,7 @@ export async function runSupportAgent(
       sources: [],
     };
   const tools = consented ? [createTicketTool(context, requestId, true, signal)] : [];
-  return answerFromEvidence(context.organization.name, history, plan, evidence, coverage, tools, onDraft, signal);
+  return answerFromEvidence(context.organization.name, scopedHistory, plan, evidence, coverage, tools, onDraft, signal);
 }
 
 // Shared by runtime and the isolated provider evaluation. No alternate prompt

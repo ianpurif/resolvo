@@ -8,3 +8,7 @@ out/
 .local/
 coverage/
 .vercel/
+supabase/.temp/
+
+.vercel
+.env*

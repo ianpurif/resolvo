@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --conditions=react-server --import tsx --test tests/*.test.ts",
     "test:browser": "node --import tsx tests/browser/verify.ts",
+    "integrations:worker": "node --env-file=.env.local --conditions=react-server --import tsx scripts/integration-worker.ts",
     "eval:rag": "node --conditions=react-server --import tsx scripts/evaluate-rag.ts",
     "eval:rag:live": "node --env-file=.env.local --conditions=react-server --import tsx scripts/evaluate-rag.ts --live",
     "bench:rag": "node --conditions=react-server --import tsx scripts/benchmark-rag.ts",

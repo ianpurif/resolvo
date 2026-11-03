@@ -2,7 +2,7 @@ import { apiError, requireSameOrigin } from "@/lib/api";
 import { AppError, requireAIConfiguration } from "@/lib/config";
 import { requireTenant } from "@/lib/auth";
 import { checkDatabaseError } from "@/lib/supabase/server";
-import { chatInputSchema } from "@/lib/validations";
+import { chatInputSchema, knowledgeFilterSchema } from "@/lib/validations";
 import { runSupportAgent } from "@/lib/ai/graph";
 import { readBoundedJson } from "@/lib/bounded-json";
 export const runtime = "nodejs";
@@ -43,10 +43,14 @@ export async function POST(request: Request) {
       checkDatabaseError(owned.error, "check this conversation");
       if (!owned.data) throw new AppError("Conversation not found.", 404);
     }
-    const started = await db.rpc("begin_chat_request", {
+    const started = await db.rpc("begin_filtered_chat_request", {
       p_id: input.requestId,
       p_conversation_id: input.conversationId,
       p_content: input.message,
+      p_filter: input.filters ? {
+        ...(input.filters.platforms?.length ? { platforms: [...new Set(input.filters.platforms)].sort() } : {}),
+        ...(input.filters.documentIds?.length ? { documentIds: [...new Set(input.filters.documentIds)].sort() } : {}),
+      } : null,
     });
     if (started.error) {
       if (started.error.message.includes("in progress"))
@@ -115,6 +119,7 @@ export async function POST(request: Request) {
             input.requestId,
             (text) => emit("draft", { text }),
             signal,
+            knowledgeFilterSchema.parse(started.data.filter ?? {}),
           );
           const completed = await db.rpc("finish_chat_request", {
             p_id: input.requestId,

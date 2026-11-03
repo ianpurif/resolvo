@@ -4,19 +4,17 @@ import { useEffect, useRef, type RefObject } from "react";
 import type { SceneController, SceneInput } from "./scene";
 
 export function CinematicStage({
-  enabled,
   input,
   onReady,
   onFailure,
 }: {
-  enabled: boolean;
   input: RefObject<SceneInput>;
   onReady: () => void;
   onFailure: () => void;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
-    if (!enabled || !canvas.current) return;
+    if (!canvas.current) return;
     let cancelled = false;
     let scene: SceneController | undefined;
     const element = canvas.current;
@@ -38,7 +36,7 @@ export function CinematicStage({
       cancelled = true;
       scene?.dispose();
     };
-  }, [enabled, input, onReady, onFailure]);
+  }, [input, onReady, onFailure]);
   return (
     <canvas
       className="cinema-canvas"

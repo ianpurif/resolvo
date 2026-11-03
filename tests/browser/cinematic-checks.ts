@@ -52,6 +52,12 @@ const stitches = async (page: Page) =>
   Number(
     await page.getByTestId("cinematic-canvas").getAttribute("data-stitches"),
   );
+// Every fresh visit can compile shaders on the runner's software renderer.
+const sceneStartupTimeout = 60_000;
+const waitForScene = (page: Page) =>
+  expect(page.locator(".cinema")).toHaveAttribute("data-scene", "ready", {
+    timeout: sceneStartupTimeout,
+  });
 
 /** Actual GLB/WebGL checks, independent of the authenticated fixture transports. */
 export async function verifyCinematic(
@@ -72,14 +78,36 @@ export async function verifyCinematic(
     if (message.type() === "error") errors.push(message.text());
   });
   try {
-    await page.goto(origin);
-    await expect(page.locator(".cinema")).toHaveAttribute(
-      "data-scene",
-      "ready",
-      { timeout: 60_000 },
-    );
     const canvas = page.getByTestId("cinematic-canvas");
+    const poster = page.locator(".cinema-poster");
+    const model = "**/models/embroidery-machine.glb";
+    const release = Promise.withResolvers<void>();
+    await page.route(
+      model,
+      async (route) => {
+        await release.promise;
+        await route.continue();
+      },
+      { times: 1 },
+    );
+    try {
+      await Promise.all([
+        page.waitForRequest(model, { timeout: sceneStartupTimeout }),
+        page.goto(origin),
+      ]);
+      await expect(poster).toBeHidden();
+      await expect(canvas).toHaveCSS("opacity", "0");
+    } finally {
+      release.resolve();
+    }
+    await waitForScene(page);
     await expect(canvas).toHaveAttribute("data-model", "blender-atelier");
+    await expect(canvas).toHaveCSS("opacity", "1", { timeout: 60_000 });
+    await expect(poster).toBeHidden();
+    record(
+      "A delayed model reveals only the first rendered 3D frame, with no poster flash",
+    );
+    await expect(page.locator(".cinema-controls button")).toHaveCount(0);
     await page.waitForTimeout(1000);
     const initial = digest(await canvasShot(page));
     await page.waitForTimeout(650);
@@ -94,40 +122,7 @@ export async function verifyCinematic(
       "The real Blender machine loads and animates immediately above blank fabric",
     );
 
-    await page.getByRole("button", { name: "Pause ambient motion" }).click();
-    await page.waitForTimeout(1200);
-    const still = digest(await canvasShot(page));
-    await page.waitForTimeout(350);
-    assert.equal(
-      digest(await canvasShot(page)),
-      still,
-      "pause must stop the actual canvas",
-    );
-    assert.equal(
-      await page.evaluate(() => document.elementFromPoint(1050, 440)?.tagName),
-      "CANVAS",
-    );
-    await page.mouse.move(1050, 440);
-    await page.mouse.down();
-    await page.mouse.move(1160, 465, { steps: 8 });
-    await page.mouse.up();
-    await page.waitForTimeout(700);
-    assert.notEqual(
-      digest(await canvasShot(page)),
-      still,
-      "drag must change the physical view",
-    );
-    await page.getByRole("button", { name: "Play ambient motion" }).click();
-    record(
-      "Ambient pause freezes rendering while pointer exploration remains interactive",
-    );
-
-    // Reload resets pointer orbit so the chapter screenshots show their authored composition.
-    await page.reload();
-    await expect(page.locator(".cinema")).toHaveAttribute(
-      "data-scene",
-      "ready",
-    );
+    // Capture the authored chapter compositions before dragging the camera.
     const counts: number[] = [],
       shots: string[] = [];
     for (const id of chapters) {
@@ -179,9 +174,6 @@ export async function verifyCinematic(
     );
 
     await chapter(page, "color");
-    await page.getByRole("button", { name: "Pause ambient motion" }).click();
-    await page.waitForTimeout(700);
-    const kingfisher = digest(await canvasShot(page));
     await page
       .getByRole("group", { name: "Thread palette" })
       .getByRole("button", { name: "Forest", exact: true })
@@ -190,17 +182,15 @@ export async function verifyCinematic(
     await expect(
       page.getByRole("button", { name: "Forest", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
-    await page.waitForTimeout(600);
-    assert.notEqual(digest(await canvasShot(page)), kingfisher);
     await chapter(page, "capabilities");
-    const full = digest(await canvasShot(page));
     await page.getByRole("button", { name: "Inspect the stitching" }).click();
-    await page.waitForTimeout(1000);
-    assert.notEqual(digest(await canvasShot(page)), full);
+    await expect(page.getByRole("button", { name: "View the whole piece" }))
+      .toHaveAttribute("aria-pressed", "true");
     await page.getByRole("button", { name: "View the whole piece" }).click();
-    await page.getByRole("button", { name: "Play ambient motion" }).click();
+    await expect(page.getByRole("button", { name: "Inspect the stitching" }))
+      .toHaveAttribute("aria-pressed", "false");
     record(
-      "Keyboard palette selection recolors the stitches; inspection moves into the completed piece",
+      "Keyboard palette selection and the completed-piece inspection controls work without a motion toggle",
     );
 
     const performanceEvidence = [];
@@ -269,6 +259,18 @@ export async function verifyCinematic(
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await chapter(page, "begin");
+    assert.equal(
+      await page.evaluate(() => document.elementFromPoint(1050, 440)?.tagName),
+      "CANVAS",
+    );
+    await page.mouse.move(1050, 440);
+    await page.mouse.down();
+    await expect(canvas).toHaveAttribute("data-dragging", "true");
+    await page.mouse.move(1160, 465, { steps: 8 });
+    await page.mouse.up();
+    await expect(canvas).toHaveAttribute("data-dragging", "false");
+    record("The automatically animated scene retains pointer exploration");
+
     await page
       .getByRole("link", { name: "Open your workspace", exact: true })
       .click();
@@ -277,10 +279,7 @@ export async function verifyCinematic(
     ).toBeVisible();
     await expect(page.locator("canvas")).toHaveCount(0);
     await page.goto(origin);
-    await expect(page.locator(".cinema")).toHaveAttribute(
-      "data-scene",
-      "ready",
-    );
+    await waitForScene(page);
     await canvas.evaluate((element) =>
       (element as HTMLCanvasElement)
         .getContext("webgl2")
@@ -312,11 +311,7 @@ export async function verifyCinematic(
   try {
     const page = await mobile.newPage();
     await page.goto(origin);
-    await expect(page.locator(".cinema")).toHaveAttribute(
-      "data-scene",
-      "ready",
-      { timeout: 60_000 },
-    );
+    await waitForScene(page);
     await page.screenshot({
       path: join(output, "cinematic-mobile-arrival.png"),
     });
@@ -401,19 +396,9 @@ export async function verifyCinematic(
     });
     await page.locator("#capabilities").scrollIntoViewIfNeeded();
     await expect(page.getByAltText(/completed kingfisher/)).toBeVisible();
-    await page.getByRole("button", { name: "Enable cinematic motion" }).click();
-    await expect(page.locator(".cinema")).toHaveAttribute(
-      "data-scene",
-      "ready",
-      { timeout: 60_000 },
-    );
-    assert.ok(
-      (await page.evaluate(
-        () => (window as unknown as { webglAttempts: number }).webglAttempts,
-      )) > 0,
-    );
+    await expect(page.locator(".cinema-controls button")).toHaveCount(0);
     record(
-      "Reduced motion creates no WebGL context, shows the real finished embroidery, and supports explicit motion opt-in",
+      "Reduced motion creates no WebGL context and shows the real finished embroidery",
     );
   } finally {
     await reduced.close();

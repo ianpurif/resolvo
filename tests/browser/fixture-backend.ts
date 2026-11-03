@@ -74,6 +74,11 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
   const modelCalls: Array<{
     messages: Array<{ role: string; content: string }>;
   }> = [];
+  const integrationRecords = new Map([
+    ["process", { id: "process", name: "Connected process", text: "The documented review process has two steps. Submit the change. A department manager reviews it.", url: "https://docs.fixture.invalid/process", updated_at: "v1" }],
+    ["handbook", { id: "handbook", name: "Connected handbook", text: "The company handbook explains the documentation and onboarding process for new team members.", url: "https://docs.fixture.invalid/handbook", updated_at: "v1" }],
+  ]);
+  let documentEmbeddingCalls = 0;
   const tables = new Set([
     "organization_members",
     "organizations",
@@ -86,6 +91,7 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
     "query_embeddings",
     "tickets",
     "document_index_jobs",
+    "integration_connections", "integration_credentials", "integration_oauth_states", "integration_selections", "integration_items", "integration_tasks", "integration_file_gc",
   ]);
   let queue = Promise.resolve();
   function serial<T>(fn: () => Promise<T>): Promise<T> {
@@ -135,6 +141,16 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
         ? JSON.parse(bytes.toString())
         : {};
     const uid = identity(request);
+    if (url.pathname === "/integration-provider") {
+      const original = new URL(url.searchParams.get("url")!);
+      if (original.pathname === "/token") { json(response, { access_token: "fixture-provider-token", refresh_token: "fixture-provider-refresh", token_type: "bearer", expires_in: 3600 }); return; }
+      if (request.headers.authorization !== "Bearer fixture-provider-token") { json(response, { error: "Unauthorized" }, 401); return; }
+      if (original.pathname === "/items") {
+        json(response, { items: original.searchParams.get("parent") ? [...integrationRecords.values()] : [{ id: "team", name: "Team policies", kind: "folder" }], next: null }); return;
+      }
+      const record = integrationRecords.get(original.pathname.split("/").at(-1)!);
+      json(response, record ?? { error: "Missing" }, record ? 200 : 404); return;
+    }
     if (url.pathname === "/auth/v1/authorize") {
       response.writeHead(302, {
         Location: appOrigin + "/auth/callback?code=local-pkce-fixture",
@@ -224,6 +240,7 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
       return;
     }
     if (url.pathname === "/voyage/embeddings") {
+      if (body.input_type === "document") documentEmbeddingCalls++;
       json(response, {
         data: body.input.map((_: unknown, index: number) => ({
           index,
@@ -248,7 +265,7 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
         if (!/^[a-z_]+$/.test(name)) throw new Error("Unknown fixture RPC");
         const entries = Object.entries(body);
         const parameters = entries.map(([key, value]) =>
-          Array.isArray(value) && /^(?:p_passage_ids|p_document_ids)$/.test(key)
+          Array.isArray(value) && /^(?:p_passage_ids|p_document_ids|p_ids|p_platforms)$/.test(key)
             ? `{${value.join(",")}}`
             : typeof value === "object" && value !== null
               ? JSON.stringify(value)
@@ -261,6 +278,7 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
           "search_knowledge",
           "knowledge_passage_context",
           "knowledge_overview",
+          "knowledge_source_metadata",
         ].includes(name);
         const result = await db.query<{ data: unknown }>(
           (isSet ? "select * from public." : "select public.") +
@@ -340,7 +358,7 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
       const values: unknown[] = [];
       const conditions: string[] = [];
       for (const [key, filter] of url.searchParams) {
-        if (["select", "order", "limit", "offset"].includes(key)) continue;
+        if (["select", "order", "limit", "offset", "on_conflict"].includes(key)) continue;
         if (!/^[a-z_]+$/.test(key))
           throw new Error("Unsupported fixture filter");
         const operator = filter.slice(0, filter.indexOf("."));
@@ -454,6 +472,12 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
             values,
           )
         ).rows;
+      } else if (request.method === "POST") {
+        const entries = Object.entries(body);
+        if (entries.some(([key]) => !/^[a-z_]+$/.test(key))) throw new Error("Unsupported fixture insert");
+        const insertValues = entries.map(([, value]) => value !== null && typeof value === "object" ? JSON.stringify(value) : value);
+        const conflict = String(request.headers.prefer).includes("resolution=merge-duplicates") ? " on conflict do nothing" : "";
+        rows = (await db.query<Record<string, unknown>>(`insert into public.${table}(${entries.map(([key]) => key).join(",")}) values(${entries.map((_, i) => `$${i + 1}`).join(",")})${conflict} returning *`, insertValues)).rows;
       } else if (request.method === "DELETE")
         rows = (
           await db.query<Record<string, unknown>>(
@@ -507,6 +531,9 @@ export async function startFixtureBackend(port: number, appOrigin: string) {
     ticket,
     org,
     modelCalls,
+    integrationRecords,
+    documentEmbeddingCalls: () => documentEmbeddingCalls,
+    integrationSnapshot: () => serial(async () => { await db.exec("reset role"); return (await db.query<{ id: string; active_revision: string; content_hash: string; name: string }>("select id,active_revision,content_hash,name from documents where integration_connection_id is not null order by name")).rows; }),
     token,
     close: async () => {
       await new Promise<void>((resolve) => server.close(() => resolve()));

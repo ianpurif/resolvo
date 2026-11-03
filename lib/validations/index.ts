@@ -2,11 +2,17 @@ import { z } from "zod";
 import { MAX_FILE_SIZE, UPLOAD_SIZE_ERROR } from "@/lib/knowledge-limits";
 export { MAX_FILE_SIZE } from "@/lib/knowledge-limits";
 export const ticketStatusSchema = z.enum(["open", "in_progress", "resolved"]);
+export const knowledgeFilterSchema = z.object({
+  platforms: z.array(z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/)).max(100).optional(),
+  documentIds: z.array(z.uuid()).max(100).optional(),
+}).strict();
+export type KnowledgeFilter = z.infer<typeof knowledgeFilterSchema>;
 export const chatInputSchema = z
   .object({
     message: z.string().trim().min(1).max(4000),
     conversationId: z.uuid().nullable(),
     requestId: z.uuid(),
+    filters: knowledgeFilterSchema.optional(),
   })
   .strict();
 export const createTicketSchema = z

@@ -16,8 +16,6 @@ import {
   ArrowUpRight,
   Maximize2,
   Menu,
-  Pause,
-  Play,
   X,
 } from "lucide-react";
 import { Brand } from "@/components/brand";
@@ -50,22 +48,20 @@ export function LandingPage() {
   const [status, setStatus] = useState<"loading" | "ready" | "fallback">(
     "loading",
   );
-  const [paused, setPaused] = useState(false);
-  const [allowMotion, setAllowMotion] = useState(false);
   const [palette, setPalette] = useState(0);
   const [inspect, setInspect] = useState(false);
   const [chapter, setChapter] = useState(0);
-  const reducedMotion = useSyncExternalStore(
+  const reduced = useSyncExternalStore(
     subscribeMotion,
     readMotion,
     serverMotion,
   );
-  const reduced = reducedMotion && !allowMotion;
+  // Restoring motion after an OS preference change requires a fresh first frame.
+  if (reduced && status === "ready") setStatus("loading");
   const staticExperience = reduced || status === "fallback";
   const root = useRef<HTMLDivElement>(null);
   const input = useRef<SceneInput>({
     progress: 0,
-    paused: false,
     palette: 0,
     inspect: false,
   });
@@ -129,14 +125,6 @@ export function LandingPage() {
     return () => window.removeEventListener("keydown", close);
   }, [menu]);
 
-  function toggleMotion() {
-    if (reduced) {
-      setAllowMotion(true);
-      return;
-    }
-    input.current.paused = !paused;
-    setPaused(!paused);
-  }
   function selectPalette(index: number) {
     input.current.palette = index;
     setPalette(index);
@@ -153,7 +141,7 @@ export function LandingPage() {
       data-scene={status}
       data-chapter={chapter}
       data-inspect={inspect}
-      data-motion={staticExperience ? "static" : paused ? "paused" : "live"}
+      data-motion={staticExperience ? "static" : "live"}
     >
       <div className="cinema-world">
         <div className="cinema-poster" aria-hidden="true">
@@ -162,16 +150,15 @@ export function LandingPage() {
             alt=""
             fill
             sizes="100vw"
-            preload
             className="cinema-poster-image"
           />
         </div>
-        <CinematicStage
-          enabled={!reduced && status !== "fallback"}
-          input={input}
-          onReady={ready}
-          onFailure={failed}
-        />
+        <noscript>
+          <style>{".cinema-poster{display:block}"}</style>
+        </noscript>
+        {!staticExperience && (
+          <CinematicStage input={input} onReady={ready} onFailure={failed} />
+        )}
         <div className="cinema-vignette" />
         <div className="cinema-grain" />
       </div>
@@ -375,29 +362,7 @@ export function LandingPage() {
           <span>/ 09</span>
           <span className="cinema-current-name">{CHAPTERS[chapter].name}</span>
         </span>
-        {status !== "fallback" ? (
-          <button
-            type="button"
-            onClick={toggleMotion}
-            aria-label={
-              reduced
-                ? "Enable cinematic motion"
-                : paused
-                  ? "Play ambient motion"
-                  : "Pause ambient motion"
-            }
-            aria-pressed={!reduced && !paused}
-          >
-            {reduced || paused ? <Play size={12} /> : <Pause size={12} />}
-            <span>
-              {reduced
-                ? "Enable motion"
-                : paused
-                  ? "Motion paused"
-                  : "Motion on"}
-            </span>
-          </button>
-        ) : (
+        {status === "fallback" && (
           <span className="cinema-static-label">Still edition</span>
         )}
       </div>

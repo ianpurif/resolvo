@@ -39,6 +39,7 @@ test("provider capacity exhaustion degrades to authorized lexical search instead
     if (url.pathname.endsWith("query_embeddings")) return reply(null);
     if (url.pathname.endsWith("reserve_voyage_request")) return reply({ granted: false, wait_ms: 90000 });
     if (url.pathname.endsWith("knowledge_passage_context")) return reply([]);
+    if (url.pathname.endsWith("knowledge_source_metadata")) return reply([{ id: document, source_url: null, platform: "uploads" }]);
     assert.ok(url.pathname.endsWith("search_knowledge"));
     assert.equal(JSON.parse(String(init?.body)).p_query_embedding, null);
     searches++;
