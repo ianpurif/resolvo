@@ -52,6 +52,12 @@ const stitches = async (page: Page) =>
   Number(
     await page.getByTestId("cinematic-canvas").getAttribute("data-stitches"),
   );
+// Every fresh visit can compile shaders on the runner's software renderer.
+const sceneStartupTimeout = 60_000;
+const waitForScene = (page: Page) =>
+  expect(page.locator(".cinema")).toHaveAttribute("data-scene", "ready", {
+    timeout: sceneStartupTimeout,
+  });
 
 /** Actual GLB/WebGL checks, independent of the authenticated fixture transports. */
 export async function verifyCinematic(
@@ -85,17 +91,16 @@ export async function verifyCinematic(
       { times: 1 },
     );
     try {
-      await Promise.all([page.waitForRequest(model), page.goto(origin)]);
+      await Promise.all([
+        page.waitForRequest(model, { timeout: sceneStartupTimeout }),
+        page.goto(origin),
+      ]);
       await expect(poster).toBeHidden();
       await expect(canvas).toHaveCSS("opacity", "0");
     } finally {
       release.resolve();
     }
-    await expect(page.locator(".cinema")).toHaveAttribute(
-      "data-scene",
-      "ready",
-      { timeout: 60_000 },
-    );
+    await waitForScene(page);
     await expect(canvas).toHaveAttribute("data-model", "blender-atelier");
     await expect(canvas).toHaveCSS("opacity", "1", { timeout: 60_000 });
     await expect(poster).toBeHidden();
@@ -117,24 +122,7 @@ export async function verifyCinematic(
       "The real Blender machine loads and animates immediately above blank fabric",
     );
 
-    assert.equal(
-      await page.evaluate(() => document.elementFromPoint(1050, 440)?.tagName),
-      "CANVAS",
-    );
-    await page.mouse.move(1050, 440);
-    await page.mouse.down();
-    await expect(canvas).toHaveAttribute("data-dragging", "true");
-    await page.mouse.move(1160, 465, { steps: 8 });
-    await page.mouse.up();
-    await expect(canvas).toHaveAttribute("data-dragging", "false");
-    record("The automatically animated scene retains pointer exploration");
-
-    // Reload resets pointer orbit so the chapter screenshots show their authored composition.
-    await page.reload();
-    await expect(page.locator(".cinema")).toHaveAttribute(
-      "data-scene",
-      "ready",
-    );
+    // Capture the authored chapter compositions before dragging the camera.
     const counts: number[] = [],
       shots: string[] = [];
     for (const id of chapters) {
@@ -271,6 +259,18 @@ export async function verifyCinematic(
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await chapter(page, "begin");
+    assert.equal(
+      await page.evaluate(() => document.elementFromPoint(1050, 440)?.tagName),
+      "CANVAS",
+    );
+    await page.mouse.move(1050, 440);
+    await page.mouse.down();
+    await expect(canvas).toHaveAttribute("data-dragging", "true");
+    await page.mouse.move(1160, 465, { steps: 8 });
+    await page.mouse.up();
+    await expect(canvas).toHaveAttribute("data-dragging", "false");
+    record("The automatically animated scene retains pointer exploration");
+
     await page
       .getByRole("link", { name: "Open your workspace", exact: true })
       .click();
@@ -279,10 +279,7 @@ export async function verifyCinematic(
     ).toBeVisible();
     await expect(page.locator("canvas")).toHaveCount(0);
     await page.goto(origin);
-    await expect(page.locator(".cinema")).toHaveAttribute(
-      "data-scene",
-      "ready",
-    );
+    await waitForScene(page);
     await canvas.evaluate((element) =>
       (element as HTMLCanvasElement)
         .getContext("webgl2")
@@ -314,11 +311,7 @@ export async function verifyCinematic(
   try {
     const page = await mobile.newPage();
     await page.goto(origin);
-    await expect(page.locator(".cinema")).toHaveAttribute(
-      "data-scene",
-      "ready",
-      { timeout: 60_000 },
-    );
+    await waitForScene(page);
     await page.screenshot({
       path: join(output, "cinematic-mobile-arrival.png"),
     });

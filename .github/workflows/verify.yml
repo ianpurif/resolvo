@@ -35,6 +35,8 @@ jobs:
           name: local-verification
           path: |
             .local/verification/browser-evidence.json
+            .local/verification/browser-next.log
             .local/rag-evaluation/ci-offline/summary.json
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7
