@@ -80,6 +80,7 @@ export async function verifyCinematic(
     );
     const canvas = page.getByTestId("cinematic-canvas");
     await expect(canvas).toHaveAttribute("data-model", "blender-atelier");
+    await expect(page.locator(".cinema-controls button")).toHaveCount(0);
     await page.waitForTimeout(1000);
     const initial = digest(await canvasShot(page));
     await page.waitForTimeout(650);
@@ -94,33 +95,17 @@ export async function verifyCinematic(
       "The real Blender machine loads and animates immediately above blank fabric",
     );
 
-    await page.getByRole("button", { name: "Pause ambient motion" }).click();
-    await page.waitForTimeout(1200);
-    const still = digest(await canvasShot(page));
-    await page.waitForTimeout(350);
-    assert.equal(
-      digest(await canvasShot(page)),
-      still,
-      "pause must stop the actual canvas",
-    );
     assert.equal(
       await page.evaluate(() => document.elementFromPoint(1050, 440)?.tagName),
       "CANVAS",
     );
     await page.mouse.move(1050, 440);
     await page.mouse.down();
+    await expect(canvas).toHaveAttribute("data-dragging", "true");
     await page.mouse.move(1160, 465, { steps: 8 });
     await page.mouse.up();
-    await page.waitForTimeout(700);
-    assert.notEqual(
-      digest(await canvasShot(page)),
-      still,
-      "drag must change the physical view",
-    );
-    await page.getByRole("button", { name: "Play ambient motion" }).click();
-    record(
-      "Ambient pause freezes rendering while pointer exploration remains interactive",
-    );
+    await expect(canvas).toHaveAttribute("data-dragging", "false");
+    record("The automatically animated scene retains pointer exploration");
 
     // Reload resets pointer orbit so the chapter screenshots show their authored composition.
     await page.reload();
@@ -179,9 +164,6 @@ export async function verifyCinematic(
     );
 
     await chapter(page, "color");
-    await page.getByRole("button", { name: "Pause ambient motion" }).click();
-    await page.waitForTimeout(700);
-    const kingfisher = digest(await canvasShot(page));
     await page
       .getByRole("group", { name: "Thread palette" })
       .getByRole("button", { name: "Forest", exact: true })
@@ -190,17 +172,15 @@ export async function verifyCinematic(
     await expect(
       page.getByRole("button", { name: "Forest", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
-    await page.waitForTimeout(600);
-    assert.notEqual(digest(await canvasShot(page)), kingfisher);
     await chapter(page, "capabilities");
-    const full = digest(await canvasShot(page));
     await page.getByRole("button", { name: "Inspect the stitching" }).click();
-    await page.waitForTimeout(1000);
-    assert.notEqual(digest(await canvasShot(page)), full);
+    await expect(page.getByRole("button", { name: "View the whole piece" }))
+      .toHaveAttribute("aria-pressed", "true");
     await page.getByRole("button", { name: "View the whole piece" }).click();
-    await page.getByRole("button", { name: "Play ambient motion" }).click();
+    await expect(page.getByRole("button", { name: "Inspect the stitching" }))
+      .toHaveAttribute("aria-pressed", "false");
     record(
-      "Keyboard palette selection recolors the stitches; inspection moves into the completed piece",
+      "Keyboard palette selection and the completed-piece inspection controls work without a motion toggle",
     );
 
     const performanceEvidence = [];
@@ -401,19 +381,9 @@ export async function verifyCinematic(
     });
     await page.locator("#capabilities").scrollIntoViewIfNeeded();
     await expect(page.getByAltText(/completed kingfisher/)).toBeVisible();
-    await page.getByRole("button", { name: "Enable cinematic motion" }).click();
-    await expect(page.locator(".cinema")).toHaveAttribute(
-      "data-scene",
-      "ready",
-      { timeout: 60_000 },
-    );
-    assert.ok(
-      (await page.evaluate(
-        () => (window as unknown as { webglAttempts: number }).webglAttempts,
-      )) > 0,
-    );
+    await expect(page.locator(".cinema-controls button")).toHaveCount(0);
     record(
-      "Reduced motion creates no WebGL context, shows the real finished embroidery, and supports explicit motion opt-in",
+      "Reduced motion creates no WebGL context and shows the real finished embroidery",
     );
   } finally {
     await reduced.close();

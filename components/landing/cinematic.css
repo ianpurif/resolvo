@@ -514,19 +514,6 @@
   justify-content: space-between;
   pointer-events: none;
 }
-.cinema-controls button {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 44px;
-  padding: 9px 13px;
-  border-radius: 2px;
-  color: #c8cebe;
-  background: #14242ae6;
-  border: 1px solid #bec5ad30;
-  font-size: 9px;
-}
 .cinema-chapter-count {
   display: flex;
   gap: 11px;
@@ -573,10 +560,6 @@
   100% {
     transform: translateX(100%);
   }
-}
-.cinema[data-motion="paused"] *,
-.cinema[data-motion="paused"] *::after {
-  animation-play-state: paused !important;
 }
 .cinema[data-motion="static"] .cinema-canvas {
   display: none;
@@ -778,9 +761,6 @@
   }
   .cinema-current-name {
     margin-left: 4px;
-  }
-  .cinema-controls button {
-    font-size: 8px;
   }
   .cinema-footer {
     bottom: 11%;

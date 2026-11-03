@@ -20,7 +20,6 @@ import {
 
 export type SceneInput = {
   progress: number;
-  paused: boolean;
   palette: number;
   inspect: boolean;
 };
@@ -158,7 +157,6 @@ export function createScene({
 
     let width = 1,
       height = 1,
-      invalid = true,
       loaded = false;
     let budget = 2_000_000,
       pixelRatio = 1,
@@ -176,7 +174,6 @@ export function createScene({
       gl.setSize(width, height, false);
       camera.aspect = width / Math.max(height, 1);
       camera.updateProjectionMatrix();
-      invalid = true;
       canvas.dataset.renderPixels = String(canvas.width * canvas.height);
     };
     resize();
@@ -201,7 +198,6 @@ export function createScene({
         pitch = clamp(pitch + (event.clientY - lastY) * 0.001, -0.15, 0.15);
         lastX = event.clientX;
         lastY = event.clientY;
-        invalid = true;
       }
     };
     const down = (event: PointerEvent) => {
@@ -288,22 +284,12 @@ export function createScene({
       if (disposed) return;
       const delta = previous ? Math.min(0.2, (now - previous) / 1000) : 1 / 60;
       previous = now;
-      if (!input.paused) elapsed += delta;
-      const next = advanceProgress(progress, input.progress, delta);
-      const needsDraw =
-        loaded &&
-        (!input.paused ||
-          invalid ||
-          next !== progress ||
-          pointer.distanceTo(pointerTarget) > 0.0002 ||
-          lastPalette !== input.palette ||
-          Math.abs(inspectAmount - Number(input.inspect)) > 0.0001);
-      progress = next;
+      elapsed += delta;
+      progress = advanceProgress(progress, input.progress, delta);
       pointer.lerp(pointerTarget, 1 - Math.exp(-delta * 18));
       inspectAmount +=
         (Number(input.inspect) - inspectAmount) * (1 - Math.exp(-delta * 12));
-      if (needsDraw) {
-        invalid = false;
+      if (loaded) {
         const started = performance.now(),
           pose = journeyPose(progress, width < 900);
         const sew = sewingProgress(
@@ -433,7 +419,7 @@ export function createScene({
           canvas.dataset.frame = String(rendered);
           lastMetrics = now;
         }
-        if (!input.paused && rendered > 45) {
+        if (rendered > 45) {
           perfFrames++;
           perfTotal += delta;
           if (perfFrames >= 50) {
@@ -452,7 +438,6 @@ export function createScene({
       cancelAnimationFrame(frame);
       previous = 0;
       if (!document.hidden) {
-        invalid = true;
         frame = requestAnimationFrame(tick);
       }
     };
@@ -501,7 +486,6 @@ export function createScene({
         if (disposed) return;
         gl.shadowMap.needsUpdate = true;
         loaded = true;
-        invalid = true;
         canvas.dataset.model = "blender-atelier";
       })
       .catch((error) => {
