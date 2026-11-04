@@ -12,6 +12,7 @@ import {
 } from "@/lib/rag/ingest";
 import { readKnowledgeSource } from "@/lib/rag/read-source";
 import { pendingIndex } from "@/lib/rag/index-jobs";
+import { knowledgeApiError } from "@/lib/rag/knowledge-errors";
 export const runtime = "nodejs";
 export const maxDuration = 120;
 type Params = { params: Promise<{ id: string }> };
@@ -31,7 +32,7 @@ export async function PATCH(request: Request, { params }: Params) {
       { status: result.status === "processing" ? 202 : 200 },
     );
   } catch (error) {
-    return apiError(error);
+    return knowledgeApiError(error, "save");
   }
 }
 export async function DELETE(request: Request, { params }: Params) {

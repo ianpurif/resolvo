@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/client-errors";
+import { readKnowledgeDocument } from "@/lib/knowledge-response";
 import {
   Upload,
   RefreshCw,
@@ -77,14 +78,12 @@ export function KnowledgeManager({
             `/api/knowledge/${document.id}/continue`,
             { method: "POST" },
           );
-          const data = await response.json();
-          if (!response.ok)
-            throw new Error(data.error ?? "Could not continue indexing.");
+          const updated = await readKnowledgeDocument(response, "The server didn't confirm the next indexing batch.");
           setRecoveryDelay(0);
-          if (data.document.status === "ready" && !data.document.error_message)
-            setNotice(data.document.name + " is indexed and ready.", "success");
-          else if (data.document.error_message)
-            setNotice(data.document.error_message);
+          if (updated.status === "ready" && !updated.error_message)
+            setNotice(updated.name + " is indexed and ready.", "success");
+          else if (updated.error_message)
+            setNotice(updated.error_message);
         } catch (error) {
           setRecoveryDelay(30_000);
           setNotice(
@@ -116,7 +115,9 @@ export function KnowledgeManager({
         if (!(file instanceof File))
           throw new Error("Choose a document to import.");
         validateUpload(file);
-        body = fields;
+        const upload = new FormData();
+        upload.set("file", file);
+        body = upload;
       } else {
         headers["Content-Type"] = "application/json";
         body = JSON.stringify(
@@ -127,19 +128,17 @@ export function KnowledgeManager({
         editing ? "/api/knowledge/" + editing.id : "/api/knowledge",
         { method: editing ? "PATCH" : "POST", headers, body },
       );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
-      if (data.document.error_message)
-        throw new Error(data.document.error_message);
-      if (data.document.status === "failed")
+      const document = await readKnowledgeDocument(response, "The server didn't confirm the save. Retry without changing the source.");
+      if (document.error_message) throw new Error(document.error_message);
+      if (document.status === "failed")
         throw new Error(
           "The source is saved but indexing is paused. Use Re-index to resume.",
         );
       setNotice(
-        data.document.status === "processing"
-          ? data.document.name +
+        document.status === "processing"
+          ? document.name +
               " is saved. Indexing will continue automatically here."
-          : data.document.name + " is indexed and ready.",
+          : document.name + " is indexed and ready.",
         "success",
       );
       saveRequest.current = null;
@@ -168,14 +167,13 @@ export function KnowledgeManager({
         "/api/knowledge/" + document.id + "/reindex",
         { method: "POST" },
       );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
+      const updated = await readKnowledgeDocument(response, "The server didn't confirm that indexing restarted. Check the source's status and try Re-index again.");
       setNotice(
-        data.document.status === "processing"
+        updated.status === "processing"
           ? document.name + " is continuing from saved indexing progress."
-          : (data.document.error_message ??
+          : (updated.error_message ??
               document.name + " has been re-indexed."),
-        data.document.error_message ? "warning" : "success",
+        updated.error_message ? "warning" : "success",
       );
     } catch (error) {
       setNotice(

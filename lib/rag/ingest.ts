@@ -5,10 +5,11 @@ import { delimitedKnowledge, jsonKnowledge } from "./structured";
 import { AppError } from "@/lib/config";
 import { checkDatabaseError } from "@/lib/supabase/server";
 import { validateUpload } from "@/lib/validations";
-import { MAX_FILE_SIZE } from "@/lib/knowledge-limits";
+import { MAX_FILE_SIZE, UPLOAD_SIZE_ERROR } from "@/lib/knowledge-limits";
 import { tokenCounts } from "./embedding-policy";
 import { pendingIndex, continueIndexing } from "./index-jobs";
 import { extractWebsite } from "./website";
+import { logKnowledgeFailure } from "./knowledge-errors";
 import type { TenantContext } from "@/lib/auth";
 import { requireKnowledgeOwner } from "@/lib/auth-context";
 import type { KnowledgeDocument, DataSource } from "@/types";
@@ -97,7 +98,13 @@ export async function extractText(file: File, extension: string) {
     const bytes = Buffer.from(await file.arrayBuffer());
     if (bytes.subarray(0, 5).toString() !== "%PDF-")
       throw new AppError("This file is not a valid PDF.", 400);
-    const { PDFParse } = await import("pdf-parse");
+    const { PDFParse } = await import("pdf-parse").catch((error: unknown) => {
+      logKnowledgeFailure("load-pdf-parser", error);
+      throw new AppError(
+        "PDF processing is temporarily unavailable. Upload a DOCX or UTF-8 TXT version, or try again later.",
+        503,
+      );
+    });
     let parser: InstanceType<typeof PDFParse> | undefined;
     try {
       parser = new PDFParse({ data: bytes });
@@ -117,7 +124,7 @@ export async function extractText(file: File, extension: string) {
         400,
       );
     } finally {
-      await parser?.destroy();
+      await parser?.destroy().catch((error: unknown) => logKnowledgeFailure("close-pdf-parser", error));
     }
   }
   if (extension === "docx") {
@@ -304,7 +311,13 @@ export async function ingestPrepared(
       "This document produces too many chunks. Split it into smaller files.",
       400,
     );
-  const counts = await tokenCounts(texts);
+  const counts = await tokenCounts(texts).catch((error: unknown) => {
+    logKnowledgeFailure("count-index-tokens", error);
+    throw new AppError(
+      "Indexing is temporarily unavailable. The new source wasn't saved. Try again later.",
+      503,
+    );
+  });
   const id = existing?.id ?? requestId ?? randomUUID();
   const revision = existing ? randomUUID() : (requestId ?? randomUUID());
   const filename = input.file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-160);
@@ -321,11 +334,9 @@ export async function ingestPrepared(
   const uploaded = await db.storage
     .from("support-documents")
     .upload(path, input.file, { contentType: mime, upsert: false });
-  if (
-    uploaded.error &&
-    "statusCode" in uploaded.error &&
-    String(uploaded.error.statusCode) === "409"
-  ) {
+  const storageStatus = uploaded.error?.status;
+  const storageCode = uploaded.error?.statusCode;
+  if (storageStatus === 409 || storageCode === "409") {
     // Recover an upload whose response was lost before its job was created.
     // Never overwrite a different original under an idempotency key.
     const stored = await db.storage.from("support-documents").download(path);
@@ -343,7 +354,16 @@ export async function ingestPrepared(
         "This save request already contains a different original. Start a new save.",
         409,
       );
-  } else checkDatabaseError(uploaded.error, "store this document");
+  } else if (uploaded.error) {
+    logKnowledgeFailure("store-original", uploaded.error);
+    if (storageStatus === 413 || storageCode === "413" || storageCode === "EntityTooLarge")
+      throw new AppError(UPLOAD_SIZE_ERROR, 413);
+    if (storageStatus === 401 || storageStatus === 403 || storageCode === "403")
+      throw new AppError("File storage denied this upload. Sign in again and check that you are a workspace owner.", 403);
+    if (storageStatus === 415 || storageCode === "InvalidMimeType")
+      throw new AppError("Storage rejected this file type. Try a UTF-8 TXT file or ask your administrator to check the allowed file types.", 415);
+    throw new AppError("The original file couldn't be stored. Retry the same save. If it fails again, contact your workspace administrator.", 502);
+  }
   let claimed = false;
   try {
     const started = await db.rpc("start_document_index_job", {

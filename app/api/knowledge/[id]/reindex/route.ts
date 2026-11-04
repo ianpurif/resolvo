@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireTenant } from "@/lib/auth";
 import { requireKnowledgeOwner } from "@/lib/auth-context";
-import { apiError, requireSameOrigin } from "@/lib/api";
+import { requireSameOrigin } from "@/lib/api";
 import { loadDocument, reindexDocument } from "@/lib/rag/ingest";
+import { knowledgeApiError } from "@/lib/rag/knowledge-errors";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 export async function POST(
@@ -24,6 +25,6 @@ export async function POST(
       { status: result.status === "processing" ? 202 : 200 },
     );
   } catch (error) {
-    return apiError(error);
+    return knowledgeApiError(error, "reindex");
   }
 }
