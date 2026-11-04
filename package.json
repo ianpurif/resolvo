@@ -15,6 +15,7 @@
     "eval:rag:live": "node --env-file=.env.local --conditions=react-server --import tsx scripts/evaluate-rag.ts --live",
     "bench:rag": "node --conditions=react-server --import tsx scripts/benchmark-rag.ts",
     "verify:setup": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-setup.ts",
+    "verify:pdf-bundle": "node --import tsx scripts/verify-pdf-bundle.ts",
     "verify:oauth": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-oauth.ts",
     "verify:providers": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-providers.ts"
   },

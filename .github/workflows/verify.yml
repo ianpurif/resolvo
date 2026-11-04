@@ -26,6 +26,7 @@ jobs:
       - run: npm run lint -- --max-warnings=0
       - run: npm test
       - run: npm run build
+      - run: npm run verify:pdf-bundle
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: npm run eval:rag -- --splits=development,acceptance,regression,holdout --output=ci-offline
