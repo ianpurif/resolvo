@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
+import { once } from "node:events";
 import {
   cp,
   mkdir,
@@ -15,9 +16,12 @@ import { chromium, expect } from "@playwright/test";
 import { startFixtureBackend } from "./fixture-backend";
 import { verifyCinematic } from "./cinematic-checks";
 import { verifyIntegrations } from "./integration-checks";
+import { verifyKnowledgeUpload } from "./knowledge-upload-checks";
 
 async function main() {
   const integrationsOnly = process.argv.includes("--integrations");
+  const knowledgeOnly = process.argv.includes("--knowledge-upload");
+  const production = process.argv.includes("--production");
   const root = process.cwd(),
     base = resolve(root, ".local"),
     output = join(base, "verification");
@@ -95,33 +99,42 @@ async function main() {
       const response = await fetch('${backendOrigin}/integration-provider?url=' + encodeURIComponent(url), { method: options.method || 'GET', headers: options.headers, body: options.body });
       return { status: response.status, headers: Object.fromEntries(response.headers), bytes: Buffer.from(await response.arrayBuffer()) };
     };\n` + transport.slice(end));
+    const next = join(root, "node_modules/next/dist/bin/next");
+    const fixtureOptions = {
+      cwd: directory,
+      windowsHide: true,
+      env: {
+        ...process.env,
+        SUPABASE_URL: backendOrigin,
+        SUPABASE_PUBLISHABLE_KEY: "sb_publishable_fixture",
+        SUPABASE_SERVICE_ROLE_KEY: "fixture-service-key",
+        APP_URL: appOrigin,
+        DEEPSEEK_API_KEY: "fixture-deepseek",
+        VOYAGE_API_KEY: "fixture-voyage",
+        VOYAGE_REQUESTS_PER_MINUTE: "100",
+        VOYAGE_TOKENS_PER_MINUTE: "100000",
+        INTEGRATION_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
+        INTEGRATION_SYNC_SECRET: "fixture-worker-secret-at-least-32-characters",
+        NEXT_TELEMETRY_DISABLED: "1",
+      },
+    };
+    if (production) {
+      const build = spawn(process.execPath, [next, "build"], { ...fixtureOptions, stdio: "inherit" });
+      const [code] = await once(build, "exit");
+      assert.equal(code, 0, "The isolated production fixture could not build");
+    }
     child = spawn(
       process.execPath,
       [
-        join(root, "node_modules/next/dist/bin/next"),
-        "dev",
+        next,
+        production ? "start" : "dev",
         "--hostname",
         "127.0.0.1",
         "--port",
         "3100",
       ],
       {
-        cwd: directory,
-        windowsHide: true,
-        env: {
-          ...process.env,
-          SUPABASE_URL: backendOrigin,
-          SUPABASE_PUBLISHABLE_KEY: "sb_publishable_fixture",
-          SUPABASE_SERVICE_ROLE_KEY: "fixture-service-key",
-          APP_URL: appOrigin,
-          DEEPSEEK_API_KEY: "fixture-deepseek",
-          VOYAGE_API_KEY: "fixture-voyage",
-          VOYAGE_REQUESTS_PER_MINUTE: "100",
-          VOYAGE_TOKENS_PER_MINUTE: "100000",
-          INTEGRATION_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
-          INTEGRATION_SYNC_SECRET: "fixture-worker-secret-at-least-32-characters",
-          NEXT_TELEMETRY_DISABLED: "1",
-        },
+        ...fixtureOptions,
         stdio: ["ignore", "pipe", "pipe"],
       },
     );
@@ -134,7 +147,7 @@ async function main() {
     const deadline = Date.now() + 120_000;
     while (true) {
       try {
-        const response = await fetch(integrationsOnly ? appOrigin + "/login" : appOrigin, {
+        const response = await fetch(integrationsOnly || knowledgeOnly ? appOrigin + "/login" : appOrigin, {
           signal: AbortSignal.timeout(20_000),
         });
         if (response.ok) break;
@@ -144,6 +157,10 @@ async function main() {
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
     browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-swiftshader"] });
+    if (knowledgeOnly) {
+      await verifyKnowledgeUpload(browser, appOrigin, record);
+      return;
+    }
     const context = await browser.newContext({
       viewport: { width: 1440, height: 900 },
       permissions: ["clipboard-read", "clipboard-write"],
@@ -885,6 +902,7 @@ async function main() {
     );
     assert.deepEqual(errors, []);
     assert.deepEqual(controlledInputWarnings, []);
+    await verifyKnowledgeUpload(browser, appOrigin, record);
     await verifyCinematic(browser, appOrigin, output, record);
     await writeFile(
       join(output, "browser-evidence.json"),
